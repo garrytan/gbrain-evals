@@ -12,18 +12,22 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import {
   ALIAS_PHRASING, aliasPlanProblems, BG1_ALIAS_GENERATOR_VERSION, BG1_DATA_DIR, BG1_DEV_SEEDS, buildQuestions, checkPlan, devFiles, devWorldPlan, PlanError, planWorld,
-  isolatingWords, questionLeaks, renderLeaks, renderTemplateWorld, resolveSubject, type WorldPlan,
+  isolatingWords, misspellingQuestionIds, questionLeaks, renderLeaks, renderTemplateWorld, resolveSubject, type WorldPlan,
 } from '../../eval/generators/changing-facts-gen.ts';
 import { misspellings } from '../../eval/generators/changing-facts-alias.ts';
-import { BG1_DEV_ALIAS_CONVERSATIONS } from '../../eval/runner/memory-qa/bg1-names.ts';
+import { BG1_DEV_ALIAS_CONVERSATIONS, BG1_DEV_ALIAS_MISSPELLING_QUESTIONS } from '../../eval/runner/memory-qa/bg1-names.ts';
 import { BG1_FIXTURES_ROOT, loadBg1Dev, type MemoryQuestion } from '../../eval/runner/memory-qa/corpus.ts';
 import { answerId, sha256, type AnswerRecord } from '../../eval/runner/memory-qa/records.ts';
 import { devOnly, scheduledQuestions } from '../../eval/runner/q1/cell.ts';
 import { bg1JudgeOf } from '../../eval/runner/q1/cells/definitions.ts';
-import { buildWeeklyPilotManifest, generateWeeklyLineJudgeCheckCells, generateWeeklyLinePilotCells, WEEKLY_ALIAS_PILOT_MONEY, weeklyLinePilotCaps } from '../../eval/runner/q1/cells/weekly-line.ts';
 import {
-  CEILING, judgeCheckShortfall, main as pilotMain, pilotPlan, pilotReport, PilotError, pooledGrepOpus, readRow, STOP_RULE, stopRuleReading, writePilotCampaigns, type StopReading,
+  buildWeeklyPilotManifest, generateWeeklyLineJudgeCheckCells, generateWeeklyLineMisspellingCells, generateWeeklyLinePilotCells, WEEKLY_ALIAS_PILOT_MONEY, WEEKLY_ALIAS_STAGE2_MONEY, weeklyLinePilotCaps,
+} from '../../eval/runner/q1/cells/weekly-line.ts';
+import {
+  CEILING, judgeCheckShortfall, main as pilotMain, pilotPlan, pilotReport, PilotError, pooledGrepOpus, readRow, STOP_RULE, stopRuleLabel, stopRuleReading, writePilotCampaigns, type StopReading,
 } from '../../eval/runner/weekly-line/pilot.ts';
+import { goldLabel } from '../../eval/runner/weekly-line/judge-check.ts';
+import { matchAnswer } from '../../eval/runner/bg1/match.ts';
 
 const REPO = resolve(import.meta.dir, '../..');
 const RENDER = join(REPO, 'eval/custody/bg1/render.ts');
@@ -183,7 +187,9 @@ describe('the alias pilot and judge check', () => {
       ['pilot-gbrain', true], ['pilot-gbrain-reread', true], ['pilot-memory-bank', true], ['pilot-memory-bank-reread', true]]);
     expect(plan.ledgers.filter(l => l.campaign_id).every(l => /^q1-scoreboard-weekly-(pilot|judge-check)-alias/.test(l.campaign_id!))).toBe(true);
     expect(plan.cells.map(c => c.questions)).toEqual([64, 64, 64, 64, 128]);
-    expect(plan.window).toEqual({ mint_usd: 11, grep_first_usd: 14, after_stop_rule_usd: 20, total_usd: 45, window_usd: 45 });
+    expect(plan.window).toEqual({ mint_usd: 15, grep_first_usd: 14, after_stop_rule_usd: 16, total_usd: 45, window_usd: 45 });
+    expect(plan.ledgers.filter(l => l.kind === 'reread').map(l => l.cap_usd)).toEqual([1.15, 1.15, 1.15]);
+    expect(plan.ledgers.find(l => l.kind === 'mint')!.estimate_usd).toBeLessThanOrEqual(15);
     expect(plan.totals.cap_usd).toBeLessThanOrEqual(WEEKLY_ALIAS_PILOT_MONEY.window_usd);
     expect(STOP_RULE).toBe('If the Opus grep agent scores 95% or more on the pilot, the line stops and we publish the grep result.');
     expect(plan.stop_rule).toBe(STOP_RULE);
@@ -197,11 +203,12 @@ describe('the alias pilot and judge check', () => {
   const corpus = loadBg1Dev({ root: BG1_FIXTURES_ROOT, only: new Set(ALIAS), worldEnd: WORLD_END, keyless: true });
   const pilotGrep = pilot.find(c => c.system === 'baseline-file-agent')!, judgeGrep = judge[0];
   type Answer = { text: string; outcome?: AnswerRecord['outcome'] };
-  /** A grep-agent cell's out dir on its alias worlds: each reader's answer from `answer` and its gating judge's verdict from `verdict`. */
-  function grepCell(def: typeof judgeGrep, answer: (q: MemoryQuestion, reader: string, i: number) => Answer, verdict: (q: MemoryQuestion, reader: string, i: number) => 0 | 1, status = 'complete') {
+  const PAID = { keyless: false, paid_window: 'test-window' };
+  /** A grep-agent cell's out dir on its alias worlds: each reader's answer from `answer`, its gating judge's verdict from `verdict`, and the receipt's upstream record. */
+  function grepCell(def: typeof judgeGrep, answer: (q: MemoryQuestion, reader: string, i: number) => Answer, verdict: (q: MemoryQuestion, reader: string, i: number) => 0 | 1 | null, status = 'complete', upstream: object | null = PAID) {
     const out = scratch('grep-cell'), cell = def.arms[0].cell_id, dir = join(out, 'cells', cell);
     mkdirSync(dir, { recursive: true });
-    writeFileSync(join(dir, 'receipt.json'), JSON.stringify({ run_cell: def.id, block: def.block, run_status: status, system: { kind: 'baseline-file-agent', versions: { ripgrep: '14.1.0' } } }));
+    writeFileSync(join(dir, 'receipt.json'), JSON.stringify({ run_cell: def.id, block: def.block, run_status: status, ...(upstream ? { upstream } : {}), system: { kind: 'baseline-file-agent', versions: { ripgrep: '14.1.0' } } }));
     const answers: string[] = [], judgments: string[] = [];
     corpus.questions.filter(q => def.only_conversations!.includes(q.conversation)).forEach((q, i) => {
       for (const reader of [OPUS, PARTICLE]) {
@@ -209,7 +216,8 @@ describe('the alias pilot and judge check', () => {
         const rec = { answer_id: answerId(cell, q.id, reader, 0), cell_id: cell, realization_id: 'r', question_id: q.id, conversation: q.conversation, system: 'baseline-file-agent', arm: 'whole-agent', reader, replicate: 0, effort: 'high',
           context_sha256: sha256(q.id), text: a.text, usage: { input: 10, output: 5, cache_read: 0, cache_write: 0 }, provider_input_tokens: 10, latency_ms: 1000, outcome, stop_reason: 'submitted', turns: 3, tool_calls: { grep: { calls: 2, failed: 0 } }, usd: 0.01 };
         answers.push(JSON.stringify(rec));
-        if (outcome === 'scored') judgments.push(JSON.stringify({ answer_id: rec.answer_id, instrument_id: 'bg1', instrument_sha256: sha256('i'), judge: bg1JudgeOf(reader), judge_replicate: 0, temperature: null, score: verdict(q, reader, i), parse_ok: true, raw_sha256: sha256('[]'), outcome: 'scored' }));
+        const score = verdict(q, reader, i);
+        if (outcome === 'scored' && score !== null) judgments.push(JSON.stringify({ answer_id: rec.answer_id, instrument_id: 'bg1', instrument_sha256: sha256('i'), judge: bg1JudgeOf(reader), judge_replicate: 0, temperature: null, score, parse_ok: true, raw_sha256: sha256('[]'), outcome: 'scored' }));
       }
     });
     writeFileSync(join(dir, 'answers.ndjson'), answers.join('\n') + '\n');
@@ -245,11 +253,69 @@ describe('the alias pilot and judge check', () => {
     expect(others(pilotReport(below, [], manifest, 'JUDGE_CHECK_SHORT: x'))).toEqual([[false, 'the judge check is short: JUDGE_CHECK_SHORT: x'], [false, 'the judge check is short: JUDGE_CHECK_SHORT: x'], [false, 'the judge check is short: JUDGE_CHECK_SHORT: x']]);
   });
 
+  // Value: protects=the stop rule scores every committed reference answer of the three alias worlds right, 192 of 192, and a stale answer set (each question's latest withdrawn or superseded value) well below 0.95, while BG1's matchAnswer and the judge check's goldLabel read the withdrawal answers exactly as before; fails_when=the stop-rule scorer can't pass its own gold (the 24 withdrawal answers that name the withdrawn partner beside a none-form read as unsettled), passes a stale set, or the fix moves the shared matcher that BG1's and BG1-C's counted verdicts use; why_new=GBEV-3's ruling of 2026-11-25 on #650's blocker 1 ("the 192 reference answers must score 192/192 under the stop-rule scorer, and a deliberately stale answer set must score below 0.95"); seam=pilot.ts stopRuleLabel through readRow and stopRuleReading over written cells on the alias fixtures; no_claim=real answers
+  test('the stop rule scores the 192 reference answers 192/192 and a stale answer set below 0.95', () => {
+    const reference = (q: MemoryQuestion): Answer => ({ text: q.answer! });
+    const ref = stopRuleReading(manifest, read(reference, wrong));
+    console.log('reference answers: ' + ref.correct + '/' + ref.expected_answers + ', accuracy ' + ref.grep_agent_opus_accuracy);
+    expect(ref).toMatchObject({ correct: 192, answers: 192, expected_answers: 192, unsettled: 0, grep_agent_opus_accuracy: 1, complete: true });
+    const staleAnswer = (q: MemoryQuestion): Answer => ({ text: q.bg1!.stale_values.at(-1) ?? (q.bg1!.ordered ? [...q.bg1!.gold_values].reverse().join(', then ') : q.bg1!.decoy_values[0]) });
+    const st = stopRuleReading(manifest, read(staleAnswer, right));
+    console.log('stale answers: ' + st.correct + '/' + st.expected_answers + ', accuracy ' + st.grep_agent_opus_accuracy);
+    expect(st.complete).toBe(true);
+    expect(st.grep_agent_opus_accuracy!).toBeLessThan(0.95);
+    const withdrawn = corpus.questions.filter(q => q.bg1!.stratum === 's5_withdrawn');
+    expect(withdrawn).toHaveLength(24);
+    for (const q of withdrawn) {
+      expect([matchAnswer(q, q.answer!), goldLabel(q, { stop_reason: null, text: q.answer! }).gold]).toEqual(['unclear', null]);
+      const [partner] = q.bg1!.stale_values;
+      expect(stopRuleLabel(q, { stop_reason: null, text: partner })).toBe(0);
+      expect(stopRuleLabel(q, { stop_reason: null, text: partner + ', and nothing else is planned.' })).toBeNull();
+      for (const text of ['None, ' + partner, 'Nothing has changed: ' + partner + '.', 'None of the old plans fell through; it is still with ' + partner + '.'])
+        expect([text, stopRuleLabel(q, { stop_reason: null, text })]).toEqual([text, null]);
+      expect(stopRuleLabel(q, { stop_reason: null, text: "I couldn't find anything; nothing came up about " + partner + '.' })).toBeNull();
+      if (q.bg1!.decoy_values.length) expect(stopRuleLabel(q, { stop_reason: null, text: 'None: ' + partner + ' was called off, but ' + q.bg1!.decoy_values[0] + ' is in talks.' })).toBeNull();
+    }
+    for (const q of corpus.questions.filter(x => x.bg1!.stratum !== 's5_withdrawn'))
+      for (const text of [q.answer!, staleAnswer(q).text, 'None: ' + q.answer + ' was called off.'])
+        expect(stopRuleLabel(q, { stop_reason: null, text })).toBe(goldLabel(q, { stop_reason: null, text }).gold);
+  });
+
   // Value: protects=the judge check's own sampler reads the grep agent's cells as short when its judges called too few answers wrong, which holds the other rows; fails_when=judgeCheckShortfall reads a sample the judge check would refuse as drawable, or refuses a drawable one; why_new=GBEV-3's ruling of 2026-11-25 (item 4): the other rows wait when the judge check can't get 40 wrong answers; seam=pilot.ts judgeCheckShortfall over judge-check.ts poolAnswers and buildSample on written cells; no_claim=real verdicts
   test('the judge check reads short when its judges called too few answers wrong', () => {
     expect(judgeCheckShortfall([grepCell(pilotGrep, gold, right), grepCell(judgeGrep, gold, right)], 'alias')).toContain('JUDGE_CHECK_SHORT');
     const half = (q: MemoryQuestion, r: string, i: number) => (i % 2 ? 1 : 0) as 0 | 1;
     expect(judgeCheckShortfall([grepCell(pilotGrep, gold, half), grepCell(judgeGrep, gold, half)], 'alias')).toBeNull();
+  });
+
+  // Value: protects=a judge with no verdict at all reads as short, so the judge check never passes on the other judge alone and the other rows stay held; fails_when=buildSample draws only the judges that gave a verdict, so a pool where claude-opus-5-5's judge has 100 verdicts with 40 wrong and particle-1's judge has none reads as drawable; why_new=GBEV-3's ruling of 2026-11-25 on #650's blocker 2; seam=pilot.ts judgeCheckShortfall over judge-check.ts buildSample, then pilotReport and writePilotCampaigns, on written cells; no_claim=real verdicts
+  test('a judge with no verdicts reads as short and the other rows stay held', () => {
+    const at = new Map(corpus.questions.map((q, i) => [q.id, i]));
+    const oneJudge = (q: MemoryQuestion, r: string) => { const i = at.get(q.id)!; return r !== OPUS || i >= 100 ? null : i < 40 ? 0 : 1; };
+    const someStale = (q: MemoryQuestion, r: string, i: number) => (i % 10 === 0 ? stale(q) : gold(q));
+    const dirs = [grepCell(pilotGrep, someStale, oneJudge), grepCell(judgeGrep, someStale, oneJudge)];
+    const short = judgeCheckShortfall(dirs, 'alias');
+    expect(short).toContain('JUDGE_CHECK_SHORT: ' + bg1JudgeOf(PARTICLE) + ' has 0 answers with a verdict');
+    const rows = dirs.flatMap(d => readRow(d)), reading = stopRuleReading(manifest, rows);
+    expect(reading).toMatchObject({ complete: true, stops_line: false });
+    const held = Object.entries(pilotReport(rows, [], manifest, short).rows).filter(([row]) => row !== 'grep-agent').map(([, x]) => [x.pass, (x as { held?: string }).held]);
+    expect(held).toEqual(['extract-first', 'gbrain', 'memory-bank'].map(() => [false, 'the judge check is short: ' + short]));
+    expect(() => writePilotCampaigns(manifest, { out: scratch('held'), window: 'test-window', windowCapUsd: 45, worldEnd: WORLD_END, stopReading: { ...reading, judge_check_short: short } })).toThrow('PILOT_JUDGE_CHECK_SHORT');
+  });
+
+  // Value: protects=campaigns --grep-cell writes the other rows only from cells whose receipts record real providers under a granted paid window, so a completed keyless rehearsal, which shares the paid cell's id, or a receipt from before the record never moves the stop rule; fails_when=the stop rule reads a keyless or unrecorded cell as complete, or campaigns writes the other rows from one; why_new=GBEV-3's ruling of 2026-11-25 on #650's blocker 3; seam=pilot.ts main campaigns --grep-cell through readRow, stopRuleReading and writePilotCampaigns on written cells; no_claim=the cell runner's own receipt, which weekly-line-execution.test.ts reads
+  test('campaigns --grep-cell refuses a completed keyless or rehearsal cell', () => {
+    const someStale = (q: MemoryQuestion, r: string, i: number) => (i % 10 === 0 ? stale(q) : gold(q));
+    const half = (q: MemoryQuestion, r: string, i: number) => (i % 2 ? 1 : 0) as 0 | 1;
+    const campaigns = (dirs: string[]) => pilotMain(['campaigns', '--length', 'alias', '--out', scratch('camp'), '--window-granted', 'test-window', '--window-cap-usd', '45', '--world-end', WORLD_END, ...dirs.flatMap(d => ['--grep-cell', d])], { lsRemote, env: {} }, () => {});
+    expect(campaigns([grepCell(pilotGrep, someStale, half), grepCell(judgeGrep, someStale, half)])).toBe(0);
+    for (const upstream of [{ keyless: true, paid_window: null }, null, { keyless: false, paid_window: null }]) {
+      const rehearsal = grepCell(pilotGrep, someStale, half, 'complete', upstream), paid = grepCell(judgeGrep, someStale, half);
+      expect(stopRuleReading(manifest, [...readRow(rehearsal), ...readRow(paid)])).toMatchObject({ cells_complete: true, unpaid: [pilotGrep.id], complete: false, stops_line: false });
+      expect(() => campaigns([rehearsal, paid])).toThrow('PILOT_NOT_PAID: ' + pilotGrep.id + ' is not a paid cell');
+    }
+    const allGold = [grepCell(pilotGrep, gold, half, 'complete', { keyless: true, paid_window: null }), grepCell(judgeGrep, gold, half, 'complete', { keyless: true, paid_window: null })];
+    expect(stopRuleReading(manifest, allGold.flatMap(d => readRow(d)))).toMatchObject({ grep_agent_opus_accuracy: 1, complete: false, stops_line: false });
   });
 
   // Value: protects=the alias campaigns write the mint, the grep agent's pilot, the judge check and its labelling first, hold the other rows until a complete reading below 0.95 that the judge check can sample, and refuse either stage unless the mint and both stages fit one window's cap together; fails_when=campaigns writes a row the stop rule or a short judge check keeps from running, writes the grep stage again with the other rows, or lets the two stages and the mint pass the window between them; why_new=/ship review p1 specialist (the stop rule was only a label), p2 targeted money note and GBEV-3's ruling of 2026-11-25 (items 4 and 6); seam=pilot.ts writePilotCampaigns with fake readings; no_claim=the VM run
@@ -259,7 +325,7 @@ describe('the alias pilot and judge check', () => {
     const first = write();
     expect(first.campaigns.map(c => c.name)).toEqual(['pilot-grep-agent', 'judge-check']);
     expect(first.commands.map(c => c.name)).toEqual(['judge-check-label', 'mint']);
-    expect(first.commands.find(c => c.name === 'mint')!.argv).toEqual(['eval/custody/bg1/mint.sh', '--dev', '--worlds', ALIAS.join(','), '--paid-window', 'test-window', '--window-cap-usd', '11']);
+    expect(first.commands.find(c => c.name === 'mint')!.argv).toEqual(['eval/custody/bg1/mint.sh', '--dev', '--worlds', ALIAS.join(','), '--paid-window', 'test-window', '--window-cap-usd', '15']);
     expect(() => write(reading(0.97))).toThrow(PilotError);
     expect(() => write(reading(0.97))).toThrow(STOP_RULE);
     expect(() => write(reading(0.9, false))).toThrow('not complete');
@@ -271,5 +337,76 @@ describe('the alias pilot and judge check', () => {
     expect(() => write(undefined, 44.99)).toThrow('PILOT_OVER_WINDOW');
     expect(() => write(reading(0.9), 44.99)).toThrow('PILOT_OVER_WINDOW');
     expect(() => writePilotCampaigns(buildWeeklyPilotManifest(GBRAIN), { out: scratch('std'), window: 'w', windowCapUsd: 1e6, worldEnd: WORLD_END, stopReading: reading(0.9) })).toThrow('only the alias pilot');
+  });
+});
+
+describe("the alias pilot's stage 2 on the misspelling questions", () => {
+  const manifest = buildWeeklyPilotManifest(GBRAIN, 'BGW', 'alias');
+  const stage2 = generateWeeklyLineMisspellingCells(GBRAIN);
+  const lsRemote = () => GBRAIN.commit + '\trefs/tags/' + GBRAIN.release;
+  /** Grep's 12 stage-1 misses on these questions, by hand in the stage-1 results' miss taxonomy. */
+  const GREP_MISSES = ['bg1-dev-alias-01:s3_repeated_stale:5', 'bg1-dev-alias-01:s3_repeated_stale:6', 'bg1-dev-alias-01:s4_conflicting:5', 'bg1-dev-alias-01:s8_history:2', 'bg1-dev-alias-01:s8_history:7', 'bg1-dev-alias-02:s8_history:1',
+    'bg1-dev-alias-03:s1_updated:0', 'bg1-dev-alias-03:s1_updated:4', 'bg1-dev-alias-03:s1_updated:5', 'bg1-dev-alias-03:s8_history:0', 'bg1-dev-alias-03:s8_history:1', 'bg1-dev-alias-03:s8_history:2'];
+
+  // Value: protects=the stage-2 filter is exactly the 34 questions whose evidence names their subject by its misspelling, the split stage 1's 22/34 was read on, by plan refs and by the rendered text alike, and it holds every one of grep's 12 misspelling misses; fails_when=the id list drifts from the plans, the split's rule changes, or a question with misspelled evidence is left out or one without it let in; why_new=GBEV-3's grant of 2026-11-25 (K1: name the 34 by id, compare paired on exactly those); seam=changing-facts-gen.ts misspellingQuestionIds over the committed plans and questions, bg1-names.ts BG1_DEV_ALIAS_MISSPELLING_QUESTIONS; no_claim=a Gemini render's wording
+  test('the filter is the 34 questions whose evidence names their subject by its misspelling', () => {
+    const committed = (id: string) => JSON.parse(readFileSync(join(BG1_DATA_DIR, 'dev/worlds/' + id + '/questions.json'), 'utf8'));
+    const ids = ALIAS.flatMap(id => misspellingQuestionIds(plans.get(id)!, committed(id)));
+    expect(ids).toEqual([...BG1_DEV_ALIAS_MISSPELLING_QUESTIONS]);
+    expect(ids).toHaveLength(34);
+    expect(ALIAS.map(id => ids.filter(q => q.startsWith(id + ':')).length)).toEqual([14, 6, 14]);
+    expect(ALIAS.flatMap(id => misspellingQuestionIds(plans.get(id)!))).toEqual(ids);
+    const byText = ALIAS.flatMap(id => {
+      const plan = plans.get(id)!, text = textOf(plan), names = new Map(plan.entities.map(e => [e.id, e.aliases!.misspelling]));
+      return buildQuestions(plan).filter(q => q.evidence_sessions.some(s => text(s).includes(names.get(q.subject!.entity)!))).map(q => q.id).sort();
+    });
+    expect(byText).toEqual(ids);
+    expect(GREP_MISSES.filter(id => !ids.includes(id))).toEqual([]);
+  });
+
+  // Value: protects=stage 2 runs gbrain, extract-first and memory-bank on all three alias worlds, ingesting each world whole and asking only the 34 ids, read by claude-opus-5-5 alone with its gpt-6-astra judge and no particle-1 re-read, each leased at its row's cap, with the caps together at most the stage's own window and the earlier alias cells unchanged; fails_when=a stage-2 cell loads fewer worlds, asks other questions, adds particle-1 or a re-read, runs the grep agent, or its caps pass the window; why_new=GBEV-3's grant of 2026-11-25 (K1, a hard cap for the whole window); seam=weekly-line.ts generateWeeklyLineMisspellingCells and buildWeeklyPilotManifest, cell.ts devOnly and scheduledQuestions over the template fixtures; no_claim=measured costs
+  test('stage 2 asks the 34 questions of three whole worlds with the Opus reader alone, inside its window', () => {
+    expect(stage2.map(c => c.system)).toEqual(['ext-extract-first', 'gbrain-defaults', 'ext-memory-bank']);
+    for (const def of stage2) {
+      expect([def.set, def.block, def.only_conversations]).toEqual(['BGW-misspell-alias', 'BGW-pilot', ALIAS]);
+      expect(devOnly(def)).toEqual(new Set(ALIAS));
+      const corpus = loadBg1Dev({ root: BG1_FIXTURES_ROOT, only: devOnly(def)!, worldEnd: WORLD_END, keyless: true });
+      expect(corpus.conversations.map(c => c.id)).toEqual(ALIAS);
+      expect(scheduledQuestions(def, corpus, null).map(q => q.id)).toEqual([...BG1_DEV_ALIAS_MISSPELLING_QUESTIONS]);
+      expect(def.arms.map(a => [a.readers, a.frontier?.judge_by_reader])).toEqual([[['anthropic:claude-opus-5-5'], { 'anthropic:claude-opus-5-5': 'openai:gpt-6-astra' }]]);
+      expect(def.gbrain_build ?? GBRAIN).toEqual(GBRAIN);
+    }
+    expect(manifest.cells.slice(-3)).toEqual(stage2);
+    expect(manifest.reread_plans.filter(r => stage2.some(c => c.id === r.cell))).toEqual([]);
+    expect(manifest.cells.slice(0, -3)).toEqual([...generateWeeklyLinePilotCells(GBRAIN, 'BGW', 'alias'), ...generateWeeklyLineJudgeCheckCells('alias')]);
+    expect(buildWeeklyPilotManifest(GBRAIN).cells.some(c => c.set === 'BGW-misspell-alias')).toBe(false);
+    const plan = pilotPlan(manifest, null), stage = plan.misspelling_stage!;
+    expect(stage.cells.map(c => c.questions)).toEqual([34, 34, 34]);
+    expect(stage.ledgers.map(l => [l.name, l.cap_usd])).toEqual(stage2.map(c => ['stage2-' + { 'gbrain-defaults': 'gbrain', 'ext-extract-first': 'extract-first', 'ext-memory-bank': 'memory-bank' }[c.system], c.lease!.usd]));
+    expect(stage.cap_usd).toBeLessThanOrEqual(WEEKLY_ALIAS_STAGE2_MONEY.window_usd);
+    expect(WEEKLY_ALIAS_STAGE2_MONEY.window_usd).toBeLessThanOrEqual(20);
+    expect(pilotPlan(buildWeeklyPilotManifest(GBRAIN), null).misspelling_stage).toBeNull();
+    const lines: string[] = [];
+    expect(pilotMain(['plan', '--length', 'alias'], { lsRemote, env: {} }, s => lines.push(s))).toBe(0);
+    expect(lines.join('\n')).toContain('Stage 2 caps');
+  });
+
+  // Value: protects=campaigns --misspelling-stage writes the three stage-2 campaigns alone, each its row's ledger at its cap, with no re-read, labelling or mint command, and refuses a window cap below the stage's caps, a stop-rule reading beside it, or a length with no stage 2; fails_when=the stage writes the grep stage or the alias-01 rows again, writes a particle-1 re-read, or its caps pass the window; why_new=GBEV-3's grant of 2026-11-25 (K1); seam=pilot.ts main campaigns and writePilotCampaigns; no_claim=the VM run
+  test('campaigns --misspelling-stage writes the three stage-2 campaigns inside the window', () => {
+    const campaigns = (cap: string, extra: string[] = [], length = 'alias') => pilotMain(['campaigns', '--length', length, '--misspelling-stage', '--out', scratch('stage2'), '--window-granted', 'test-window', '--window-cap-usd', cap, '--world-end', WORLD_END, ...extra], { lsRemote, env: {} }, () => {});
+    const out = scratch('stage2-write');
+    const r = writePilotCampaigns(manifest, { out, window: 'test-window', windowCapUsd: 20, worldEnd: WORLD_END, misspellingStage: true });
+    expect(r.campaigns.map(c => c.name)).toEqual(['stage2-extract-first', 'stage2-gbrain', 'stage2-memory-bank']);
+    expect(r.commands).toEqual([]);
+    for (const [i, c] of r.campaigns.entries()) {
+      const camp = JSON.parse(readFileSync(c.file, 'utf8'));
+      expect(camp.cells.map((x: { id: string }) => x.id).join(' ')).toContain(stage2[i].id);
+      expect(camp.cells.every((x: { command: string }) => x.command.includes('--paid-window test-window --window-cap-usd ' + stage2[i].lease!.usd))).toBe(true);
+    }
+    expect(JSON.parse(readFileSync(join(out, 'plan.json'), 'utf8')).stage).toBe('misspelling');
+    expect(campaigns('20')).toBe(0);
+    expect(() => campaigns('19.99')).toThrow('PILOT_OVER_WINDOW');
+    expect(() => campaigns('20', [], 'standard')).toThrow('only the alias pilot has a misspelling stage');
+    expect(() => writePilotCampaigns(manifest, { out, window: 'w', windowCapUsd: 20, worldEnd: WORLD_END, misspellingStage: true, stopReading: { ...pooledGrepOpus([], ['q']), judge_check_short: null } })).toThrow('takes no stop-rule reading');
   });
 });

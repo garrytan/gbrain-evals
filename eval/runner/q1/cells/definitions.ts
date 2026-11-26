@@ -34,7 +34,7 @@ import { CHAT_PRICE_OVERRIDES, type ChatPrice } from '../../budget-ledger.ts';
 import { lookupEmbeddingPrice } from '../../../../node_modules/gbrain/src/core/embedding-pricing.ts';
 import { FRONTIER_READERS, READER_WINDOWS } from '../../systems/baselines.ts';
 import type { Outcome } from '../../memory-qa/outcomes.ts';
-import { BG1_N_FINAL, BG1C_N_FINAL, BGW_WORLDS_PER_WEEK, bgwSlotOf } from '../../memory-qa/bg1-names.ts';
+import { BG1_DEV_ALIAS_CONVERSATIONS, BG1_DEV_ALIAS_MISSPELLING_QUESTIONS, BG1_N_FINAL, BG1C_N_FINAL, BGW_WORLDS_PER_WEEK, bgwSlotOf } from '../../memory-qa/bg1-names.ts';
 
 export const CELL_SCHEMA = 'gbrain-evals/q1-cell/v1';
 export const MANIFEST_SCHEMA = 'gbrain-evals/q1-cell-manifest/v1';
@@ -55,9 +55,10 @@ export type BG1CSetId = 'BG1C' | 'BG1C-dev1';
  * The weekly outcome line's sets (weekly-line.ts): one week's Set W worlds (BGW, or BGW-long for a W1-long batch), the pilot on
  * public dev world bg1-dev-01 (R111) and the grep agent's judge check on public dev worlds bg1-dev-02 and bg1-dev-03 (R78), and
  * the same two on the long public dev worlds ahead of a W1-long block (bg1-dev-long-01, and bg1-dev-long-02 and -03) and on
- * the alias public dev worlds of changing-facts-gen@3 (bg1-dev-alias-01, and bg1-dev-alias-02 and -03).
+ * the alias public dev worlds of changing-facts-gen@3 (bg1-dev-alias-01, and bg1-dev-alias-02 and -03), and the alias
+ * pilot's stage 2 on all three alias worlds, asking only their misspelling questions (BGW-misspell-alias).
  */
-export type WeeklyLineSetId = 'BGW' | 'BGW-long' | 'BGW-pilot' | 'BGW-judge' | 'BGW-pilot-long' | 'BGW-judge-long' | 'BGW-pilot-alias' | 'BGW-judge-alias';
+export type WeeklyLineSetId = 'BGW' | 'BGW-long' | 'BGW-pilot' | 'BGW-judge' | 'BGW-pilot-long' | 'BGW-judge-long' | 'BGW-pilot-alias' | 'BGW-judge-alias' | 'BGW-misspell-alias';
 /** The SOTA loop's sets (generateSotaDevCells, generateSotaLeaderCells). */
 export type SotaSetId = 'SOTA-dev' | 'SOTA-leader-beam' | 'SOTA-leader-lme';
 export type Q1BlockId = 'T1' | 'T2-S2a' | 'T2-S2b' | 'T2-S3' | 'T2-S4-S5';
@@ -312,6 +313,7 @@ export const WEEKLY_LINE_SETS: Record<WeeklyLineSetId, SetFacts> = {
   'BGW-judge-long': { id: 'BGW-judge-long', benchmark: 'bg1-dev', split: 'dev', questions: 128, conversations: 2, corpus_tokens: 2_000_000, messages: 20_000, block: 'BGW-judge', selection: { kind: 'all' }, exclusions: [], role: 'smoke', exposure: 'E2', label: "weekly outcome line, the grep agent's long judge check on public dev worlds bg1-dev-long-02 and bg1-dev-long-03 (about 1,000,000 tokens each)", only_conversations: ['bg1-dev-long-02', 'bg1-dev-long-03'], sessions: 750 },
   'BGW-pilot-alias': { id: 'BGW-pilot-alias', benchmark: 'bg1-dev', split: 'dev', questions: 64, conversations: 1, corpus_tokens: 200_000, messages: 2_000, block: 'BGW-pilot', selection: { kind: 'all' }, exclusions: [], role: 'smoke', exposure: 'E2', label: 'weekly outcome line alias pilot, public dev world bg1-dev-alias-01 (changing-facts-gen@3, described subjects) at the counted settings', only_conversations: ['bg1-dev-alias-01'], sessions: 150 },
   'BGW-judge-alias': { id: 'BGW-judge-alias', benchmark: 'bg1-dev', split: 'dev', questions: 128, conversations: 2, corpus_tokens: 400_000, messages: 4_000, block: 'BGW-judge', selection: { kind: 'all' }, exclusions: [], role: 'smoke', exposure: 'E2', label: "weekly outcome line, the grep agent's alias judge check on public dev worlds bg1-dev-alias-02 and bg1-dev-alias-03 (changing-facts-gen@3)", only_conversations: ['bg1-dev-alias-02', 'bg1-dev-alias-03'], sessions: 150 },
+  'BGW-misspell-alias': { id: 'BGW-misspell-alias', benchmark: 'bg1-dev', split: 'dev', questions: BG1_DEV_ALIAS_MISSPELLING_QUESTIONS.length, conversations: 3, corpus_tokens: 600_000, messages: 6_000, block: 'BGW-pilot', selection: { kind: 'ids', ids: [...BG1_DEV_ALIAS_MISSPELLING_QUESTIONS] }, exclusions: [], role: 'smoke', exposure: 'E2', label: "weekly outcome line alias pilot's stage 2, public dev worlds bg1-dev-alias-01 to -03 ingested whole, asking only the 34 questions whose evidence names their subject by its misspelling", only_conversations: [...BG1_DEV_ALIAS_CONVERSATIONS], sessions: 150 },
 };
 /** The weekly line's blocks on public dev worlds: the pilot and the grep agent's judge check (weekly-line.ts generateWeeklyLinePilotCells). */
 export const WEEKLY_PILOT_BLOCK_IDS: readonly WeeklyLineBlockId[] = ['BGW-pilot', 'BGW-judge'];

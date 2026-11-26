@@ -1,0 +1,14 @@
+{
+  "run_id": "bgw-judge-alias.baseline-file-agent.baseline-a1-8a2a52f0",
+  "lease_usd": 8.67,
+  "committed_usd": 0.49911801,
+  "requests": 18,
+  "max_output_tokens": 32768,
+  "cell_exit_code": 143,
+  "timeout_hours": 17,
+  "timed_out": false,
+  "stopped_by": "SIGTERM",
+  "checkpoint_rows": 169,
+  "restored_from": null,
+  "resumed_from_checkpoint": true
+}

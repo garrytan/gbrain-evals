@@ -1,0 +1,482 @@
+{
+  "schema": "gbrain-evals/q1-cell-receipt/v1",
+  "cell_id": "bgw-pilot.gbrain-defaults.rs1-stable.p",
+  "run_cell": "bgw-pilot.gbrain-defaults.rs1-stable",
+  "config_sha256": "c2bc637721b9a1f07753ad39ff1275de45ad53420320195766156325db809473",
+  "run_status": "complete",
+  "invalid_reasons": [],
+  "stopped": null,
+  "set": "BGW-pilot",
+  "benchmark": "bg1-dev",
+  "split": "dev",
+  "block": "BGW-pilot",
+  "system": {
+    "kind": "gbrain-defaults",
+    "configuration": "rs1-stable",
+    "runner": "shim",
+    "capability_system": "gbrain-defaults",
+    "versions": {
+      "package": "gbrain (github:garrytan/gbrain#528595df98b0277640673455d8640e8887a6d1e9, 0.60.768.0), installed with bun install -g",
+      "runtime": "Bun 1.4.4 (oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4)",
+      "image": "shim built from eval/systems/gbrain-defaults/Dockerfile on python:3.12-slim@sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d",
+      "lock_sha256": null,
+      "vendor_benchmark_code": null
+    },
+    "capabilities": {
+      "protocol": 1,
+      "system": "gbrain-defaults",
+      "versions": {
+        "package": "gbrain (github:garrytan/gbrain#528595df98b0277640673455d8640e8887a6d1e9, 0.60.768.0), installed with bun install -g",
+        "runtime": "Bun 1.4.4 (oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4)",
+        "image": "shim built from eval/systems/gbrain-defaults/Dockerfile on python:3.12-slim@sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d",
+        "lock_sha256": null,
+        "vendor_benchmark_code": null
+      },
+      "configs": {
+        "recipe": {
+          "model_roles": {
+            "embedder": "voyage:voyage-4",
+            "dims": 1024,
+            "reranker": "voyage:rerank-2.5",
+            "expansion": "anthropic:claude-haiku-4-5-20251001",
+            "synthesis": "anthropic:claude-opus-4-7",
+            "extraction": "anthropic:claude-haiku-5-5"
+          },
+          "notes": "gbrain's shipped defaults as init resolves them with Voyage, OpenAI and Anthropic keys present: PGLite engine, voyage:voyage-4 at 1024 dimensions, search mode tokenmax (init's auto pick: reranker voyage:rerank-2.5 on, LLM expansion on, search limit 50, contextual retrieval per-chunk synopsis, semantic cache as gbrain's availability gate sets it), internal models from gbrain's tier defaults. These are the expected values; /capabilities adds `resolved`, read from the stack's reference install (gbrain search modes --json, gbrain models --json, config.json) with its sha256, and every later install and every serve start must resolve to the same hash."
+        }
+      },
+      "install": {
+        "recipe": [
+          "bun install -g github:garrytan/gbrain#<GBRAIN_SHA> (image build)",
+          "config.json provider_base_urls.{voyage,openai,anthropic} -> the egress relay to the metering proxy, written before init",
+          "gbrain init --pglite --json (dummy VOYAGE_API_KEY, OPENAI_API_KEY, ANTHROPIC_API_KEY in the environment)",
+          "gbrain apply-migrations --yes --non-interactive --no-autopilot-install (the setup step gbrain's postinstall runs; bun install -g blocks postinstall scripts)",
+          "the scripted 'defaults' reply: every first_run_decisions default option's argv, as init printed it",
+          "with GBRAIN_IDLE_UPKEEP=off (RS1's cells): gbrain config set maintenance.auto false, read back, so serve runs no idle upkeep (gbrain 0.60.715.0 and later; the off answer to init's upkeep question)",
+          "gbrain serve --surface starter over MCP stdio (the registration gbrain's harness_wiring option names)"
+        ],
+        "first_run_defaults": {
+          "search_mode": "tokenmax (gbrain config set search.mode tokenmax)",
+          "writeback": "salient (gbrain config set memory.auto_writeback salient)",
+          "harness_wiring": "skip in init's terms (no argv); the shim is the agent host and registers gbrain serve --surface starter"
+        }
+      },
+      "time": "in-text",
+      "time_notes": "Each session is a type: conversation page whose frontmatter carries the session date and whose turns carry the session time in gbrain's conversation-parser anchor shape (**Speaker** (YYYY-MM-DD h:mm AM): text). query takes no as-of date, so query_time is not sent; synthesize takes none either (relative-time questions resolve against the run date, the shipped behavior). think receives the question date as reference_date.",
+      "provenance": {
+        "status": "exact",
+        "mechanism": "One page per session at conversations/<date>/<source id>; every returned row names its page slug, which maps to exactly one ingested source id. Rows from pages gbrain created itself (none under the defaults on conversation pages) report unavailable."
+      },
+      "delete": "unsupported",
+      "delete_notes": "The starter surface has no page delete; delete_page is a full-surface op and the scoreboard calls only starter ops.",
+      "readiness": "put_page returns when the write commits (pending receipts are polled with get_write_request until terminal; a failed or conflicting receipt is a product error, and a replay with the same request id returns gbrain's stored receipt); embeddings are a later persistence effect. /finish stops serve, runs gbrain doctor --json with the brain to itself (a doctor under a live serve reports details.reason live_serve and fails the barrier), requires every expected page and 0 chunks missing embeddings, restarts serve while coverage is short (its persistence consumer drains the effects) until timeout_s, then reads gbrain's job queue (gbrain jobs list --json) and the outbox effects still pending (list_write_requests) and keeps serve up for drain rounds while any can still run, up to the same timeout_s, recording what is left as background_liabilities, and confirms every page through list_pages.",
+      "namespace": "one brain per namespace: a clean scripted install per namespace at one fixed GBRAIN_HOME, verified against the stack's reference install (resolved configuration, config hash without its install timestamp, starter tools/list). Brains move between /data/ns/<ns> and GBRAIN_HOME by rename and are never copied: gbrain binds a brain's content checkout to its inode and birth time, so a copied brain refuses writes with recovery_required.",
+      "parallel_namespaces": false,
+      "retrieval_policies": {
+        "vendor-default": {
+          "settings": {},
+          "notes": "Bare query: no limit (tokenmax resolves 50), no token_budget, expansion on by default, auto delivery (whole conversation pages up to 24,000 tokens). token_budget is refused: without return_unit it switches query to chunk delivery (src/core/ops/search.ts:131, src/core/search/evidence-delivery.ts:200)."
+        },
+        "fixed-evidence": {
+          "settings": {
+            "limit": 50,
+            "autocut": false
+          },
+          "notes": "query with limit 50 and autocut off, still no token_budget, so delivery stays auto; the harness packs 2k/8k/16k from the delivered pages."
+        },
+        "allowed_settings_overrides": [
+          "limit",
+          "autocut",
+          "expand",
+          "on_degraded (error | report)"
+        ],
+        "on_degraded": "error",
+        "degraded_reads": "Every query response's _meta.retrieval (vector_enabled, expansion_applied, cache, degraded, projection_readiness, vector_pool_underfilled, crag, delivery fallbacks and dropped_reasons) and its gbrain notices are returned under raw. A harness failure is: any degraded stage (the reranker reports failure as reranker_skipped, rerank_passthrough or rerank_failed; expansion as expansion_failed), rows without the confidence block's top_rerank_score in a reranked mode (meta.rerank is System One's field and stays absent under the defaults), expansion_applied false in an expansion mode (gbrain's expansion falls back to the bare query silently, for example on a proxy 402), a disabled vector arm, a projection that is not ready, a delivery fallback that is not shipped behavior (fetch_timeout, fetch_failed, row_limit, unsealed_page, anchor_not_located, page_missing or any unknown reason), or a delivery unit other than auto. With on_degraded error (the default) /retrieve answers HTTP 503 with error kind invalid_request, which memory-qa records as harness_invalid and retries; with on_degraded report it returns the items with raw.classification.outcome harness_invalid. A semantic cache hit, an underfilled vector pool, dropped delivery blocks and the preregistered shipped-behavior delivery fallbacks (redaction_unmapped: gbrain's secret redactor changed a block's text; no_text_chunks: a page with no text chunks delivers its hit as a chunk; the set is GBRAIN_SHIPPED_FALLBACKS and /capabilities shows it under shipped_behavior) are recorded under raw.classification.recorded as delivery_fallback:<reason>, counted in GET /health shipped_fallbacks, never classified as degraded and never answered with the 503.",
+        "item_mapping": "One item per query row in gbrain's rank order. Rows are gbrain's lean remote rows (the shape an agent reads); chunk_text is the delivered text (a whole conversation page under auto delivery). A type: conversation row -> type episode (chunk when gbrain marks it truncated), anything else chunk; source_ids is the page's source id, provenance exact."
+      },
+      "own_answer": {
+        "route": "POST /answer {ns, question, query_time, mode: synthesize | think, model}",
+        "synthesize": "the starter synthesize verb with gbrain's configured default model; synthesis_status ok -> outcome scored; extractive_fallback -> scored with degraded extractive_fallback (its own column); an unavailable error (dummy-key or compose failure path) -> harness_invalid.",
+        "think": "full surface only (GBRAIN_FULL_SURFACE=1 serves --surface full; every other call still uses starter ops, checked against the starter tools/list captured at template build): think with model = the reader and reference_date = the question date."
+      },
+      "streaming": "disabled",
+      "provider_routes": [
+        "POST /voyage/v1/embeddings (voyage-4, output_dimension 1024)",
+        "POST /voyage/v1/rerank (rerank-2.5)",
+        "POST /anthropic/v1/messages (expansion, synthesis, background extraction)",
+        "POST /openai/v1/* and GET /openai/v1/models (latest-model discovery on connect)"
+      ],
+      "telemetry_off": [],
+      "telemetry_notes": "gbrain sends no product telemetry. Its update check (GitHub) cannot leave the sandbox network and fails closed; the failure is recorded, not hidden.",
+      "agent_surface": {
+        "kind": "vendor-mcp",
+        "transport": "stdio",
+        "version": "gbrain serve --surface starter (gbrain 0.60.95.0)"
+      },
+      "deviations_from_vendor_code": [
+        "Sessions arrive through the shim as one put_page per session (the capture-hook path), not through gbrain's transcript import adapters; the page shape follows gbrain's transcript renderer (type: conversation, date, imessage-slack anchor lines) without its 4,000-character per-message cap or part splitting, so no turn text is cut.",
+        "The update check and autopilot install are not reachable from the sandbox; apply-migrations runs with --no-autopilot-install."
+      ],
+      "extensions": {
+        "POST /answer": "gbrain's own answer (see own_answer)",
+        "GET /stats": "serve resident memory (VmRSS, VmHWM from /proc) and the active brain's size on disk, for the stress pilot",
+        "POST /restart {ns}": "stop and start serve on the namespace's brain; restart_ms",
+        "GET /health": "adds called_ops (every MCP tool called since start), checked against resolved.starter_tools, and shipped_fallbacks (shipped-behavior delivery fallbacks counted per reason)",
+        "POST /finish": "adds doctor (the last doctor gate), doctor_rounds (their count), rounds (every doctor gate of the barrier), absent_pages, expected_pages and background_liabilities (pending_jobs by kind, oldest_pending_age_s, pending_effects by kind, drained, drain_rounds, the doctor's facts and queue backlog)"
+      },
+      "f6": {
+        "preregistration": "docs/benchmarks/2026-10-29-f6-current-master-preregistration.md",
+        "enabled_by": "GBRAIN_F6=1 (off for every Q1 cell); GBRAIN_F6_EXTRACT_CAP_USD is the extraction cap, a recorded parameter",
+        "surface": "gbrain serve --surface full (query's evidence-budget argument and recall's limit and include_expired are full-surface parameters)",
+        "build": [
+          "the Q1 install recipe at the cell's pin (launch env GBRAIN_SHA)",
+          "gbrain config set facts.default_visibility world at install (the posture gbrain's bootstrap writes when unset), read back",
+          "sessions written with put_page as in Q1",
+          "/finish, serve stopped: gbrain extract-conversation-facts --source-id default --max-cost-usd <cap left> --json --yes, resumed up to 3 passes while a pass ends partial; a pass that stops on its cap, or pages failed, pending, blocked, ambiguous, too large or unparsed after the last pass, or an unpriced model, fail the realization; with GBRAIN_F6_BUILD_PROBLEMS=record (RS1's cells) the last pass's unparsed pages and its failed pages are recorded instead when gbrain lists every failed page and each stopped on the provider's safety filter (reason content_filter or refusal), with that pass's status, counts and failed pages by reason",
+          "gbrain repair safe-chunks --source default --json, then --apply when the preview finds pages",
+          "the Q1 quiesce barrier",
+          "a fact index: one recall {session_id: cli:extract-conversation-facts:<slug>, limit 100, include_expired} per session page"
+        ],
+        "policies": "settings {op: query | recall, args, overlay}: query gets {query: question, ...args}; recall gets {question, query: question, ...args}; overlay writes all six search keys (evidence_date_header, evidence_titles, fact_source_pages, query_budget_unit, query_facts_block, saved_facts_supersede)",
+        "overlay_switch": "only when the overlay hash changes: stop serve, gbrain config set each key, gbrain config get each key (a mismatch is a product error that invalidates the cell), start serve; raw.overlay records the hash, whether it switched, the values read back and switch_ms",
+        "item_mapping": "rows in gbrain's delivered order. A query fact row (result_type fact) or a recall fact -> type fact, id fact:<fact_id>, text as delivered (recall: its date header line, then the fact), source_ids the session of the fact's source page (fact index, else one recall with the row's follow_up), valid_from/valid_to from the fact; unavailable when no page resolves. Page rows map as in Q1; recall's results[] map to type chunk.",
+        "enabled": true,
+        "gbrain_sha": "528595df98b0277640673455d8640e8887a6d1e9",
+        "extract_cap_usd": 1,
+        "overlay_keys": [
+          "search.evidence_date_header",
+          "search.evidence_titles",
+          "search.fact_source_pages",
+          "search.query_budget_unit",
+          "search.query_facts_block",
+          "search.saved_facts_supersede"
+        ]
+      },
+      "answer": {
+        "modes": [
+          "synthesize"
+        ],
+        "models": {
+          "synthesize": "anthropic:claude-opus-4-7"
+        }
+      },
+      "idle_upkeep": {
+        "configured_by": "GBRAIN_IDLE_UPKEEP",
+        "off": false,
+        "posture": null
+      },
+      "f6_build_problems": {
+        "configured_by": "GBRAIN_F6_BUILD_PROBLEMS",
+        "record": false,
+        "recorded": null
+      },
+      "shipped_behavior": {
+        "delivery_fallbacks": [
+          "no_text_chunks",
+          "redaction_unmapped"
+        ],
+        "preregistered": [
+          "no_text_chunks",
+          "redaction_unmapped"
+        ],
+        "configured_by": "GBRAIN_SHIPPED_FALLBACKS",
+        "matches_preregistration": true
+      },
+      "resolved": {
+        "gbrain_version": "gbrain 0.60.768.0",
+        "resolved_sha256": "a84d4af6835a5af0855cc281c46d211208d8532e700722e99ae77e58c9a5ec7a",
+        "config_sha256": "c266257bf4b64ac6d44a3bd6b854fa0a15780a39a63dbf03948e60d0310773e2",
+        "starter_tools_sha256": "3d74f14118c909f31075cb2714acd4304ec3c4b856ba52142b9480f061d02295",
+        "starter_tools": [
+          "add_timeline_entry",
+          "cancel_job",
+          "cancel_write_request",
+          "capture",
+          "context_pack",
+          "delta",
+          "edit_page",
+          "entity",
+          "find_anomalies",
+          "forget",
+          "get_agent_job",
+          "get_backlinks",
+          "get_ingest_log",
+          "get_page",
+          "get_recent_salience",
+          "get_skill",
+          "get_skill_asset",
+          "get_write_request",
+          "list_brain_skillpack",
+          "list_link_sources",
+          "list_pages",
+          "list_skills",
+          "list_write_requests",
+          "memory_conversation_mode",
+          "mute_notice",
+          "put_page",
+          "query",
+          "recall",
+          "remember",
+          "request_tools",
+          "resolve_slugs",
+          "search",
+          "submit_agent",
+          "synthesize",
+          "traverse_graph",
+          "whoami"
+        ],
+        "first_run_decisions": [
+          {
+            "id": "search_mode",
+            "default": "tokenmax",
+            "applied_argv": [
+              "gbrain",
+              "config",
+              "set",
+              "search.mode",
+              "tokenmax"
+            ]
+          },
+          {
+            "id": "writeback",
+            "default": "off",
+            "applied_argv": [
+              "gbrain",
+              "config",
+              "set",
+              "memory.auto_writeback",
+              "off"
+            ]
+          },
+          {
+            "id": "upkeep",
+            "default": "on",
+            "applied_argv": null
+          },
+          {
+            "id": "conversation_archive",
+            "default": "on",
+            "applied_argv": null
+          }
+        ],
+        "engine": "pglite",
+        "embedding_model": "voyage:voyage-4",
+        "embedding_dimensions": 1024,
+        "search_mode": "tokenmax",
+        "search": {
+          "autocut": false,
+          "autocut_jump": 0.2,
+          "autocut_min_keep": 1,
+          "autocut_min_top": 0.35,
+          "cache_enabled": false,
+          "cache_similarity_threshold": 0.92,
+          "cache_ttl_seconds": 3600,
+          "collapse": true,
+          "contextual_retrieval": "per_chunk_synopsis",
+          "contextual_retrieval_disabled": false,
+          "cross_modal_both_image_weight": 0.4,
+          "cross_modal_both_text_weight": 0.6,
+          "cross_modal_llm_intent": false,
+          "diverse_pool_depth": 0,
+          "evidence_cosine_floor": 0.8,
+          "expansion": false,
+          "expansion_variant_budget": null,
+          "floor_ratio": null,
+          "graph_signals": true,
+          "image_query_image_refinement_weight": 0.6,
+          "image_query_text_refinement_weight": 0.4,
+          "intentWeighting": true,
+          "keywordOrFallback": true,
+          "keyword_arm_confidence_floor": null,
+          "keyword_phrase": false,
+          "metadata_boost_gate": "lexical",
+          "qualified_aliases": false,
+          "rank_priors": true,
+          "relationalRetrieval": true,
+          "relational_chain_slots": 10,
+          "relational_orient_onehop": false,
+          "relational_planner": true,
+          "relational_rerank_pin": 3,
+          "relational_retrieval_depth": 2,
+          "reranker_enabled": true,
+          "reranker_gate": "off",
+          "reranker_gate_min_gap": 0.05,
+          "reranker_model": "voyage:rerank-3-lite",
+          "reranker_timeout_ms": 5000,
+          "reranker_top_n_in": 50,
+          "reranker_top_n_out": null,
+          "searchLimit": 50,
+          "title_boost": 1.25,
+          "title_qualified": false,
+          "tokenBudget": null,
+          "unified_multimodal": false,
+          "unified_multimodal_only": false
+        },
+        "model_tiers": {
+          "deep": "anthropic:claude-opus-4-7",
+          "reasoning": "anthropic:claude-sonnet-4-6",
+          "subagent": "anthropic:claude-sonnet-4-6",
+          "utility": "anthropic:claude-haiku-4-5-20251001"
+        },
+        "model_tasks": {
+          "models.dream.synthesize": "anthropic:claude-sonnet-4-6",
+          "models.dream.synthesize_verdict": "anthropic:claude-haiku-4-5-20251001",
+          "models.dream.patterns": "anthropic:claude-sonnet-4-6",
+          "models.dream.extract_atoms": "anthropic:claude-haiku-4-5-20251001",
+          "models.drift": "anthropic:claude-sonnet-4-6",
+          "models.standing_questions": "anthropic:claude-opus-4-7",
+          "models.think": "anthropic:claude-opus-4-7",
+          "models.fence_repair": "openai:gpt-6.1-sol",
+          "models.content_repair": "anthropic:claude-opus-5-5",
+          "models.subagent": "anthropic:claude-sonnet-4-6",
+          "facts.extraction_model": "anthropic:claude-haiku-5-5",
+          "models.eval.longmemeval": "anthropic:claude-sonnet-4-6",
+          "models.eval.contradictions_judge": "anthropic:claude-haiku-4-5-20251001",
+          "models.expansion": "anthropic:claude-haiku-4-5-20251001",
+          "models.contextual_synopsis": "anthropic:claude-haiku-4-5-20251001",
+          "models.chat": "anthropic:claude-sonnet-4-6"
+        }
+      }
+    }
+  },
+  "arm": {
+    "id": "p",
+    "arm": "component",
+    "mode": "packed",
+    "policy": "fixed-evidence",
+    "budget": 8000,
+    "variant": null,
+    "label": "P: A with the facts block"
+  },
+  "readers": [
+    "anthropic:claude-opus-5-5"
+  ],
+  "reader_replicates": {},
+  "effort": "medium",
+  "instrument": {
+    "id": "bg1",
+    "sha256": "9598aacb076ba7bc8e589546008d6db30fa57d078e4140194b1ea05e2564102a",
+    "judge": null
+  },
+  "frontier": {
+    "judges": [
+      "openai:gpt-6-astra"
+    ],
+    "readers": null,
+    "sample": null,
+    "per_reader": true,
+    "judge_by_reader": {
+      "anthropic:claude-opus-5-5": "openai:gpt-6-astra"
+    },
+    "settings": {
+      "effort": "medium",
+      "max_tokens": 8000
+    },
+    "instrument_ids": [
+      "bg1@openai:gpt-6-astra"
+    ]
+  },
+  "selection": {
+    "questions": 64,
+    "conversations": 1,
+    "scheduled_sha256": "b4c65c2d16d3644ba1b18d337418e8a1911a36eacc7ec44007cb86746c0533f5"
+  },
+  "counts": {
+    "rows": 64,
+    "answers": 64,
+    "answers_promised": 64,
+    "judgments": 64,
+    "unjudged": 0,
+    "outcomes": {
+      "scored": 64
+    }
+  },
+  "per_reader_mean": {
+    "anthropic:claude-opus-5-5": null
+  },
+  "per_reader_frontier_mean": {
+    "anthropic:claude-opus-5-5": 0.984375
+  },
+  "realizations": [
+    {
+      "conversation": "bg1-dev-01",
+      "realization_id": "e57b2c3728a1c6bb96b474b63c48fa23ef4d8238c5b74237918dff9fa01625c2",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": {
+        "pending_jobs": {},
+        "oldest_pending_age_s": null,
+        "pending_effects": {},
+        "drained": true,
+        "drain_rounds": 1,
+        "doctor": {
+          "facts_backlog": {
+            "waiting": 0,
+            "delayed": 0,
+            "active": 0
+          },
+          "chronicle_pending_pages": 9,
+          "queue_waiting": 0
+        }
+      }
+    }
+  ],
+  "ingest": {
+    "conversations": 1,
+    "messages": 4461,
+    "ingested_tokens": 187021,
+    "wall_ms": {
+      "total": 2118761,
+      "p50": 2118761,
+      "p95": 2118761
+    },
+    "failed_sessions": 0,
+    "degraded_conversations": 0,
+    "readiness_samples_ms": [],
+    "write_start_to_queryable_ms": {
+      "p50": null,
+      "p95": null,
+      "probes": 0,
+      "found": 0,
+      "missed": 0,
+      "not_measurable": 0
+    }
+  },
+  "timings": {
+    "retrieval_ms": {
+      "p50": 1361.9,
+      "p95": 1462.8
+    },
+    "answer_ms": {
+      "p50": 6168.5,
+      "p95": 8318.2
+    }
+  },
+  "usage": {
+    "input": 530742,
+    "output": 36376,
+    "cache_read": 0,
+    "cache_write": 0
+  },
+  "spend": {
+    "source": "metering proxy (whole cell, every arm)",
+    "usd": {
+      "ingest": 0.257921,
+      "retrieval": 0.044549,
+      "reader": 2.850488,
+      "judge": 0.36469,
+      "background_tail": 0
+    },
+    "total_usd": 3.517648,
+    "background_tail_usd_by_realization": {}
+  },
+  "files": {
+    "rows": "rows.ndjson",
+    "answers": "answers.ndjson",
+    "judgments": "judgments.ndjson",
+    "run_config": "run-config.json",
+    "readiness": "readiness.ndjson",
+    "contexts": "../../runs/bgw-pilot.gbrain-defaults.rs1-stable/contexts.ndjson"
+  }
+}

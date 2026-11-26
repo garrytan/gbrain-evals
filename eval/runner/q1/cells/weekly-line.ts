@@ -257,8 +257,8 @@ export const WEEKLY_PILOT_SETS = {
 /** The counted set each pilot length precedes, whose rates set the pilot's caps. */
 export const WEEKLY_PILOT_COUNTED: Readonly<Record<WeeklyPilotLength, WeeklyLineCountedSet>> = { standard: 'BGW', long: 'BGW-long', alias: 'BGW' };
 type WeeklyPilotSetId = (typeof WEEKLY_PILOT_SETS)[WeeklyPilotLength][keyof (typeof WEEKLY_PILOT_SETS)[WeeklyPilotLength]];
-/** Where a set of the line's cells runs: one week of Set W (BGW, or BGW-long for a W1-long batch), or the public dev worlds of the pilot or the judge check at either length (WEEKLY_PILOT_SETS). */
-type WeeklyLineTarget = { set: WeeklyLineCountedSet; week: WeeklyLineWeek; worlds: readonly string[] } | { set: WeeklyPilotSetId };
+/** Where a set of the line's cells runs: one week of Set W (BGW, or BGW-long for a W1-long batch), the public dev worlds of the pilot or the judge check at either length (WEEKLY_PILOT_SETS), or the alias pilot's stage 2 (BGW-misspell-alias). */
+type WeeklyLineTarget = { set: WeeklyLineCountedSet; week: WeeklyLineWeek; worlds: readonly string[] } | { set: WeeklyPilotSetId | typeof WEEKLY_ALIAS_STAGE2_SET };
 
 /**
  * How a week's cell too long for one VM splits into launch units: the most worlds one unit can ingest and answer within
@@ -406,11 +406,13 @@ export const WEEKLY_REREAD_JUDGE_RESERVATIONS = 2;
  * each stage's expected spend instead of R111's tenth of a block budget: the mint (mint.sh --dev on the three alias
  * worlds); the grep agent's stage, its pilot row and the judge check's cells, with the labelling pass at
  * WEEKLY_LINE_LABEL_CAP_USD; and the other rows' stage, each row's cap split between its cell and particle-1's re-read
- * as weeklyLinePilotCaps splits it.
+ * as weeklyLinePilotCaps splits it. The 2026-11-25 re-split (GBEV-3's ruling on #650) raises the mint to its estimate
+ * with room, keeps the grep agent's stage, and takes the other rows' stage down to fit: each of those rows keeps its re-read
+ * share and its cell gets the stage's rest in proportion to the cells' estimates.
  */
 export const WEEKLY_ALIAS_PILOT_MONEY = {
-  window_usd: 45, mint_usd: 11, judge_check_cells_usd: 8.67,
-  row_cap_usd: { 'grep-agent': 4.33, 'extract-first': 9.42, gbrain: 5.47, 'memory-bank': 5.11 } as Readonly<Record<WeeklyLineRow, number>>,
+  window_usd: 45, mint_usd: 15, judge_check_cells_usd: 8.67,
+  row_cap_usd: { 'grep-agent': 4.33, 'extract-first': 7.42, gbrain: 4.43, 'memory-bank': 4.15 } as Readonly<Record<WeeklyLineRow, number>>,
 } as const;
 
 /** One row's pilot money: its block budget, its cap (a tenth of the budget), its re-read's share and the cells' share (the cell's lease). */
@@ -465,6 +467,39 @@ export function generateWeeklyLineJudgeCheckCells(length: WeeklyPilotLength = 's
   return weeklyLineCells({ set: WEEKLY_PILOT_SETS[length].judge }, null, ['grep-agent']).map(c => withLease(c, usd, `weekly judge check (R78): its $${WEEKLY_LINE_JUDGE_CHECK_PAUSE_USD} pause less the labelling pass's $${WEEKLY_LINE_LABEL_CAP_USD}`));
 }
 
+/**
+ * The alias pilot's stage 2 (Amendment 1, its stage-2 lines of 2026-11-25, on Garry Tan's "Do it" to GBEV-3's J2): gbrain,
+ * extract-first and memory-bank, each read live by claude-opus-5-5 alone with no particle-1 re-read, on all three alias
+ * worlds. Each cell ingests its three worlds whole and asks only the 34 questions whose evidence names their subject by
+ * its misspelling (set BGW-misspell-alias, bg1-names.ts BG1_DEV_ALIAS_MISSPELLING_QUESTIONS). The stage has its own
+ * paid window with no mint, so its rows' caps together stay at or under window_usd; each cell's lease is its row's cap.
+ */
+export const WEEKLY_ALIAS_STAGE2_SET = 'BGW-misspell-alias' as const;
+export const WEEKLY_ALIAS_STAGE2_ROWS: readonly WeeklyLineRow[] = ['extract-first', 'gbrain', 'memory-bank'];
+export const WEEKLY_ALIAS_STAGE2_MONEY = {
+  window_usd: 20,
+  row_cap_usd: { 'extract-first': 14.1, gbrain: 3, 'memory-bank': 2.9 } as Readonly<Partial<Record<WeeklyLineRow, number>>>,
+} as const;
+
+/**
+ * A stage-2 cell's estimate: BG1-C's rate per world split into its ingest, which every one of the three worlds pays in
+ * full, and its reads and gating judges, which scale with the questions asked (the stage's 34 of a world's 64).
+ */
+function weeklyStage2Estimate(c: Pick<CellDefinition, 'set' | 'system' | 'configuration'>): CellEstimate {
+  const s = ALL_SETS[c.set], key = `${c.system}:${c.configuration}`, row = BG1C_RATES.row_usd_per_world[key], ingest = ingestUsd(key, WEEKLY_LINE_RATE_WORLD_TOKENS);
+  return estimateOf({ ingest: s.conversations * ingest, reads_and_judges: (row - ingest) * s.questions / ALL_SETS['BGW-pilot'].questions });
+}
+
+/** The alias pilot's stage-2 cells (WEEKLY_ALIAS_STAGE2_ROWS on BGW-misspell-alias) at the gbrain build passed in, each leased at its row's stage-2 cap. */
+export function generateWeeklyLineMisspellingCells(gbrain: WeeklyLineGbrainBuild): CellDefinition[] {
+  const problems = weeklyLineBuildProblems(gbrain);
+  if (problems.length) throw new Error(`the alias pilot's stage 2 can't build: ${problems.join('; ')}`);
+  return weeklyLineCells({ set: WEEKLY_ALIAS_STAGE2_SET }, gbrain, WEEKLY_ALIAS_STAGE2_ROWS).map(c => {
+    const cap = WEEKLY_ALIAS_STAGE2_MONEY.row_cap_usd[WL_ROW_OF[c.system]]!;
+    return withLease({ ...c, estimate: weeklyStage2Estimate(c) }, cap, `weekly alias pilot stage 2 (Amendment 1, 2026-11-25): the row's cap inside the stage's own window`);
+  });
+}
+
 /** The variable that names the pilot's gbrain build to every pilot command (`<release>@<commit>`), so a VM regenerates the same cells. */
 export const WEEKLY_PILOT_GBRAIN_ENV = 'GBRAIN_EVALS_WEEKLY_PILOT_GBRAIN';
 
@@ -505,13 +540,14 @@ export const WEEKLY_LINE_LABELLER = 'gemini:gemini-3.8-flash';
  * and each block's estimate and cap (the pilot's: its rows' caps; the judge check's: its pause). The pilot's caps and recorded
  * rates are those of the counted set it precedes, `counted` (BGW unless a W1-long block is amended in), and its worlds
  * are `length`'s (WEEKLY_PILOT_SETS), so the long pilot is buildWeeklyPilotManifest(gbrain, 'BGW-long', 'long') and the
- * alias pilot buildWeeklyPilotManifest(gbrain, 'BGW', 'alias').
+ * alias pilot buildWeeklyPilotManifest(gbrain, 'BGW', 'alias'). The alias manifest also holds the stage-2 cells
+ * (generateWeeklyLineMisspellingCells), which only pilot.ts campaigns --misspelling-stage writes campaigns for.
  */
 export function buildWeeklyPilotManifest(gbrain: WeeklyLineGbrainBuild, counted: WeeklyLineCountedSet = 'BGW', length: WeeklyPilotLength = 'standard'): WeeklyPilotManifest {
   const pilot = generateWeeklyLinePilotCells(gbrain, counted, length), judge = generateWeeklyLineJudgeCheckCells(length), caps = weeklyLinePilotCaps(counted, length);
   const pause = length === 'alias' ? round(judge[0].lease!.usd + WEEKLY_LINE_LABEL_CAP_USD) : WEEKLY_LINE_JUDGE_CHECK_PAUSE_USD;
   const sets = WEEKLY_PILOT_SETS[length], worldsOf = (set: WeeklyPilotSetId) => (ALL_SETS[set].only_conversations ?? []).join(' and ');
-  const rereads = weeklyLineRereadPlans(pilot);
+  const rereads = weeklyLineRereadPlans(pilot), stage2 = length === 'alias' ? generateWeeklyLineMisspellingCells(gbrain) : [];
   const sum = (xs: Array<{ estimate: CellEstimate }>) => xs.reduce((s, x) => s + x.estimate.usd, 0);
   const labelUsd = WEEKLY_LINE_READERS.length * WEEKLY_LINE_JUDGE_CHECK_PER_JUDGE * BG1_MEASURED.canonical_judge_usd_per_call;
   const pilotUsd = round(sum(pilot) + sum(rereads)), judgeUsd = round(sum(judge) + labelUsd);
@@ -520,12 +556,12 @@ export function buildWeeklyPilotManifest(gbrain: WeeklyLineGbrainBuild, counted:
   return {
     schema: MANIFEST_SCHEMA, generated_by: 'eval/runner/q1/cells/weekly-line.ts buildWeeklyPilotManifest', preregistration: WEEKLY_LINE_PREREGISTRATION, readers: [...WEEKLY_LINE_READERS], effort: WEEKLY_LINE_EFFORT,
     prices: Object.fromEntries(models.map(m => { const { input, output, cache_read, cache_write } = listPrice(m); return [m, { input, output, ...(cache_read !== undefined ? { cache_read } : {}), ...(cache_write !== undefined ? { cache_write } : {}) }]; })),
-    assumptions: ASSUMPTIONS, sets: [WEEKLY_LINE_SETS[sets.pilot], WEEKLY_LINE_SETS[sets.judge]],
+    assumptions: ASSUMPTIONS, sets: [WEEKLY_LINE_SETS[sets.pilot], WEEKLY_LINE_SETS[sets.judge], ...(stage2.length ? [WEEKLY_LINE_SETS[WEEKLY_ALIAS_STAGE2_SET]] : [])],
     blocks: [
       { id: 'BGW-pilot', label: `weekly line pilot on ${worldsOf(sets.pilot)} (R111): the four rows at the counted settings and particle-1's re-reads`, plan_usd: pilotUsd, estimate_usd: pilotUsd, cap_usd: pilotCap },
       { id: 'BGW-judge', label: `weekly line judge check (R78): the grep agent on ${worldsOf(sets.judge)} and the labelling pass`, plan_usd: judgeUsd, estimate_usd: judgeUsd, cap_usd: pause },
     ],
-    cells: [...pilot, ...judge], smoke_cells: [], addon_cells: [],
+    cells: [...pilot, ...judge, ...stage2], smoke_cells: [], addon_cells: [],
     total_usd: round(pilotUsd + judgeUsd), plan_total_usd: round(pilotUsd + judgeUsd), cap_usd: round(pilotCap + pause),
     campaign_id: BGW_CAMPAIGN, length, gbrain_build: { ...gbrain }, frontier_judges: { ...WEEKLY_LINE_JUDGE_BY_READER }, reread_plans: rereads, pilot_caps: caps, rates: weeklyLineRates(counted),
     judge_check: { pause_usd: pause, cells_cap_usd: judge[0].lease!.usd, label_cap_usd: WEEKLY_LINE_LABEL_CAP_USD, per_judge: WEEKLY_LINE_JUDGE_CHECK_PER_JUDGE, labeller: WEEKLY_LINE_LABELLER },

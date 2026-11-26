@@ -66,6 +66,16 @@ export const BG1_DEV_LONG_CONVERSATIONS: readonly string[] = ['bg1-dev-long-01',
  * (bg1-dev-alias-01) and the grep agent's alias judge check (bg1-dev-alias-02 and -03).
  */
 export const BG1_DEV_ALIAS_CONVERSATIONS: readonly string[] = ['bg1-dev-alias-01', 'bg1-dev-alias-02', 'bg1-dev-alias-03'];
+/**
+ * The 34 alias dev questions whose evidence names their subject by its misspelling (changing-facts-gen.ts
+ * misspellingQuestionIds over the three committed plans), the questions the alias pilot's stage 2 asks (Amendment 1,
+ * 2026-11-25 stage-2 lines). The grep agent with claude-opus-5-5 answered 22 of them right in stage 1.
+ */
+export const BG1_DEV_ALIAS_MISSPELLING_QUESTIONS: readonly string[] = [
+  'bg1-dev-alias-01:s2_corrected:0', 'bg1-dev-alias-01:s2_corrected:1', 'bg1-dev-alias-01:s3_repeated_stale:5', 'bg1-dev-alias-01:s3_repeated_stale:6', 'bg1-dev-alias-01:s3_repeated_stale:7', 'bg1-dev-alias-01:s4_conflicting:1', 'bg1-dev-alias-01:s4_conflicting:5', 'bg1-dev-alias-01:s4_conflicting:6', 'bg1-dev-alias-01:s5_withdrawn:7', 'bg1-dev-alias-01:s7_as_known:0', 'bg1-dev-alias-01:s7_as_known:2', 'bg1-dev-alias-01:s8_history:2', 'bg1-dev-alias-01:s8_history:4', 'bg1-dev-alias-01:s8_history:7',
+  'bg1-dev-alias-02:s2_corrected:3', 'bg1-dev-alias-02:s5_withdrawn:0', 'bg1-dev-alias-02:s5_withdrawn:1', 'bg1-dev-alias-02:s5_withdrawn:4', 'bg1-dev-alias-02:s5_withdrawn:5', 'bg1-dev-alias-02:s8_history:1',
+  'bg1-dev-alias-03:s1_updated:0', 'bg1-dev-alias-03:s1_updated:4', 'bg1-dev-alias-03:s1_updated:5', 'bg1-dev-alias-03:s2_corrected:0', 'bg1-dev-alias-03:s2_corrected:1', 'bg1-dev-alias-03:s5_withdrawn:2', 'bg1-dev-alias-03:s5_withdrawn:3', 'bg1-dev-alias-03:s6_as_of:6', 'bg1-dev-alias-03:s7_as_known:5', 'bg1-dev-alias-03:s7_as_known:7', 'bg1-dev-alias-03:s8_history:0', 'bg1-dev-alias-03:s8_history:1', 'bg1-dev-alias-03:s8_history:2', 'bg1-dev-alias-03:s8_history:3',
+];
 /** Kept worlds per launch unit; wave A (the internal pilot) is the first BG1_WAVE_A kept worlds. */
 export const BG1_KEPT_UNITS = 6;
 export const BG1_WAVE_A = 12;

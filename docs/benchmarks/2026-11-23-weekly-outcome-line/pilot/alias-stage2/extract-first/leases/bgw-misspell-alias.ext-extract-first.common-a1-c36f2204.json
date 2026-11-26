@@ -1,0 +1,13 @@
+{
+  "run_id": "bgw-misspell-alias.ext-extract-first.common-a1-c36f2204",
+  "lease_usd": 14.1,
+  "committed_usd": 12.728119069999948,
+  "requests": 26680,
+  "max_output_tokens": 32768,
+  "cell_exit_code": 0,
+  "timeout_hours": 17,
+  "timed_out": false,
+  "checkpoint_rows": 34,
+  "realization_id": "real-bgw-misspell-alias.ext-extract-first.common-95ef0ce59e966e8a",
+  "realization_status": "complete"
+}

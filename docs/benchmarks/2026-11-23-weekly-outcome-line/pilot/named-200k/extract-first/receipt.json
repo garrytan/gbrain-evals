@@ -1,0 +1,152 @@
+{
+  "schema": "gbrain-evals/q1-cell-receipt/v1",
+  "cell_id": "bgw-pilot.ext-extract-first.common.component-b8000",
+  "run_cell": "bgw-pilot.ext-extract-first.common",
+  "config_sha256": "fb04578e4499af978f397ebea9b48067289a2c36ba054c18214b11b2a2e741d5",
+  "run_status": "complete",
+  "invalid_reasons": [],
+  "stopped": null,
+  "set": "BGW-pilot",
+  "benchmark": "bg1-dev",
+  "split": "dev",
+  "block": "BGW-pilot",
+  "system": {
+    "kind": "ext-extract-first",
+    "configuration": "common",
+    "runner": "shim",
+    "capability_system": "ext-extract-first",
+    "versions": {
+      "described_in": "docs/comparison-systems/ext-extract-first/capability.json",
+      "original_sha256": "1742faee7a63f1368ba8c43a910154f79a2f78bd547ea3e8bafc21792df09a2b"
+    },
+    "capabilities": {
+      "described_in": "docs/comparison-systems/ext-extract-first/capability.json",
+      "original_sha256": "35badd89b00823784444e95ddbc13bf5bf64ceefbe9b4d7aafa6ab2ca7aeed7f"
+    }
+  },
+  "arm": {
+    "id": "component-b8000",
+    "arm": "component",
+    "mode": "packed",
+    "policy": "fixed-evidence",
+    "budget": 8000,
+    "variant": null,
+    "label": "component, 8,000 tokens"
+  },
+  "readers": [
+    "anthropic:claude-opus-5-5"
+  ],
+  "reader_replicates": {},
+  "effort": "medium",
+  "instrument": {
+    "id": "bg1",
+    "sha256": "9598aacb076ba7bc8e589546008d6db30fa57d078e4140194b1ea05e2564102a",
+    "judge": null
+  },
+  "frontier": {
+    "judges": [
+      "openai:gpt-6-astra"
+    ],
+    "readers": null,
+    "sample": null,
+    "per_reader": true,
+    "judge_by_reader": {
+      "anthropic:claude-opus-5-5": "openai:gpt-6-astra"
+    },
+    "settings": {
+      "effort": "medium",
+      "max_tokens": 8000
+    },
+    "instrument_ids": [
+      "bg1@openai:gpt-6-astra"
+    ]
+  },
+  "selection": {
+    "questions": 64,
+    "conversations": 1,
+    "scheduled_sha256": "b4c65c2d16d3644ba1b18d337418e8a1911a36eacc7ec44007cb86746c0533f5"
+  },
+  "counts": {
+    "rows": 64,
+    "answers": 64,
+    "answers_promised": 64,
+    "judgments": 64,
+    "unjudged": 0,
+    "outcomes": {
+      "scored": 64
+    }
+  },
+  "per_reader_mean": {
+    "anthropic:claude-opus-5-5": null
+  },
+  "per_reader_frontier_mean": {
+    "anthropic:claude-opus-5-5": 0.984375
+  },
+  "realizations": [
+    {
+      "conversation": "bg1-dev-01",
+      "realization_id": "8bffad730a8c49f4620655a51d7ea23f8c6fe93a79e3081e002b76e5de5851a8",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    }
+  ],
+  "ingest": {
+    "conversations": 1,
+    "messages": 4461,
+    "ingested_tokens": 187021,
+    "wall_ms": {
+      "total": 6706953,
+      "p50": 6706953,
+      "p95": 6706953
+    },
+    "failed_sessions": 0,
+    "degraded_conversations": 0,
+    "readiness_samples_ms": [],
+    "write_start_to_queryable_ms": {
+      "p50": null,
+      "p95": null,
+      "probes": 0,
+      "found": 0,
+      "missed": 0,
+      "not_measurable": 0
+    }
+  },
+  "timings": {
+    "retrieval_ms": {
+      "p50": 572.3,
+      "p95": 785.6
+    },
+    "answer_ms": {
+      "p50": 5797.5,
+      "p95": 8796.4
+    }
+  },
+  "usage": {
+    "input": 485630,
+    "output": 35699,
+    "cache_read": 0,
+    "cache_write": 0
+  },
+  "spend": {
+    "source": "metering proxy (whole cell, every arm)",
+    "usd": {
+      "ingest": 3.635958,
+      "retrieval": 0.000164,
+      "reader": 2.6565,
+      "judge": 0.36636,
+      "background_tail": 0
+    },
+    "total_usd": 6.658982,
+    "background_tail_usd_by_realization": {}
+  },
+  "files": {
+    "rows": "rows.ndjson",
+    "answers": "answers.ndjson",
+    "judgments": "judgments.ndjson",
+    "run_config": "run-config.json",
+    "readiness": "readiness.ndjson",
+    "contexts": "../../runs/bgw-pilot.ext-extract-first.common/contexts.ndjson"
+  }
+}

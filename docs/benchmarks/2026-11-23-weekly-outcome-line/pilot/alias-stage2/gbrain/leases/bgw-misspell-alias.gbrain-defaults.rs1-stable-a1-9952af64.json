@@ -1,0 +1,12 @@
+{
+  "run_id": "bgw-misspell-alias.gbrain-defaults.rs1-stable-a1-9952af64",
+  "lease_usd": 3,
+  "committed_usd": 0.058643999999999974,
+  "requests": 3,
+  "max_output_tokens": 32768,
+  "cell_exit_code": 0,
+  "timeout_hours": 8,
+  "timed_out": false,
+  "checkpoint_rows": 67,
+  "restored_from": "real-bgw-misspell-alias.gbrain-defaults.rs1-stable-1ea73c280eb12a77"
+}
