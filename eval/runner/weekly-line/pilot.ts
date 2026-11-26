@@ -223,7 +223,7 @@ export function writePilotCampaigns(m: WeeklyPilotManifest, o: { out: string; wi
     mkdirSync(o.out, { recursive: true });
     const campaigns = stage.ledgers.map(l => {
       const file = join(o.out, `${l.name}.campaign.json`);
-      writeFileSync(file, JSON.stringify(weeklyPilotCampaignManifest(m, { units: l.units, campaign_id: l.campaign_id!, cap_usd: l.cap_usd, window: o.window!, worldEnd: o.worldEnd! }), null, 2) + '\n');
+      writeFileSync(file, JSON.stringify(weeklyPilotCampaignManifest(m, { units: l.units, campaign_id: l.campaign_id!, cap_usd: l.cap_usd, window: o.window!, windowCapUsd: over, worldEnd: o.worldEnd! }), null, 2) + '\n');
       return { name: l.name, file };
     });
     const env = { GBRAIN_EVALS_BG1_WORLD_END: o.worldEnd!, [WEEKLY_PILOT_GBRAIN_ENV]: `${m.gbrain_build.release}@${m.gbrain_build.commit}`, [WEEKLY_PILOT_LENGTH_ENV]: m.length };
@@ -242,7 +242,7 @@ export function writePilotCampaigns(m: WeeklyPilotManifest, o: { out: string; wi
   mkdirSync(o.out, { recursive: true });
   const campaigns = ledgers.filter(l => l.kind === 'campaign').map(l => {
     const file = join(o.out, `${l.name}.campaign.json`);
-    writeFileSync(file, JSON.stringify(weeklyPilotCampaignManifest(m, { units: l.units, campaign_id: l.campaign_id!, cap_usd: l.cap_usd, window: o.window!, worldEnd: o.worldEnd! }), null, 2) + '\n');
+    writeFileSync(file, JSON.stringify(weeklyPilotCampaignManifest(m, { units: l.units, campaign_id: l.campaign_id!, cap_usd: l.cap_usd, window: o.window!, windowCapUsd: o.windowCapUsd!, worldEnd: o.worldEnd! }), null, 2) + '\n');
     return { name: l.name, file };
   });
   const paid = (cap: number) => ['--paid-window', o.window!, '--window-cap-usd', String(cap), '--ledger-cap-usd', String(cap), '--lease-usd', String(cap)];

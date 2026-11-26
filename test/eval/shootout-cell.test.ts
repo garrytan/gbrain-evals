@@ -192,3 +192,31 @@ describe('remote cell', () => {
     expect(ledgerStatus({ ledgerPath: join(out, 'lease.sqlite'), runId: 'remote-lease-1' }).run!.budget_usd).toBe(0.5);
   }, 30_000);
 });
+
+describe('campaigns in one paid window', () => {
+  beforeEach(() => closeLedgers());
+
+  // Value: protects=a paid window's cap holds across every campaign written for it, so a fresh campaign can't reserve the window's money again; fails_when=each campaign reserves against a ledger of its own at its own cap, blind to what the window's other campaigns hold or settled; why_new=#652 round-1 note on pilot.ts:226 and shootout-cell.ts:1138; seam=shootout-cell.ts Campaign init, run and reserve with paid_window; no_claim=the re-read, labelling and mint commands, which keep ledgers of their own
+  test('settled spend in another campaign of the window plus a new lease over the window cap refuses before the launcher runs', async () => {
+    const ledger = join(tmp, 'window-test.sqlite');
+    const paid_window = { unit: 'test-window', cap_usd: 10 };
+    const first = campaign({ cap_usd: 8, ledger, paid_window }, [8]);
+    const queued = campaign({ cap_usd: 5, ledger, paid_window }, [5]);
+    const a = new Campaign(first.manifestPath, first.state), b = new Campaign(queued.manifestPath, queued.state);
+    a.init(); b.init();
+    a.reserve('cell-0');
+    expect(await a.launch('cell-0', vmSpends(a, 7))).toMatchObject({ status: 'settled', actual_usd: 7 });
+    let launched = 0;
+    expect(() => b.reserve('cell-0')).toThrow(/would take the program to \$12\.0000, over its \$10\.00 cap/);
+    await expect(b.launch('cell-0', async () => { launched++; return 0; })).rejects.toThrow(/has no reserved lease/);
+    const fresh = campaign({ cap_usd: 5, ledger, paid_window }, [5]);
+    expect(() => new Campaign(fresh.manifestPath, fresh.state).init()).toThrow(/exceeds the \$3\.00 left of the \$10\.00 program cap/);
+    expect(launched).toBe(0);
+    expect(b.status().committed_usd).toBe(0);
+  });
+
+  test('a paid window must name its unit and cover the campaign cap', () => {
+    const { manifestPath, state } = campaign({ cap_usd: 10, paid_window: { unit: 'test-window', cap_usd: 5 } });
+    expect(() => new Campaign(manifestPath, state)).toThrow(/paid_window must name the granted unit/);
+  });
+});
