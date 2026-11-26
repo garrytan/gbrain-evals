@@ -26,7 +26,7 @@ const lines = <T>(path: string): T[] => readFileSync(path, 'utf8').split('\n').f
 export function readCell(dir: string): { answers: Scored[]; spend_usd: number; gbrain: string | null } {
   const verdicts = new Map(lines<Judgment>(join(dir, 'judgments.ndjson')).filter(j => j.view === 'gating').map(j => [j.answer_id, j.score]));
   const answers = lines<Answer>(join(dir, 'answers.ndjson')).map(a => ({ ...a, right: verdicts.get(a.answer_id) === 1 }));
-  const spend = readdirSync(join(dir, 'leases')).reduce((s, f) => s + (JSON.parse(readFileSync(join(dir, 'leases', f), 'utf8')) as { committed_usd: number }).committed_usd, 0);
+  const spend = readdirSync(join(dir, 'leases')).sort().reduce((s, f) => s + (JSON.parse(readFileSync(join(dir, 'leases', f), 'utf8')) as { committed_usd: number }).committed_usd, 0);
   const pkg = (JSON.parse(readFileSync(join(dir, 'receipt.json'), 'utf8')) as { system: { versions?: { package?: string } } }).system.versions?.package ?? '';
   const m = /gbrain#([0-9a-f]{40}), ([0-9.]+)\)/.exec(pkg);
   return { answers, spend_usd: spend, gbrain: m ? `v${m[2]} (${m[1]})` : null };
@@ -91,7 +91,7 @@ export function recount(dir = PILOT_DIR) {
     return [stage, by];
   }));
   const resumes = Object.fromEntries(['gbrain', 'memory-bank'].map(row => {
-    const leases = readdirSync(join(dir, 'alias-stage2', row, 'leases')).map(f => JSON.parse(readFileSync(join(dir, 'alias-stage2', row, 'leases', f), 'utf8')) as { checkpoint_rows: number; realization_id?: string; restored_from?: string });
+    const leases = readdirSync(join(dir, 'alias-stage2', row, 'leases')).sort().map(f => JSON.parse(readFileSync(join(dir, 'alias-stage2', row, 'leases', f), 'utf8')) as { checkpoint_rows: number; realization_id?: string; restored_from?: string });
     const first = leases.find(l => l.realization_id), second = leases.find(l => l.restored_from);
     return [row, { first_lease_answers: first?.checkpoint_rows ?? null, resumed_from_its_snapshot: !!first && second?.restored_from === first.realization_id }];
   }));

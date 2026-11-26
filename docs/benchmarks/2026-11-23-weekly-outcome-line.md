@@ -190,6 +190,10 @@ its reading is not reported.
 - **System-internal models.** The extract-first server extracted with gpt-4.1-mini, as the changing-facts confirmation
   configured it, and the memory-bank server with its shipped gpt-4o-mini; gbrain's own extraction resolved to
   claude-haiku-5-5. None of them reads or judges.
+- **Server receipts by kind.** This repository names other memory products only in
+  [docs/comparison-systems.md](../comparison-systems.md). So in the six committed receipts of the extract-first and
+  memory-bank cells, `system.versions` and `system.capabilities` are replaced by a pointer to that kind's
+  `capability.json` and the sha256 of the original block; every count, answer, judgment and dollar is unchanged.
 - **Worlds.** Named subjects: `bg1-dev-01` to `-03` and `bg1-dev-long-01` to `-03`, already committed. Alias:
   `bg1-dev-alias-01` to `-03` (changing-facts-gen@3), committed with this page; their `world.json` sha256 prefixes
   are `04d01519fcf6f76f`, `b9f5b4a58ac9e1f0` and `0c301fe7c16764c4`, and each passes
