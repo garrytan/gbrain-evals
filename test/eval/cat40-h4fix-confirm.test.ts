@@ -8,12 +8,36 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { ARMS, FRONTIER, FULL_WORLDS, GREP_FIX_COMMIT, H4FIX_WORLDS, JUDGE_FOR, PARTICLE, SECTION_CONFIG, h4Half, worldPlan } from '../../eval/runner/cat40/h4fix-confirm.ts';
+import { ARMS, FRONTIER, FULL_WORLDS, GREP_FIX_COMMIT, H4FIX_WORLDS, JUDGE_FOR, LONG_PAGE_MIN_CHARS, N1_LONG_H4_TASKS, PARTICLE, SECTION_CONFIG, checkWorld, h4Half, longH4Tasks, worldPlan } from '../../eval/runner/cat40/h4fix-confirm.ts';
+import { generateHardWorld } from '../../eval/generators/model-ladder-hard.ts';
+import { validateKnobs } from '../../eval/generators/hard/schema.ts';
 
 const BUILD = 'e'.repeat(40);
 const SHA = 'f'.repeat(40);
 const val = (argv: string[], f: string) => (argv.includes(f) ? argv[argv.indexOf(f) + 1] : undefined) as string;
 const family = (m: string) => (m.startsWith('claude') ? 'anthropic' : m.startsWith('gpt') ? 'openai' : 'particle');
+
+describe('check-world (amended 2026-11-26: fresh public-generator worlds with long H4 pages)', () => {
+  const h4 = (n: number, long: number) => ({
+    version: 'model-ladder-hard-v2', scale: 'large',
+    docs: Array.from({ length: n }, (_, i) => ({ id: `d${i}`, body: 'x'.repeat(i < long ? LONG_PAGE_MIN_CHARS : LONG_PAGE_MIN_CHARS - 1) })),
+    tasks: Array.from({ length: n }, (_, i) => ({ id: `H4-${String(i + 1).padStart(2, '0')}`, family: 'H4', gold: { evidence: [`d${i}`] } })),
+  }) as never;
+  const D = 'a'.repeat(64);
+  test('counts H4 tasks governed by a page at or over the threshold', () => {
+    expect(longH4Tasks(h4(20, 14))).toBe(14);
+    expect(longH4Tasks(h4(20, 0))).toBe(0);
+  });
+  test('refuses a world with fewer long H4 tasks than N1, and any generator but the public one', () => {
+    expect(() => checkWorld('u1', h4(20, N1_LONG_H4_TASKS - 1), 'w.json', D)).toThrow(/LONG_PAGE_PRECONDITION/);
+    expect(() => checkWorld('u1', { ...(h4(20, 20) as object), version: 'hard-sealed-v2' } as never, 'w.json', D)).toThrow(/public generator/);
+    expect(() => checkWorld('u1', h4(20, 20), 'w.json', undefined)).toThrow(/--digest/);
+  });
+  test('N1 itself meets the precondition at exactly its recorded count', () => {
+    const knobs = validateKnobs(JSON.parse(readFileSync('docs/benchmarks/cat40-hard/knobs.frozen.json', 'utf8')));
+    expect(longH4Tasks(generateHardWorld(20261141, knobs, { scale: 'large' }))).toBe(N1_LONG_H4_TASKS);
+  }, 120_000);
+});
 
 describe('h4fix-confirm plan', () => {
   for (const w of H4FIX_WORLDS) {
@@ -48,7 +72,7 @@ describe('h4fix-confirm plan', () => {
       expect(steps.filter(s => s.argv.includes('--build-slots'))).toHaveLength(1);
       expect(steps.find(s => s.id === 'launch-gate')!.argv).toEqual(['git', '-C', '../gbrain', 'merge-base', '--is-ancestor', GREP_FIX_COMMIT, BUILD]);
     });
-    test(`${w}: frontier gbrain H4 cells run twice, everything else once; S5 to S8 carry H4 only`, () => {
+    test(`${w}: frontier gbrain H4 cells run twice, everything else once; U3 to U6 carry H4 only`, () => {
       for (const s of ladder) {
         const h4 = (val(s.argv, '--tasks') ?? '').startsWith('H4-');
         const gbrainFrontier = s.argv.includes('--gbrain-label') && FRONTIER.includes(val(s.argv, '--models') as typeof FRONTIER[number]) && !s.id.startsWith('pilot');
@@ -61,9 +85,9 @@ describe('h4fix-confirm plan', () => {
       }
       expect(steps.some(s => s.id.endsWith('-other'))).toBe(FULL_WORLDS.includes(w));
     });
-    test(`${w}: pilots (S3 only), the record hold, half A, the one look, then half B`, () => {
+    test(`${w}: pilots (U1 only), the record hold, half A, the one look, then half B`, () => {
       const ids = steps.map(s => s.id);
-      expect(ids.some(i => i.startsWith('pilot-') && !i.includes('particle'))).toBe(w === 's3');
+      expect(ids.some(i => i.startsWith('pilot-') && !i.includes('particle'))).toBe(w === 'u1');
       const record = ids.indexOf('hold-record'), look = ids.indexOf('interim-look');
       expect(ids.findIndex(i => /-h4a$/.test(i))).toBeGreaterThan(record);
       expect(Math.max(...ids.map((i, k) => (/-h4a$|-other$/.test(i) ? k : -1)))).toBeLessThan(look);
@@ -79,7 +103,7 @@ describe('h4fix-confirm plan', () => {
       expect(val(steps[0].argv, '--program-cap-usd')).toBe('$CAP_PROGRAM');
     });
   }
-  test('after a stop at the look, particle-1 runs H4 half A (and the other families on S3 and S4) as an explicit list', () => {
+  test('after a stop at the look, particle-1 runs H4 half A (and the other families on U1 and U2) as an explicit list', () => {
     for (const w of H4FIX_WORLDS) {
       const p = worldPlan(w, BUILD, SHA, '2026-11-25', true).filter(s => s.paid_window && !s.id.startsWith('pilot'));
       for (const s of p) {
@@ -99,20 +123,20 @@ describe('h4fix-confirm plan', () => {
     expect([...a, ...b]).toEqual(Array.from({ length: 20 }, (_, i) => `H4-${String(i + 1).padStart(2, '0')}`));
   });
   test('a build that is not a 40-character commit is refused', () => {
-    expect(() => worldPlan('s3', 'v0.60.774.0', SHA, '2026-11-25')).toThrow(/40-character/);
+    expect(() => worldPlan('u1', 'v0.60.774.0', SHA, '2026-11-25')).toThrow(/40-character/);
   });
 });
 
 describe('h4fix_analysis.py', () => {
   const SCRIPT = 'eval/runner/cat40/h4fix_analysis.py';
-  const WORLDS = ['S3', 'S4', 'S5', 'S6', 'S7', 'S8'];
+  const WORLDS = ['U1', 'U2', 'U3', 'U4', 'U5', 'U6'];
   const H4 = Array.from({ length: 20 }, (_, i) => `H4-${String(i + 1).padStart(2, '0')}`);
   const OTHER = ['H1', 'H2', 'H3', 'H5'].flatMap(f => Array.from({ length: 20 }, (_, i) => `${f}-${String(i + 1).padStart(2, '0')}`));
   type Ok = (arm: string, model: string, task: string, rep: number, world: string) => boolean;
   interface Opts { h4?: string[]; models?: string[]; drop?: string; other?: boolean }
   function worldFile(dir: string, name: string, ok: Ok, o: Opts = {}) {
     const lines: string[] = [];
-    const tasks = [...(o.h4 ?? H4), ...((o.other ?? true) && (name === 'S3' || name === 'S4') ? OTHER : [])];
+    const tasks = [...(o.h4 ?? H4), ...((o.other ?? true) && (name === 'U1' || name === 'U2') ? OTHER : [])];
     for (const model of o.models ?? [...FRONTIER, PARTICLE]) for (const arm of ['gbrain-section', 'gbrain-default', 'fs']) for (const t of tasks) {
       const reps = t.startsWith('H4') && arm !== 'fs' && model !== PARTICLE ? 2 : 1;
       for (let rep = 0; rep < reps; rep++) {
@@ -195,10 +219,10 @@ describe('h4fix_analysis.py', () => {
     });
     test('a cell that arrives from two files is refused (a pilot never replaces a counted cell)', () => {
       const dir = mkdtempSync(join(tmpdir(), 'h4fix-dup-'));
-      const one = worldFile(dir, 'S3', () => true).split('=')[1];
-      const r = spawnSync('python3', [SCRIPT, '--world', `S3=${one},${one.replace('S3.jsonl', 'S3b.jsonl')}`], { encoding: 'utf8', input: '' });
-      writeFileSync(one.replace('S3.jsonl', 'S3b.jsonl'), readFileSync(one, 'utf8').split('\n')[0].replace('#1', '#2') + '\n');
-      const r2 = spawnSync('python3', [SCRIPT, '--world', `S3=${one},${one.replace('S3.jsonl', 'S3b.jsonl')}`], { encoding: 'utf8' });
+      const one = worldFile(dir, 'U1', () => true).split('=')[1];
+      const r = spawnSync('python3', [SCRIPT, '--world', `U1=${one},${one.replace('U1.jsonl', 'U1b.jsonl')}`], { encoding: 'utf8', input: '' });
+      writeFileSync(one.replace('U1.jsonl', 'U1b.jsonl'), readFileSync(one, 'utf8').split('\n')[0].replace('#1', '#2') + '\n');
+      const r2 = spawnSync('python3', [SCRIPT, '--world', `U1=${one},${one.replace('U1.jsonl', 'U1b.jsonl')}`], { encoding: 'utf8' });
       rmSync(dir, { recursive: true, force: true });
       expect(r.status).not.toBe(0);
       expect(r2.stderr).toContain('DUPLICATE_CELL');
@@ -220,7 +244,7 @@ describe('h4fix_analysis.py', () => {
       expect(py('round(a.conditional_power(1.0, se_interim=8.0), 6) == round(a.conditional_power(-(-1.0), se_interim=8.0), 6), round(a.conditional_power(0.0, se_interim=12.9), 3)')).toBe('True 0.032');
     });
     test('claims count only the rule-checked reading: the share of answers flagged; per-claim counts stay descriptive (2026-11-25 ruling)', () => {
-      const w = "{'S3': {('fs', 'm', 't1'): {1: {'claims': {'unsupported': 3, 'contradicted': 1}}}, ('fs', 'm', 't2'): {1: {'claims': {'supported': 2}}}}}";
+      const w = "{'U1': {('fs', 'm', 't1'): {1: {'claims': {'unsupported': 3, 'contradicted': 1}}}, ('fs', 'm', 't2'): {1: {'claims': {'supported': 2}}}}}";
       expect(py(`__import__('json').dumps(a.claims(${w}, 'fs', 'm'), sort_keys=True)`)).toBe(
         '{"answers_flagged_share": 0.5, "answers_judged": 2, "descriptive_not_rule_checked": {"contradicted_or_unsupported_per_answer": 2.0, "contradicted_per_answer": 0.5}}');
     });

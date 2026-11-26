@@ -3,14 +3,14 @@
 (docs/benchmarks/2026-11-24-cat40-h4-fix-confirmation-preregistration.md).
 
 Usage:
-  python3 eval/runner/cat40/h4fix_analysis.py --world S3=<attempts.jsonl>[,<more>] ... --world S8=<...> \
-      [--transcripts <transcripts.jsonl>[,<more>]] [--world-file S3=<world.json> ...] [--look interim|final] \
+  python3 eval/runner/cat40/h4fix_analysis.py --world U1=<attempts.jsonl>[,<more>] ... --world U6=<...> \
+      [--transcripts <transcripts.jsonl>[,<more>]] [--world-file U1=<world.json> ...] [--look interim|final] \
       [--stopped none|difference|futility] [--resamples 10000] [--seed 1] [--json out.json]
 
 Canonical cell: the last attempt per (arm, reader, task, repeat) whose stop is not harness_error; cost sums every
 attempt. A task's success in an arm is the mean over its repeats. Every comparison is paired by task: arm a minus arm b,
 per reader averaged over tasks, then over the readers named. Intervals: tasks nested in worlds, worlds fixed and visited
-in order S3 to S8; 10,000 resamples from one random.Random(1) stream per comparison; each resample draws that world's
+in order U1 to U6; 10,000 resamples from one random.Random(1) stream per comparison; each resample draws that world's
 task count of ids with replacement (rng.choice over the ids sorted as strings); a drawn task brings all its cells.
 
 --look interim reads exactly H4 half A (H4-01 to H4-10 on every world) for both gbrain arms and both frontier readers.
@@ -23,8 +23,8 @@ answer keys and reference forms on the custody VM and prints counts, never conte
 import argparse, json, math, random, sys
 from collections import defaultdict
 
-WORLDS = ['S3', 'S4', 'S5', 'S6', 'S7', 'S8']
-FULL_WORLDS = ['S3', 'S4']
+WORLDS = ['U1', 'U2', 'U3', 'U4', 'U5', 'U6']
+FULL_WORLDS = ['U1', 'U2']
 FRONTIER = ['claude-opus-5-5', 'gpt-6.2-sol']
 PRIMARY = 'claude-opus-5-5'
 PARTICLE = 'particle-1'
@@ -195,7 +195,7 @@ def interim(worlds, B, S):
     have = {(w, arm, m, t) for w, cells in gbrain_cells.items() for (arm, m, t), reps in cells.items() if t.startswith('H4') and len(reps) == 2}
     stray = {(w, arm, m, t) for w, cells in gbrain_cells.items() for (arm, m, t) in cells if t.startswith('H4') and t not in H4_A}
     if have != want or stray:
-        raise SystemExit(f'INTERIM_INCOMPLETE: the look needs exactly H4 half A at repeat 2 for both gbrain arms and both frontier readers on S3 to S8 ({len(want - have)} missing, {len(stray)} outside half A)')
+        raise SystemExit(f'INTERIM_INCOMPLETE: the look needs exactly H4 half A at repeat 2 for both gbrain arms and both frontier readers on U1 to U6 ({len(want - have)} missing, {len(stray)} outside half A)')
     res = Comparison(worlds, SECTION, DEFAULT, [PRIMARY], lambda w: H4_A).run(B, S, extra_z=(INTERIM_Z,))
     d, se = res.pop('_point'), res.pop('_se')
     if se < 1e-9:

@@ -348,6 +348,41 @@ Made after the six seeds were drawn and before any world was generated or any ce
   labelled "not rule-checked". The judge check itself is unchanged and still gates every counted cell. No decision row
   changes; every success endpoint is scored by the deterministic scorer.
 
+### 2026-11-26: the sealed worlds can't exercise section delivery; the run moves to fresh public-generator worlds
+
+Made after the S3 pilots and before any counted cell, on the results branch.
+
+- **Why.** gbrain delivers a search hit as its section only when the page's body holds at least
+  `search.long_page_min_chars` characters (20,000 by default). The sealed generator (`hard-sealed-v2`) writes no H4
+  page that long: on S3 to S8 the largest H4 governing document holds about 9,600 characters, and no H4 governing
+  document reaches 20,000. On public world N1, 14 of the 20 H4 tasks have a governing document over that threshold, and
+  those long contract pages are where the development diagnosis found gbrain's H4 loss. The S3 pilots confirmed it: in
+  20 `gbrain-section` cells (the five-cell pilot per frontier reader, then the fallback of five more H4 cells per
+  reader) no search row was delivered by the setting. Under "Pilot per arm" the arm was not exercised, so the sealed
+  run stopped before any counted cell. S3 to S8 ran slot builds, oracle gates (all passed) and the S3 pilots only; no
+  counted cell ran on them.
+- **New worlds U1 to U6.** Six fresh, unseen seeds of the public generator `model-ladder-hard-v2` at `--scale large`
+  with the frozen knobs. They are unseen but not sealed: anyone can regenerate a world from its seed, so the results
+  page says so in its takeaways. Seeds are drawn on the seed owner's machine as for S3 to S8, never printed, and none
+  may equal N1 (20261141), N2 (20263151), any other fixed seed of this or earlier plans, or a test seed (101, 202, 303).
+  Each world's digest is recorded below before the world is generated. U1 and U2 carry every family; U3 to U6 carry H4
+  only, as S3/S4 and S5 to S8 did.
+- **Precondition (checked before any digest is recorded and again by `check-world` before any slot is built).** At
+  least 14 of a world's 20 H4 tasks (N1's count) must have a governing document whose body reaches 20,000 characters.
+  A seed that falls short is replaced by a fresh draw before its digest is recorded, and the replacements are reported
+  below as a count.
+- **Unchanged.** Arms, readers, judges, the judge check (already passed on N1), the one interim look at H4 half A, the
+  margins, the decision rows, the gap wording and the paid window. The money stays inside the window already granted,
+  re-split per world in the tracking issue, with no world's cap above its earlier one.
+- **Build.** No counted cell has run, so the run takes gbrain's newest release at launch, provided it carries GST-3786.
+  It is re-read right before the first slot build and recorded under "Recorded before cells", and freezes from the first
+  counted cell. At this amendment that is v0.60.775.0 (`f832b4928844f149fb08657797eaa6fd9daebd5a`), which carries
+  `9df317b1` and leaves section delivery unchanged.
+- **Spent with no counted result.** The sealed attempt's slot builds (including about a sixth of them rebuilt after
+  gbrain's one-hour embed timeout), oracle gates and S3 pilots. The tracking issue carries the amount. One `fs` pilot
+  cell (Opus 5.5) ended in a context overflow after an unbounded `grep` returned about 2.2 million characters; that is
+  a harness outcome of the `hard` tool limits and is reported as such.
+
 ## Disclosures
 
 gbrain is Garry Tan's own project. Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, which

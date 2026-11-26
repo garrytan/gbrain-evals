@@ -3,14 +3,17 @@
  * (docs/benchmarks/2026-11-24-cat40-h4-fix-confirmation-preregistration.md): the preregistered sealed worlds, arms,
  * readers, judges, halves and ledgers, and the exact command for every step of a world, in order.
  *
- *   bun eval/runner/cat40/h4fix-confirm.ts plan --world s3|s4|s5|s6|s7|s8 --build <40-character gbrain commit> --date YYYY-MM-DD [--stopped] [--json]
+ *   bun eval/runner/cat40/h4fix-confirm.ts plan --world u1..u6 --build <40-character gbrain commit> --date YYYY-MM-DD [--stopped] [--json]
  *   bun eval/runner/cat40/h4fix-confirm.ts check-world --world <w> --file <world.json> --digest <digest recorded before cells>
  *
+ * The worlds (amended 2026-11-26) are fresh, unseen seeds of the public generator (model-ladder-hard-v2, --scale large,
+ * frozen knobs), because the sealed generator makes no H4 page long enough for section delivery to fire. check-world
+ * refuses a world where fewer H4 tasks are governed by a long page (body of LONG_PAGE_MIN_CHARS or more) than on N1.
  * Each world runs on its own owner-custody VM with its own ledger. Both gbrain arms read the same slots, built once
  * per world by the release under test: `gbrain-section` sets search.long_page_unit=section after every restore and
  * `gbrain-default` runs the release's shipping defaults. Every reader runs its own invocation, so each gets the judge
  * the preregistration names: gpt-6.2-sol grades claude-opus-5-5 rows, claude-opus-5-5 grades gpt-6.2-sol and
- * particle-1 rows. H4 runs on all six worlds; H1, H2, H3 and H5 only on S3 and S4. The gbrain arms' frontier H4 cells
+ * particle-1 rows. H4 runs on all six worlds; H1, H2, H3 and H5 only on U1 and U2. The gbrain arms' frontier H4 cells
  * run twice (repeat 2); everything else runs once. particle-1 steps come last and run only inside a granted paid
  * window. Dollar caps are `$CAP_<STEP>` placeholders the operator fills from the tracking issue (R79). `plan` refuses
  * unless the preregistration is committed, unchanged and on origin.
@@ -22,12 +25,12 @@ import type { HardWorld } from '../../generators/hard/schema.ts';
 import { attestPreregistration } from '../prereg.ts';
 import { checkHardWorld } from './hard.ts';
 
-export type H4FixWorld = 's3' | 's4' | 's5' | 's6' | 's7' | 's8';
+export type H4FixWorld = 'u1' | 'u2' | 'u3' | 'u4' | 'u5' | 'u6';
 
 export const H4FIX_PREREG = 'docs/benchmarks/2026-11-24-cat40-h4-fix-confirmation-preregistration.md';
-export const H4FIX_WORLDS: readonly H4FixWorld[] = ['s3', 's4', 's5', 's6', 's7', 's8'];
-/** S3 and S4 carry every family (the no-harm check); S5 to S8 carry H4 only. */
-export const FULL_WORLDS: readonly H4FixWorld[] = ['s3', 's4'];
+export const H4FIX_WORLDS: readonly H4FixWorld[] = ['u1', 'u2', 'u3', 'u4', 'u5', 'u6'];
+/** U1 and U2 carry every family (the no-harm check); U3 to U6 carry H4 only. */
+export const FULL_WORLDS: readonly H4FixWorld[] = ['u1', 'u2'];
 export const FAMILIES = ['H1', 'H2', 'H3', 'H4', 'H5'] as const;
 export const OTHER_FAMILIES = ['H1', 'H2', 'H3', 'H5'] as const;
 /** GST-3786's commit (get_page grep reads a|b as alternatives): the release under test must contain it (launch gate). */
@@ -38,8 +41,8 @@ export const FRONTIER = ['claude-opus-5-5', 'gpt-6.2-sol'] as const;
 export const PARTICLE = 'particle-1';
 /** The claims judge per reader: no family grades its own rows, particle-1 never judges. */
 export const JUDGE_FOR: Record<string, string> = { 'claude-opus-5-5': 'gpt-6.2-sol', 'gpt-6.2-sol': 'claude-opus-5-5', 'particle-1': 'claude-opus-5-5' };
-export const SLOTS: Record<H4FixWorld, number> = { s3: 5, s4: 5, s5: 2, s6: 2, s7: 2, s8: 2 };
-export const CONCURRENCY: Record<H4FixWorld, number> = { s3: 10, s4: 10, s5: 4, s6: 4, s7: 4, s8: 4 };
+export const SLOTS: Record<H4FixWorld, number> = { u1: 5, u2: 5, u3: 2, u4: 2, u5: 2, u6: 2 };
+export const CONCURRENCY: Record<H4FixWorld, number> = { u1: 10, u2: 10, u3: 4, u4: 4, u5: 4, u6: 4 };
 export const H4FIX_REPORTS = 'eval/reports/cat40/h4fix-confirm';
 export const ledgerFor = (w: H4FixWorld) => `.budget/cat40-h4fix-${w}.sqlite`;
 export const gbrainRootFor = (w: H4FixWorld) => `/home/ubi/cat40/h4fix-${w}`;
@@ -60,7 +63,7 @@ const cap = (id: string) => `$CAP_${id.toUpperCase().replace(/-/g, '_')}`;
 const short = (m: string) => (m.startsWith('claude') ? 'opus' : m.startsWith('gpt') ? 'sol' : 'particle');
 
 /** Every step of one world, in order. */
-/** After a stop at the look (`stopped`), particle-1 runs H4 half A and, on S3 and S4, the other families, as an explicit task list. */
+/** After a stop at the look (`stopped`), particle-1 runs H4 half A and, on U1 and U2, the other families, as an explicit task list. */
 export function worldPlan(world: H4FixWorld, build: string, harnessSha: string, date: string, stopped = false): Step[] {
   if (!/^[0-9a-f]{40}$/.test(build)) throw new Error(`build ${build} is not a 40-character gbrain commit`);
   const dir = `${H4FIX_REPORTS}/${world}`;
@@ -84,7 +87,7 @@ export function worldPlan(world: H4FixWorld, build: string, harnessSha: string, 
     run(`default-${short(m)}-h4${half}`, m, gbrain('default'), [...h4(half), '--repeat', '2']),
     run(`fs-${short(m)}-h4${half}`, m, ['--arms', 'fs', '--hard-tool-limits', 'hard'], [...h4(half), '--repeat', '1']),
   ]);
-  const pilots: Step[] = world !== 's3' ? [] : [
+  const pilots: Step[] = world !== 'u1' ? [] : [
     ...FRONTIER.flatMap(m => [
       run(`pilot-section-${short(m)}`, m, gbrain('section'), ['--per-family', '1', '--repeat', '1'], 'five cells; every cell calls gbrain tools with no param_not_on_surface, and the arm\'s pilot or the oracle-gate H4 probe shows a search row delivered {unit: section, reason: long_page}; if none does, rerun this step with --families H4 --per-family 5 into pilot-section-<reader>-h4; never counted'),
       run(`pilot-default-${short(m)}`, m, gbrain('default'), ['--per-family', '1', '--repeat', '1'], 'five cells; every cell calls gbrain tools with no param_not_on_surface, and no search row carries reason long_page; never counted'),
@@ -110,7 +113,7 @@ export function worldPlan(world: H4FixWorld, build: string, harnessSha: string, 
     ]) : []),
     { id: 'interim-look', argv: [], hold: 'look', note: 'every world finished half A for both gbrain arms and both frontier readers; h4fix_analysis.py --look interim decides; half B runs only if it continues (R113)' },
     ...(stopped ? [] : halfSteps('b')),
-    ...(world === 's3' ? [
+    ...(world === 'u1' ? [
       run('pilot-particle-section', PARTICLE, gbrain('section'), ['--per-family', '1', '--repeat', '1'], 'particle-1 pilot inside the granted window; never counted'),
       run('pilot-particle-default', PARTICLE, gbrain('default'), ['--per-family', '1', '--repeat', '1'], 'never counted'),
       run('pilot-particle-fs', PARTICLE, ['--arms', 'fs', '--hard-tool-limits', 'hard'], ['--per-family', '1', '--repeat', '1'], 'never counted'),
@@ -121,10 +124,24 @@ export function worldPlan(world: H4FixWorld, build: string, harnessSha: string, 
   ];
 }
 
-/** Validates a sealed world against its generator and the digest recorded before cells; returns the digest. Never prints content. */
+/** gbrain's default `search.long_page_min_chars`: a page whose body reaches it is delivered as its section under the setting. */
+export const LONG_PAGE_MIN_CHARS = 20_000;
+/** H4 tasks of 20 on public world N1 with a governing document whose body reaches LONG_PAGE_MIN_CHARS (amendment 2026-11-26). */
+export const N1_LONG_H4_TASKS = 14;
+export const PUBLIC_GENERATOR = 'model-ladder-hard-v2';
+
+/** H4 tasks with at least one governing document whose body reaches LONG_PAGE_MIN_CHARS. Counts only; reads no text out. */
+export function longH4Tasks(w: Pick<HardWorld, 'docs' | 'tasks'>): number {
+  const long = new Set(w.docs.filter(d => d.body.length >= LONG_PAGE_MIN_CHARS).map(d => d.id));
+  return w.tasks.filter(t => t.family === 'H4' && t.gold.evidence.some(id => long.has(id))).length;
+}
+
+/** Validates a world against its generator, the digest recorded before cells and the long-page precondition; returns the digest. Never prints content. */
 export function checkWorld(world: H4FixWorld, w: HardWorld, path: string, digest: string | undefined): string {
   if (!digest || !/^[0-9a-f]{64}$/.test(digest)) throw new Error(`${world}: pass --digest <the digest recorded before cells for this world>`);
-  if (!w.version.startsWith('hard-sealed')) throw new Error(`${world}: version ${w.version} is not the sealed generator`);
+  if (w.version !== PUBLIC_GENERATOR) throw new Error(`${world}: version ${w.version} is not the preregistered public generator ${PUBLIC_GENERATOR}`);
+  const long = longH4Tasks(w);
+  if (long < N1_LONG_H4_TASKS) throw new Error(`${world}: LONG_PAGE_PRECONDITION: ${long} of 20 H4 tasks have a governing page of ${LONG_PAGE_MIN_CHARS} characters or more; N1 had ${N1_LONG_H4_TASKS}; replace this world`);
   if ((w.scale ?? 'v1') !== 'large') throw new Error(`${world}: scale ${w.scale ?? 'v1'} is not the preregistered --scale large`);
   checkHardWorld(w, path);
   const got = hardWorldDigest(w);
@@ -138,7 +155,7 @@ if (import.meta.main) {
   const argv = process.argv.slice(2);
   const opt = (k: string) => { const i = argv.indexOf(k); return i >= 0 ? argv[i + 1] : undefined; };
   const world = opt('--world') as H4FixWorld | undefined;
-  if (!world || !H4FIX_WORLDS.includes(world)) { console.error('usage: h4fix-confirm.ts plan --world s3..s8 --build <sha> --date YYYY-MM-DD [--json] | check-world --world <w> --file <world.json> --digest <d>'); process.exit(2); }
+  if (!world || !H4FIX_WORLDS.includes(world)) { console.error('usage: h4fix-confirm.ts plan --world u1..u6 --build <sha> --date YYYY-MM-DD [--json] | check-world --world <w> --file <world.json> --digest <d>'); process.exit(2); }
   if (argv[0] === 'plan') {
     const date = opt('--date');
     const build = opt('--build') ?? '';
