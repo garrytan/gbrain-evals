@@ -31,6 +31,7 @@ describe('newest-confirm plan', () => {
       const firstParticle = steps.findIndex(s => s.paid_window === 'particle');
       expect(firstParticle).toBeGreaterThan(0);
       expect(steps.slice(firstParticle).every(s => s.paid_window === 'particle' && val(s.argv, '--models') === 'particle-1')).toBe(true);
+      expect(steps.slice(firstParticle).every(s => val(s.argv, '--paid-window') === '$PAID_WINDOW')).toBe(true);
       expect(steps.slice(0, firstParticle).some(s => s.argv.includes('particle-1') && s.argv.includes('--models'))).toBe(false);
     });
     test(`${w}: the oracle gate counts the frontier readers only; every gbrain step uses the pinned build`, () => {

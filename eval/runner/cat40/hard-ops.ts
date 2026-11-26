@@ -234,7 +234,7 @@ export function confirmOracleGate(records: Array<Record<string, unknown>>, model
   for (const c of oracle) { by_model[c.model] ??= { cells: 0, successes: 0 }; by_model[c.model].cells++; if (c.success) by_model[c.model].successes++; }
   const successes = oracle.filter(c => c.success).length;
   const rate = oracle.length ? successes / oracle.length : 0;
-  return { cells: oracle.length, planned, successes, rate, by_model, incomplete: incomplete.length, pass: oracle.length === planned && !incomplete.length && rate >= CONFIRM_ORACLE_MIN };
+  return { cells: oracle.length, planned, successes, rate, by_model, incomplete: incomplete.length, pass: oracle.length === planned && models.every(m => by_model[m]?.cells === tasksPerModel) && !incomplete.length && rate >= CONFIRM_ORACLE_MIN };
 }
 
 export function budgetCheck(remainingUsd: number, projection: Projection): void {

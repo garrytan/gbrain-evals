@@ -84,7 +84,7 @@ export function worldPlan(world: H4FixWorld, build: string, harnessSha: string, 
   const slotArgs = ['--gbrain-repo', '../gbrain', '--gbrain-ref', build, '--gbrain-root', gbrainRootFor(world), '--slots', String(SLOTS[world]), '--no-pglite-analyze'];
   const gbrain = (arm: keyof typeof ARMS) => ['--arms', 'gbrain', '--gbrain-label', ARMS[arm], ...slotArgs, ...(arm === 'section' ? ['--gbrain-config', SECTION_CONFIG] : [])];
   const run = (id: string, model: string, arm: string[], extra: string[], note?: string): Step => ({
-    id, argv: ['bun', 'eval/runner/cat40-model-ladder.ts', ...common, '--models', model, '--judge', JUDGE_FOR[model], ...arm, ...extra, '--out', `${dir}/${id}`, '--budget-usd', cap(id)],
+    id, argv: ['bun', 'eval/runner/cat40-model-ladder.ts', ...common, '--models', model, '--judge', JUDGE_FOR[model], ...arm, ...extra, '--out', `${dir}/${id}`, '--budget-usd', cap(id), ...(model === PARTICLE ? ['--paid-window', '$PAID_WINDOW'] : [])],
     ...(note ? { note } : {}), ...(model === PARTICLE ? { paid_window: 'particle' as const } : {}),
   });
   const families = full ? FAMILIES.join(',') : 'H4';

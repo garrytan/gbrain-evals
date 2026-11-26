@@ -501,7 +501,7 @@ export function incompleteSlotCoverage(dir: string, n: number): { problems: stri
 export const VALUE_FLAGS = ['--arms', '--models', '--families', '--tasks', '--repeat', '--concurrency', '--slots', '--gbrain-repo', '--gbrain-ref', '--gbrain-root', '--gbrain-label', '--judge', '--world', '--out',
   '--max-tool-chars', '--order', '--slot-ref', '--surface', '--gbrain-instructions-file', '--gbrain-tool-descriptions-file', '--gbrain-drop-tools', '--gbrain-config', '--gbrain-build-config', '--build-slot-ids', '--slot-build-allowance-usd',
   '--budget-usd', '--estimate-usd', '--budget-run-id', '--budget-ledger', '--program-cap-usd', '--max-turns', '--per-family', '--hard-tool-limits', '--accept-freeze-drift', '--step',
-  '--gbrain', '--advertised', '--world-templates-file', '--decision-id', '--purpose', '--retire-models'];
+  '--gbrain', '--advertised', '--world-templates-file', '--decision-id', '--purpose', '--retire-models', '--paid-window'];
 export const BOOLEAN_FLAGS = ['--scripted', '--keyless-slots', '--build-slots', '--rebuild', '--no-pglite-analyze', '--transcripts', '--preflight', '--help', '--new-budget-run', '--dev-set'];
 const NUMERIC_FLAGS = new Set(['--repeat', '--concurrency', '--slots', '--slot-build-allowance-usd', '--budget-usd', '--estimate-usd', '--program-cap-usd', '--max-turns', '--per-family']);
 
@@ -570,6 +570,7 @@ export async function main(argv = process.argv.slice(2)) {
     const judgeFlag = flag(argv, '--judge');
     if (judgeFlag && isParticle(judgeFlag)) throw new UsageError(`--judge ${judgeFlag}: particle-1 never judges a cell; pass --judge gpt-6.2-sol`);
     if (hard && models.some(isParticle) && !particleRunsOnHardWorld(raw as HardWorld)) throw new UsageError('particle-1 does not run on Hard worlds: the Hard campaign keeps its model list (amendment A6), and its freeze does not cover the particle transport (eval/runner/providers); only the newest-build re-measure (docs/benchmarks/2026-11-19-cat40-hard-newest-preregistration.md, its two worlds HARD_SEEDS.newest) and the H4 section-delivery confirmation (docs/benchmarks/2026-11-24-cat40-h4-fix-confirmation-preregistration.md, its six recorded world digests H4FIX_WORLD_DIGESTS) list it');
+    if (hard && models.some(isParticle) && !/^[A-Za-z0-9][A-Za-z0-9._:-]*$/.test(flag(argv, '--paid-window') ?? '')) throw new UsageError('particle-1 on a Hard world runs only inside a granted paid window: pass --paid-window <unit>, the unit the Captain granted (letters, digits, dot, colon, underscore or dash; an unexpanded $PAID_WINDOW is refused)');
     if (!hard && judgeFlag && /(^|[:/])gpt-5\.4-mini$/.test(judgeFlag)) throw new UsageError(`--judge ${judgeFlag}: gpt-5.4-mini is never run, so a paid v1 run needs its claims judge passed explicitly as another model (--judge <model>, or --judge none)`);
     if (!hard && !judgeFlag) throw new UsageError('a paid v1 run needs its claims judge passed explicitly (--judge <model>, from another family than every --models entry, or --judge none): v1 has no default judge');
   }

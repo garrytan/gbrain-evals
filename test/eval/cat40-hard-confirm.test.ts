@@ -93,6 +93,10 @@ describe('oracle gate (gate 2)', () => {
     expect(confirmOracleGate(h4, HARD_MODELS.slice(0, 2), 20)).toMatchObject({ cells: 40, planned: 40, pass: true });
     expect(confirmOracleGate(h4.slice(1), HARD_MODELS.slice(0, 2), 20).pass).toBe(false);
   });
+  test('every listed reader must cover its own planned tasks: one reader\'s 40 clean cells do not pass a two-reader 20-task gate', () => {
+    const one = tasks.slice(0, 40).map(t => rec(HARD_MODELS[0], t, true));
+    expect(confirmOracleGate(one, HARD_MODELS.slice(0, 2), 20)).toMatchObject({ cells: 40, planned: 40, pass: false });
+  });
   test('a missing cell or a cell with only harness-error attempts fails the gate; a clean retry counts', () => {
     expect(confirmOracleGate(records(0).slice(1)).pass).toBe(false);
     const errored = records(0);

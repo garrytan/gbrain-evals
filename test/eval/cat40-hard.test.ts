@@ -385,7 +385,7 @@ describe('runner (T1, T2, T6: CEO-F3, CEO-F12, DX-F3, DX-F7, ENG-F1, ENG-F2, ENG
   });
   test('particle-1 passes that guard only on the newest-build re-measure\'s two worlds (HARD_SEEDS.newest), which still need the frozen knobs', async () => {
     const newest = generateHardWorld(HARD_SEEDS.newest[0]);
-    const err = await main(['--world', writeWorld(newest), '--models', 'particle-1', '--judge', 'gpt-6.1-sol', '--arms', 'fs', '--out', tmp(), '--preflight']).then(() => null, e => e as Error);
+    const err = await main(['--world', writeWorld(newest), '--models', 'particle-1', '--judge', 'gpt-6.1-sol', '--arms', 'fs', '--out', tmp(), '--paid-window', 'test-window', '--preflight']).then(() => null, e => e as Error);
     expect(err?.message ?? '').not.toContain('particle-1 does not run on Hard worlds');
     expect(String((err as { code?: string } | null)?.code ?? err?.message)).toContain('HARD_KNOBS_NOT_FROZEN');
   });

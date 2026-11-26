@@ -169,18 +169,20 @@ if (import.meta.main) {
     return p;
   };
   if (cmd === 'plan') {
+    if (existsSync(join(out, 'grades.jsonl'))) usage(`${join(out, 'grades.jsonl')} already holds grades: plan into a fresh --out, so no grade from an earlier plan counts`);
     const seed = Number(flag('--seed') ?? 1), world = worldOf();
     const { items, skipped } = planItems(world, seed);
     mkdirSync(out, { recursive: true });
     writeFileSync(join(out, 'items.json'), JSON.stringify({ seed, world_seed: N1_SEED, world_scale: world.scale, world_digest: hardWorldDigest(world), skipped, items }, null, 1) + '\n');
     console.log(`planned ${items.length} construction items (${skipped.length} tasks skipped) in ${join(out, 'items.json')}`);
   } else if (cmd === 'run') {
-    const window = flag('--paid-window'), cap = Number(flag('--window-cap-usd')), budget = Number(flag('--budget-usd'));
+    const window = flag('--paid-window'), cap = Number(flag('--window-cap-usd')), options = budgetOptionsFrom(argv), budget = options.budgetUsd ?? 0;
     if (!window) usage('run needs --paid-window <unit>: judge calls are paid and run only inside a granted window');
     if (!(cap > 0) || !(budget > 0) || budget > cap) usage('run needs --window-cap-usd and --budget-usd, with the budget at or below the window cap');
     if (!flag('--budget-ledger')) usage('run needs --budget-ledger <file>, the window\'s own ledger');
+    if (options.runId) usage('run opens its own budget run under the window cap: drop --budget-run-id and BRAINBENCH_BUDGET_RUN_ID');
     const world = worldOf(), { items } = planned(world);
-    const { run, guard } = startPaidRun('cat40-h4fix-judge-check', { ...budgetOptionsFrom(argv), estimateUsd: null });
+    const { run, guard } = startPaidRun('cat40-h4fix-judge-check', { ...options, estimateUsd: null });
     let complete = false;
     try { console.log(`graded ${await gradeItems(world, items, out)} items (window ${window})`); complete = true; }
     finally { run.close({ finish: complete }); guard.uninstall(); }
