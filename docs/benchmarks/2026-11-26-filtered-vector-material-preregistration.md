@@ -111,31 +111,35 @@ exact scan.
 
 ## Cells
 
-A cell is one corpus and size, engine and version, attribute mode, filter, limit and cache state.
+A cell is one corpus and size, engine and version, attribute mode, caller, filter, limit and cache state.
 
 - **Filters** (share of pages selected): `type` at 0.1%, 1%, 5%, 20% and 50%; `afterDate` at the same five shares;
   `where: { fv_tag }` at the same five; `type` (20%) with `afterDate` (50%) together; a source scope of 1% and of 3%
   of pages; and two sanity filters where the arms are identical by construction, no filter and a 50% source scope.
-- **Limits**: 20 (gbrain's default) and 50.
+- **Callers**: a trusted caller (gbrain's local default, no private-page rule) and a caller gbrain treats as untrusted
+  (`excludePrivate: true`, which adds the private-page rule that the `JOINED_STATEMENT_SETTINGS` comment names as the
+  cause of the expensive plan). 10% of pages are private in every cell.
+- **Limits**: 20 (gbrain's default) everywhere, and 50 on the primary engine in independent mode.
 - **Queries per cell**: 200 at 375,000 chunks and below and on W, 100 at 1,500,000. A query starts from a chunk: on L
   the generator's own query perturbation of that chunk, on W the chunk's first sentence. In independent mode the chunks
   come from random pages, one fixed set per corpus and size. In clustered mode half the queries come from pages the
   filter selects and half from pages it doesn't, drawn per filter, and both halves are reported.
 - **Warm cache**: each query runs once per arm untimed, then three timed repeats with the arm order alternating by query
   and repeat (AB, BA, AB for even queries; BA, AB, BA for odd ones).
-- **Cold cache**: in independent mode, the `type`, `afterDate` and `where` filters at 1% and 20%, limit 20, 30 queries
+- **Cold cache**: in independent mode with the untrusted caller, the `type`, `afterDate` and `where` filters at 1% and 20%, limit 20, 30 queries
   per cell. Before each timed search the harness restarts Postgres, drops the operating system's page cache
   (`sync; echo 3 > /proc/sys/vm/drop_caches`) and opens a fresh gbrain engine, so gbrain's first-call probes are part of
   the timing, as they are after a real restart. For PGLite it closes and reopens the engine after dropping the cache.
 - **Engines and versions**:
   - *Primary*: PostgreSQL 17 with pgvector 0.8.7 (`pgvector/pgvector:0.8.7-pg17`, pinned by digest at launch), every
-    size of L and W, every filter, both modes, both limits, warm and cold.
+    size of L and W, every filter, both modes, both callers, both limits, warm and cold.
   - *Version sweep*: PostgreSQL 15, 16 and 18 with pgvector 0.8.7, and PostgreSQL 17 with pgvector 0.7.4 (the oldest
-    pgvector gbrain accepts, without iterative scans), on L at 75,000 and 375,000 chunks, both modes, limit 20, warm and
-    cold. gbrain supports PostgreSQL 15 and newer (its `postgres15-compat` CI job) and pgvector 0.7 and newer
+    pgvector gbrain accepts, without iterative scans), on L at 75,000 and 375,000 chunks, both modes, both callers, limit 20,
+    warm and cold. gbrain supports PostgreSQL 15 and newer (its `postgres15-compat` CI job) and pgvector 0.7 and newer
     (`docs/guides/move-to-postgres.md`).
   - *PGLite*: gbrain's default engine at the PGLite the pin installs, on L at 15,000, 75,000 and 375,000 chunks (375,000
-    is near the 50,000-page size gbrain's README gives as PGLite's range), both modes, limit 20, warm and cold.
+    is near the 50,000-page size gbrain's README gives as PGLite's range), both modes, both callers, limit 20, warm and
+    cold.
 - **Postgres settings**: gbrain's own bench sizing (`scripts/bench/hnsw-scale-vm-setup.sh` at the pin):
   `shared_buffers` 25% and `effective_cache_size` 75% of the machine's memory, `random_page_cost` 1.1,
   `effective_io_concurrency` 200, everything else at Postgres defaults, including `work_mem` (4 MB). The schema and
@@ -172,7 +176,7 @@ A cell is one corpus and size, engine and version, attribute mode, filter, limit
 Intervals are 95% percentile bootstrap intervals, 10,000 resamples over queries (a query's repeats move together).
 
 **The realistic set** is L at 15,000, 75,000 and 375,000 chunks and W, on every engine and version tested, both modes,
-both limits and both cache states. L at 1,500,000 chunks is the larger size: reported, and used only to say whether a
+both callers, both limits and both cache states. L at 1,500,000 chunks is the larger size: reported, and used only to say whether a
 flip should carry a size limit.
 
 **Affected cells** are those whose filter is one of `type`, `afterDate`, `where`, the combination, or a source scope
@@ -230,7 +234,7 @@ say so.
 
 ## Pilot per arm
 
-Before counted runs, on the primary engine at L 15,000 and 75,000 chunks, every filter, both modes, 20 queries per cell,
+Before counted runs, on the primary engine at L 15,000 and 75,000 chunks, every filter, both modes, both callers, 20 queries per cell,
 warm, plus the cold procedure on two cells. Its machine time is at most a tenth of the plan's. It must show, for each arm:
 
 - **The part under test ran.** In arm T, the captured plans of affected cells show `enable_material = off` among the

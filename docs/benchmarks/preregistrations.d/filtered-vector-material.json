@@ -51,7 +51,7 @@
         {
           "arm": "shipped",
           "max_budget_fraction": 0.1,
-          "part_under_test_ran": "on PostgreSQL 17 with pgvector 0.8.7 at L 15,000 and 75,000 chunks, every filter and both attribute modes at 20 queries per cell, auto_explain plans of the affected cells show enable_material at its default and record whether a Materialize node sits on the page join; sanity cells run the same SQL and settings as the other arm",
+          "part_under_test_ran": "on PostgreSQL 17 with pgvector 0.8.7 at L 15,000 and 75,000 chunks, every filter, both attribute modes and both callers at 20 queries per cell, auto_explain plans of the affected cells show enable_material at its default and record whether a Materialize node sits on the page join; sanity cells run the same SQL and settings as the other arm",
           "judge_passes": "no model judge in stage 1: recall is scored against gbrain's own exactSql, which the pilot checks against an independent float64 brute force over the generated vectors (ordered top 50 pages identical for every query, ties within 1e-6 aside)",
           "units_supplied_at_rate": "every pilot cell has its queries and, in clustered mode, both the selected-page and other-page halves; pilot machine time is at most a tenth of the plan's and its projected hours for the counted grid fit the plan, or the grid is cut by a dated amendment"
         },
