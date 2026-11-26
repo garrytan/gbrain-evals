@@ -35,6 +35,7 @@
  *   bun eval/runner/multi-writer-behavior.ts matrix --gbrain-clone <path> --ref <branch|sha> [--baseline-ref master]
  *       --pg-url <url> [--cargo-target <dir>] [--out <dir>]
  *   bun eval/runner/multi-writer-behavior.ts report <receipt.json> [...]
+ *   bun eval/runner/multi-writer-behavior.ts parity <a.json> <b.json>
  *
  * `matrix` fetches the ref (and the baseline) in the clone, records the SHAs, builds each Rust addon from the same
  * commit, and runs PGLite, Postgres, Rust with the switch on and Rust with it unset, then Rust at the baseline with the
@@ -231,16 +232,19 @@ async function matrix(argv: string[], log: (s: string) => void): Promise<void> {
   const sha = fetchRef(clone, ref);
   const baseSha = fetchRef(clone, baselineRef);
   log(`[mw] ${ref} = ${sha}; ${baselineRef} = ${baseSha}`);
+  // Default arms: the four the suite reports plus Rust at the baseline; the PGLite and Postgres baselines run on request.
   const arms: Array<{ name: string; sha: string; kind: EvalEngineKind; sw: SwitchSetting }> = [
     { name: 'pglite', sha, kind: 'pglite', sw: 'off' },
     { name: 'postgres', sha, kind: 'postgres', sw: 'off' },
     { name: 'rust-on', sha, kind: 'rust', sw: 'on' },
     { name: 'rust-off', sha, kind: 'rust', sw: 'off' },
     { name: 'rust-baseline-off', sha: baseSha, kind: 'rust', sw: 'off' },
+    { name: 'pglite-baseline', sha: baseSha, kind: 'pglite', sw: 'off' },
+    { name: 'postgres-baseline', sha: baseSha, kind: 'postgres', sw: 'off' },
   ];
-  const only = flag(argv, '--arms')?.split(',');
+  const only = flag(argv, '--arms')?.split(',') ?? ['pglite', 'postgres', 'rust-on', 'rust-off', 'rust-baseline-off'];
   const receipts: Record<string, Receipt> = {};
-  for (const arm of arms.filter(a => !only || only.includes(a.name))) {
+  for (const arm of arms.filter(a => only.includes(a.name))) {
     const gut = resolveGbrainUnderTest(`${clone}@${arm.sha}`);
     const env = { ...process.env };
     if (arm.kind === 'rust') process.env.GBRAIN_RUST_ENGINE_ADDON = buildAddon(gut, cargoTarget, log);
@@ -254,7 +258,7 @@ async function matrix(argv: string[], log: (s: string) => void): Promise<void> {
   const off = receipts['rust-off'];
   const base = receipts['rust-baseline-off'];
   const parity = off && base ? { a: `rust-off @${sha.slice(0, 10)}`, b: `rust @${baselineRef} ${baseSha.slice(0, 10)}`, identical: off.serial.sha256 === base.serial.sha256, firstDiff: firstDifference(off.serial.transcript, base.serial.transcript) ?? undefined } : undefined;
-  const ordered = ['pglite', 'postgres', 'rust-on', 'rust-off', 'rust-baseline-off'].map(n => receipts[n]).filter((r): r is Receipt => !!r);
+  const ordered = arms.map(a => receipts[a.name]).filter((r): r is Receipt => !!r);
   const md = `# Multi-writer behavior: ${ref} ${sha}\n\nBaseline ${baselineRef} ${baseSha}; gbrain-evals ${gitHead(REPO)}.\n\n${renderReport(ordered, parity)}`;
   writeFileSync(join(out, 'summary.md'), md);
   if (parity) writeFileSync(join(out, 'parity.json'), `${JSON.stringify(parity, null, 2)}\n`);
@@ -270,6 +274,13 @@ async function main(): Promise<void> {
     return;
   }
   if (cmd === 'matrix') { await matrix(argv, log); return; }
+  if (cmd === 'parity') {
+    // Compare two receipts' serial transcripts byte for byte (for example Rust with the switch unset against a baseline).
+    const [a, b] = argv.slice(1, 3).map(f => JSON.parse(readFileSync(f!, 'utf8')) as Receipt);
+    const d = firstDifference(a!.serial.transcript, b!.serial.transcript);
+    console.log(JSON.stringify({ a: armLabel(a!), b: armLabel(b!), identical: a!.serial.sha256 === b!.serial.sha256, a_sha256: a!.serial.sha256, b_sha256: b!.serial.sha256, first_difference: d }, null, 2));
+    return;
+  }
   if (cmd !== 'run') { console.error('usage: multi-writer-behavior.ts run|matrix|report (see the header of this file)'); process.exit(2); }
   const gut = resolveGbrainUnderTest(gbrainSpecFrom(argv));
   const kind = evalEngineKind();

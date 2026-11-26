@@ -15,7 +15,7 @@
  * then, after the parent writes `go` on stdin, one `op` line per operation as it finishes, and one `done` line. It
  * exits when stdin closes after `done`, or at once with `hold` lanes when the parent kills it.
  */
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { openEvalEngine, type EvalEngineKind } from '../eval-engine.ts';
 import type { GbrainUnderTest } from '../gbrain-under-test.ts';
@@ -109,11 +109,14 @@ async function waitForGo(): Promise<void> {
 /** The running engine's own multi-user answer: the store's open info and the session behaviour only a multi-user store has. */
 async function probeEngine(plan: WorkerPlan, engine: unknown): Promise<Record<string, unknown>> {
   if (plan.kind !== 'rust') return { applies: false };
+  // A build from before the multi-user work has no switch at all, so it can only run single-writer.
+  const buildHasSwitch = existsSync(join(plan.root, 'src/core/rust-engine/multiuser-switch.ts'));
+  if (!buildHasSwitch) return { applies: true, build_has_switch: false, role: (engine as { ownerRole?: unknown }).ownerRole ?? null };
   const e = engine as { ownerRole?: unknown; openStoreIfOpen?: (m: string) => { multiuser?: unknown } | null };
   const role = e.ownerRole ?? null;
   let store: { multiuser?: unknown } | null = null;
   try { store = typeof e.openStoreIfOpen === 'function' ? e.openStoreIfOpen('multi_writer_probe') : null; } catch (err) { return { applies: true, role, store_error: String((err as Error)?.message ?? err).slice(0, 300) }; }
-  const out: Record<string, unknown> = { applies: true, role, store_open: store !== null, store_multiuser: store ? store.multiuser === true : null };
+  const out: Record<string, unknown> = { applies: true, build_has_switch: true, role, store_open: store !== null, store_multiuser: store ? store.multiuser === true : null };
   if (store) {
     try {
       const { openPrincipalSession } = await import(join(plan.root, 'src/core/rust-engine/principal-session.ts')) as { openPrincipalSession: (s: unknown, t: string) => Promise<unknown> };

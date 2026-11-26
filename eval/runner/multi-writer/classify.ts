@@ -154,6 +154,11 @@ export interface SwitchProof {
  */
 export function judgeSwitch(kind: string, requested: 'on' | 'off', probes: Array<Record<string, unknown>>): SwitchProof {
   if (kind !== 'rust') return { requested, probes, verdict: 'not_applicable', reason: `${kind} has no multi-user switch` };
+  if (probes.length && probes.every(p => p && p.build_has_switch === false)) {
+    return requested === 'off'
+      ? { requested, probes, verdict: 'off_proven', reason: 'this gbrain build has no multi-user switch (src/core/rust-engine/multiuser-switch.ts is absent), so it runs single-writer only' }
+      : { requested, probes, verdict: 'invalid', reason: 'the switch was requested on, but this gbrain build has no multi-user switch' };
+  }
   const owners = probes.filter(p => p && p.store_open === true);
   if (!owners.length) return { requested, probes, verdict: 'invalid', reason: 'no probe process opened the store as its owner, so the running engine never answered' };
   if (requested === 'on') {

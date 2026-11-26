@@ -706,7 +706,8 @@ export async function checkAccess(ctx: Ctx): Promise<CheckResult> {
     if (norm(hiddenTl, priv) !== norm(missingTl, 'private/mw-c7-nobody')) findings.push('get_timeline on a hidden page answers differently from a missing page');
     cross['hidden_vs_missing_get_page'] = `${hidden.code ?? 'ok'}/${missing.code ?? 'ok'}/${norm(hidden, priv) === norm(missing, 'private/mw-c7-nobody') ? 'identical' : 'different'}`;
     // d. Out-of-range numbers: any typed answer is fine here; an untyped error is not. Engines are compared in the report.
-    for (const [i, [label]] of numeric.entries()) { judge(numericOut[i]!, `numeric_${label.replace(/\W+/g, '_')}`, 'typed'); cross[`numeric: ${label}`] = outcomeClass(numericOut[i]!); }
+    // list_pages counts every page the run wrote, which differs between runs, so only its outcome is compared.
+    for (const [i, [label]] of numeric.entries()) { judge(numericOut[i]!, `numeric_${label.replace(/\W+/g, '_')}`, 'typed'); cross[`numeric: ${label}`] = label.startsWith('list_pages') ? outcomeClass(numericOut[i]!).replace(/^ok:\d+$/, 'ok') : outcomeClass(numericOut[i]!); }
     // e. A forgotten fact gives the plain withdrawn refusal when the member remembers it again.
     judge(chain.first, 'member_remember', 'ok');
     if (chain.forgot) judge(chain.forgot, 'member_forget', 'ok');

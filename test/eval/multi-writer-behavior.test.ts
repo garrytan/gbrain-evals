@@ -90,6 +90,8 @@ describe('judgeSwitch: the proof comes from the running engine', () => {
     expect(judgeSwitch('rust', 'off', [owner(false, 'refused_multiuser_off')]).verdict).toBe('off_proven');
     expect(judgeSwitch('rust', 'off', [owner(true, 'reached_store_mint')]).verdict).toBe('invalid');
     expect(judgeSwitch('postgres', 'off', []).verdict).toBe('not_applicable');
+    expect(judgeSwitch('rust', 'off', [{ build_has_switch: false, role: 'owner' }]).verdict).toBe('off_proven');
+    expect(judgeSwitch('rust', 'on', [{ build_has_switch: false, role: 'owner' }]).verdict).toBe('invalid');
   });
 
   test('the child environment carries the switch exactly as asked and no provider key', () => {
