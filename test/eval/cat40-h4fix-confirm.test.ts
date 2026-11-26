@@ -317,6 +317,7 @@ describe('particle-1 on this plan\'s worlds (the U digests recorded before gener
       const file = join(dir, 'world.json');
       writeFileSync(file, JSON.stringify(listed));
       await expect(main(['--world', file, '--models', 'particle-1', '--judge', 'claude-opus-5-5', '--arms', 'fs', '--out', join(dir, 'out'), '--preflight'])).rejects.toThrow('--paid-window');
+      for (const unit of ['$PAID_WINDOW', '']) await expect(main(['--world', file, '--models', 'particle-1', '--judge', 'claude-opus-5-5', '--arms', 'fs', '--out', join(dir, 'out'), `--paid-window=${unit}`, '--preflight'])).rejects.toThrow('unexpanded $PAID_WINDOW is refused');
     } finally {
       keys.forEach((k, i) => { if (saved[i] !== undefined) process.env[k] = saved[i]; });
       rmSync(dir, { recursive: true, force: true });
