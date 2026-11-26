@@ -1,0 +1,211 @@
+{
+  "schema": "gbrain-evals/q1-cell-receipt/v1",
+  "cell_id": "bgw-pilot.baseline-file-agent.baseline.whole-agent",
+  "run_cell": "bgw-pilot.baseline-file-agent.baseline",
+  "config_sha256": "f4552cb1f7e1101ce753cea7e80dd70547c9bc9e523ad02d8240fd4aa40c5dff",
+  "run_status": "complete",
+  "invalid_reasons": [],
+  "stopped": null,
+  "set": "BGW-pilot",
+  "benchmark": "bg1-dev",
+  "split": "dev",
+  "block": "BGW-pilot",
+  "system": {
+    "kind": "baseline-file-agent",
+    "configuration": "baseline",
+    "runner": "in-process",
+    "capability_system": "baseline-file-agent",
+    "versions": {
+      "package": "in-repo",
+      "lock_sha256": null,
+      "image": null,
+      "vendor_benchmark_code": null,
+      "ripgrep": "ripgrep 14.1.0"
+    },
+    "capabilities": {
+      "system": "baseline-file-agent",
+      "protocol": 1,
+      "versions": {
+        "package": "in-repo",
+        "lock_sha256": null,
+        "image": null,
+        "vendor_benchmark_code": null,
+        "ripgrep": "ripgrep 14.1.0"
+      },
+      "configs": {
+        "common": {
+          "model_roles": {
+            "agent": "the reader of the cell"
+          },
+          "notes": "Cat 40 loop over FsArm without write_file; uncapped ripgrep grep; turn cap 40"
+        }
+      },
+      "time": "in-text",
+      "provenance": {
+        "status": "exact",
+        "mechanism": "one file per ingested session; files the agent read map back to their sessions evaluator-side"
+      },
+      "delete": "native",
+      "readiness": "synchronous: a session is a file once ingested",
+      "namespace": "directory tree per namespace",
+      "parallel_namespaces": true,
+      "retrieval_policies": {
+        "vendor-default": {
+          "supported": false
+        },
+        "fixed-evidence": {
+          "supported": false
+        }
+      },
+      "streaming": "disabled",
+      "telemetry_off": [],
+      "agent_surface": {
+        "kind": "native-agent"
+      },
+      "deviations_from_vendor_code": [],
+      "layout": "YYYY/MM/DD/<opaque>.md; undated sessions take their batch date",
+      "max_turns": 40,
+      "effort": "medium",
+      "grep": {
+        "engine": "ripgrep (Rust regex, linear time)",
+        "default_max_results": null,
+        "line_truncation": null,
+        "limits": {
+          "wall_ms": 60000,
+          "max_output_bytes": 536870912
+        }
+      }
+    }
+  },
+  "arm": {
+    "id": "whole-agent",
+    "arm": "whole-system",
+    "mode": "agent",
+    "policy": null,
+    "budget": null,
+    "variant": null,
+    "label": "grep agent, uncapped ripgrep, 40 turns"
+  },
+  "readers": [
+    "anthropic:claude-opus-5-5",
+    "particle:particle-1"
+  ],
+  "reader_replicates": {},
+  "effort": "medium",
+  "instrument": {
+    "id": "bg1",
+    "sha256": "9598aacb076ba7bc8e589546008d6db30fa57d078e4140194b1ea05e2564102a",
+    "judge": null
+  },
+  "frontier": {
+    "judges": [
+      "anthropic:claude-opus-5-5",
+      "openai:gpt-6-astra"
+    ],
+    "readers": null,
+    "sample": null,
+    "per_reader": true,
+    "judge_by_reader": {
+      "anthropic:claude-opus-5-5": "openai:gpt-6-astra",
+      "particle:particle-1": "anthropic:claude-opus-5-5"
+    },
+    "settings": {
+      "effort": "medium",
+      "max_tokens": 8000
+    },
+    "instrument_ids": [
+      "bg1@anthropic:claude-opus-5-5",
+      "bg1@openai:gpt-6-astra"
+    ]
+  },
+  "selection": {
+    "questions": 64,
+    "conversations": 1,
+    "scheduled_sha256": "b4c65c2d16d3644ba1b18d337418e8a1911a36eacc7ec44007cb86746c0533f5"
+  },
+  "counts": {
+    "rows": 64,
+    "answers": 128,
+    "answers_promised": 128,
+    "judgments": 128,
+    "unjudged": 0,
+    "outcomes": {
+      "scored": 128
+    }
+  },
+  "per_reader_mean": {
+    "anthropic:claude-opus-5-5": null,
+    "particle:particle-1": null
+  },
+  "per_reader_frontier_mean": {
+    "anthropic:claude-opus-5-5": 0.984375,
+    "particle:particle-1": 0.9375
+  },
+  "realizations": [
+    {
+      "conversation": "bg1-dev-01",
+      "realization_id": "04190700acca4a6b8cdb23b592a74995629de66be0cc6338b10c8ef60af552fb",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    }
+  ],
+  "ingest": {
+    "conversations": 1,
+    "messages": 4461,
+    "ingested_tokens": 187021,
+    "wall_ms": {
+      "total": 315,
+      "p50": 315,
+      "p95": 315
+    },
+    "failed_sessions": 0,
+    "degraded_conversations": 0,
+    "readiness_samples_ms": [],
+    "write_start_to_queryable_ms": {
+      "p50": null,
+      "p95": null,
+      "probes": 0,
+      "found": 0,
+      "missed": 0,
+      "not_measurable": 0
+    }
+  },
+  "timings": {
+    "retrieval_ms": {
+      "p50": null,
+      "p95": null
+    },
+    "answer_ms": {
+      "p50": 6687.9,
+      "p95": 11438.8
+    }
+  },
+  "usage": {
+    "input": 451841,
+    "output": 127116,
+    "cache_read": 1457167,
+    "cache_write": 152335
+  },
+  "spend": {
+    "source": "metering proxy (whole cell, every arm)",
+    "usd": {
+      "ingest": 0,
+      "retrieval": 0,
+      "reader": 1.804893,
+      "judge": 0.42336,
+      "background_tail": 0
+    },
+    "total_usd": 2.228253,
+    "background_tail_usd_by_realization": {}
+  },
+  "files": {
+    "rows": "rows.ndjson",
+    "answers": "answers.ndjson",
+    "judgments": "judgments.ndjson",
+    "run_config": "run-config.json",
+    "readiness": "readiness.ndjson",
+    "contexts": "../../runs/bgw-pilot.baseline-file-agent.baseline/contexts.ndjson"
+  }
+}
