@@ -123,7 +123,9 @@ A cell is one corpus and size, engine and version, attribute mode, caller, filte
 - **Queries per cell**: 200 at 375,000 chunks and below and on W, 100 at 1,500,000. A query starts from a chunk: on L
   the generator's own query perturbation of that chunk, on W the chunk's first sentence. In independent mode the chunks
   come from random pages, one fixed set per corpus and size. In clustered mode half the queries come from pages the
-  filter selects and half from pages it doesn't, drawn per filter, and both halves are reported.
+  filter selects and half from pages it doesn't, drawn per filter, and both halves are reported. A filter that leaves
+  no page out for the caller (no filter for the trusted caller) uses the independent set instead, and the sanity
+  cells always do.
 - **Warm cache**: each query runs once per arm untimed, then three timed repeats with the arm order alternating by query
   and repeat (AB, BA, AB for even queries; BA, AB, BA for odd ones).
 - **Cold cache**: in independent mode with the untrusted caller, the `type`, `afterDate` and `where` filters at 1% and 20%, limit 20, 30 queries
@@ -158,17 +160,22 @@ A cell is one corpus and size, engine and version, attribute mode, caller, filte
   leaves no eligible page is left out of recall and counted. The arm's rows are the first timed repeat's; the harness
   records whether later repeats returned the same ordered pages.
 - **Exact ground truth**: gbrain's own `exactSql` for the same statement (`buildVectorSearchStatement` at the pin,
-  every eligibility predicate, the distance written as `+ 0` so no index can serve it), run in its own read
-  transaction with JIT off. In the pilot it is checked against an independent float64 brute force over the generated
-  vectors with the same page predicate, and must agree on the ordered top 50 pages for every query, apart from ties
-  within 1e-6.
+  every eligibility predicate, the distance written as `+ 0` so no index can serve it), with its candidate window
+  unbounded (`null` bound at `innerLimitIdx`, as gbrain's own exact fallback binds it), so every eligible chunk is
+  scored before pages are collapsed. It runs in its own read transaction with JIT off. The corpus's slugs and sources
+  match no source boost (`GBRAIN_SOURCE_BOOST` and `GBRAIN_SEARCH_EXCLUDE` unset), so every page's factor is 1 and
+  the oracle ranks pages by pure cosine distance. The pilot checks both properties: on every pilot cell the oracle
+  must agree with an independent float64 brute force over the generated vectors (each eligible page ranked by its
+  best chunk's cosine) on the ordered top k pages for every query, apart from ties within 1e-6, and its scores must
+  equal those cosines within 1e-5.
 - **Secondary**: recall@10 inside limit-20 results; the share of queries where T and C return the same ordered pages;
   searches gbrain reports as incomplete (`onVectorPoolMeta`); errors.
 - **Errors**: a search that throws counts as recall 0 and is timed to the throw; a cell with more than 1% errors in
   either arm is invalid, reported as such, and fixed before it counts.
-- **Plans**: a separate capture pass (not timed) runs the first 5 queries of every cell per arm with `auto_explain`
-  logging every statement's executed plan as JSON with `log_analyze`, `log_buffers` and `log_settings`, so the
-  plans show `enable_material` and every Materialize node. The results publish each cell's plan summary (node types,
+- **Plans**: a separate capture pass (not timed) runs the first 5 queries of every cell per arm and, inside each vector
+  attempt's own transaction and settings, runs `EXPLAIN (ANALYZE, BUFFERS, SETTINGS, FORMAT JSON)` of that attempt's
+  statement before the statement itself, so the plans show `enable_material` and every Materialize node. On PGLite the
+  same is done through its transaction handle. The results publish each cell's plan summary (node types,
   Materialize nodes, the index used, temporary blocks, attempts per search) and representative plans in full.
 
 ## Decision rule
@@ -180,7 +187,9 @@ both callers, both limits and both cache states. L at 1,500,000 chunks is the la
 flip should carry a size limit.
 
 **Affected cells** are those whose filter is one of `type`, `afterDate`, `where`, the combination, or a source scope
-under 4%.
+under 4%. An affected cell is **reached** when at least one arm-T search in it ran a joined pooled attempt; every
+cell reports the share of its T searches that did. Recall and latency states apply to every affected cell, but the
+pooled latency test below uses only reached cells, because an unreached cell runs the same SQL in both arms.
 
 Each cell gets one state for recall and one for latency:
 
@@ -195,12 +204,15 @@ Each cell gets one state for recall and one for latency:
   - *neutral* otherwise.
 
 A cell that comes out *loss* or *regresses* is re-run once on a fresh query set (seed 29819) and keeps that state only if
-the re-run agrees; this guards the many cells against chance calls. Sanity cells must return the same ordered pages in
-both arms for at least 99% of queries and show a p50 ratio interval that includes 1; otherwise the harness is wrong and
-is fixed before anything counts.
+the re-run agrees; this guards the many cells against chance calls. Sanity cells check the harness directly: their captured attempts must
+have identical SQL and settings in both arms, and they must return the same ordered pages in both arms for at least
+99% of queries. For latency, the geometric mean of the p50 ratios over all warm sanity cells of one engine and
+version must have an interval inside 0.95 to 1.05; a single sanity cell's interval missing 1 is expected by chance
+across this many cells and is reported, not acted on. A failed check means the harness is wrong, and it is fixed
+before anything counts.
 
 **Latency improves on the realistic affected cells** when the geometric mean of the p50 ratios over the realistic
-affected warm cells has an interval below 1.00, the same holds for the p95 ratios, and at least one realistic size has
+affected, reached warm cells has an interval below 1.00, the same holds for the p95 ratios, and at least one realistic size has
 affected cells that *improve*.
 
 The outcome in "What the result decides" follows:
@@ -211,7 +223,8 @@ The outcome in "What the result decides" follows:
   proposed to GBRA-108 is the simplest threshold on filter kind, estimated filtered share or corpus size that puts every
   such cell on the keep-today side and the most *improves* cells on the flip side. It is exploratory, and **stage 1b**
   confirms it: one fresh L corpus (seed 19817) at the sizes the rule depends on, fresh queries, every filter on both sides
-  of the threshold, primary engine. The rule passes when, on stage 1b, no cell on its flip side is *loss* or *regresses*.
+  of the threshold, primary engine. The rule passes when, on stage 1b, every cell on its flip side is *safe* on recall and none *regresses* on
+  latency; an *unresolved* flip-side cell fails it.
 - **No flip** when latency improves but no such rule exists, or the stage 1b check fails.
 - **Close** when latency doesn't improve on the realistic affected cells.
 
@@ -237,10 +250,14 @@ say so.
 Before counted runs, on the primary engine at L 15,000 and 75,000 chunks, every filter, both modes, both callers, 20 queries per cell,
 warm, plus the cold procedure on two cells. Its machine time is at most a tenth of the plan's. It must show, for each arm:
 
-- **The part under test ran.** In arm T, the captured plans of affected cells show `enable_material = off` among the
-  attempt's settings and no Materialize node from the page join; in arm C they show the setting at its default. Where
-  the planner picks the same plan in both arms at these sizes, the pilot says so: that is a result, not a failure.
-  Sanity cells show identical SQL and settings in both arms.
+- **The part under test ran.** The harness classifies every attempt a search runs (index walk, scope scan, joined
+  pooled attempt or exact fallback) from its SQL, and records per search whether a joined pooled attempt ran. Only
+  joined pooled attempts are where the arms differ, so the check is on those: in arm T their captured plans show
+  `enable_material = off` among the attempt's settings, and in arm C the setting at its default, with whether a
+  Materialize node sits on the page join. Searches that an index walk or a scope scan answered never reach the changed
+  code; the pilot counts them per cell, and a cell where no T search ran a joined pooled attempt is reported as not
+  reached rather than as exposure. Where the planner picks the same plan in both arms, the pilot says so: that is a
+  result, not a failure. Sanity cells show identical SQL and settings in both arms.
 - **No model judge.** The primary metric is computed against exact ground truth, so there is no judge to check.
 - **The units can be supplied at the planned rate.** The exact oracle agrees with the float64 brute force (above); every
   cell has its queries, and the clustered split has both halves; the projected machine hours for the counted grid fit

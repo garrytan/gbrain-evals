@@ -17,7 +17,7 @@
           "then": "GBRA-108 flips gbrain's default: the shape.relaxed predicate ships in postgres-engine.ts and pglite-engine.ts, with this result linked from gbrain's changelog"
         },
         {
-          "if": "latency improves but some realistic cells lose recall beyond the margin, stay unresolved or regress on latency, and a threshold on filter kind, estimated filtered share or corpus size separates them, confirmed on the fresh stage 1b corpus and queries",
+          "if": "latency improves but some realistic cells lose recall beyond the margin, stay unresolved or regress on latency, and a threshold on filter kind, estimated filtered share or corpus size separates them, confirmed on the fresh stage 1b corpus and queries with every flip-side cell safe on recall and none regressing",
           "then": "GBRA-108 gets that rule and its cells and ships the flip only on the rule's flip side; stage 2 runs first if a realistic cell lost recall"
         },
         {
@@ -51,14 +51,14 @@
         {
           "arm": "shipped",
           "max_budget_fraction": 0.1,
-          "part_under_test_ran": "on PostgreSQL 17 with pgvector 0.8.7 at L 15,000 and 75,000 chunks, every filter, both attribute modes and both callers at 20 queries per cell, auto_explain plans of the affected cells show enable_material at its default and record whether a Materialize node sits on the page join; sanity cells run the same SQL and settings as the other arm",
-          "judge_passes": "no model judge in stage 1: recall is scored against gbrain's own exactSql, which the pilot checks against an independent float64 brute force over the generated vectors (ordered top 50 pages identical for every query, ties within 1e-6 aside)",
+          "part_under_test_ran": "on PostgreSQL 17 with pgvector 0.8.7 at L 15,000 and 75,000 chunks, every filter, both attribute modes and both callers at 20 queries per cell, EXPLAIN ANALYZE plans of joined pooled attempts in the affected cells show enable_material at its default and record whether a Materialize node sits on the page join; sanity cells run the same SQL and settings as the other arm",
+          "judge_passes": "no model judge in stage 1: recall is scored against gbrain's own exactSql, which the pilot checks against an independent float64 brute force over the generated vectors with the candidate window unbounded and no source boost (ordered top k pages identical for every query on every pilot cell, ties within 1e-6 aside, scores equal to the cosines within 1e-5)",
           "units_supplied_at_rate": "every pilot cell has its queries and, in clustered mode, both the selected-page and other-page halves; pilot machine time is at most a tenth of the plan's and its projected hours for the counted grid fit the plan, or the grid is cut by a dated amendment"
         },
         {
           "arm": "material-off-filtered",
           "max_budget_fraction": 0.1,
-          "part_under_test_ran": "the patch applies with exactly one match in each engine file and its hashes are recorded; on the same pilot cells auto_explain plans of the affected cells show enable_material = off among the attempt's settings and no Materialize node on the page join, and sanity cells show identical SQL and settings to the shipped arm; cells where the planner picks the same plan anyway are recorded as such",
+          "part_under_test_ran": "the patch applies with exactly one match in each engine file and its hashes are recorded; every attempt is classified from its SQL (index walk, scope scan, joined pooled, exact); on the same pilot cells the EXPLAIN ANALYZE plans of joined pooled attempts show enable_material = off among the attempt's settings, searches answered by an index walk or scope scan are counted per cell, a cell where no search ran a joined pooled attempt is reported as not reached, sanity cells show identical SQL and settings to the shipped arm, and cells where the planner picks the same plan anyway are recorded as such",
           "judge_passes": "no model judge in stage 1: recall is scored against the same exact oracle the shipped arm uses",
           "units_supplied_at_rate": "the same pilot cells complete with under 1% errors and the counted grid's projected machine hours fit the plan"
         }
