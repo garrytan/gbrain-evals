@@ -456,6 +456,19 @@ extract-first servers on current values. It lost questions about the past and wi
 Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator.
 Garry Tan runs Y Combinator.
 
+**Facts that change, against a grep agent: public development worlds, descriptive.** The
+[weekly held-out line's pilots](docs/benchmarks/2026-11-23-weekly-outcome-line.md) gave a grep agent (ripgrep and read
+tools over the raw chats, up to 40 turns) made-up changing-facts histories whose questions name their subject. With
+claude-opus-5-5 it answered 190 of 192 on three 200,000-token worlds and 192 of 192 on three 1,000,000-token worlds. On
+one world at each length, gbrain (v0.60.768.0 and v0.60.769.0) and the extract-first server scored 63 of 64 against the
+grep agent's 63 and 64, and the memory-bank server 59 and 62. When the questions describe their subject instead, the grep agent
+still scored 151 of 158 where the chats use nicknames, roles or full names; gbrain was not run on those questions.
+Opus grep missed 12 of 34 misspelling questions. gbrain recovered none of those 12, and the misspellings failed the blind fairness check, so the line stopped before week 1.
+The judges here were never checked against people. gbrain is Garry
+Tan's own project. Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, which makes particle-1.
+Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator.
+Garry Tan runs Y Combinator.
+
 **Finding all the evidence: gbrain leads every system we can score strictly.** A question counts only if every
 required session is in the top five. gbrain was measured at `109b992`
 ([recount](docs/benchmarks/2026-10-04-longmemeval-opaque-followups.md)); the other rows and their sources are in
@@ -685,6 +698,14 @@ Garry Tan runs Y Combinator.
 [Disclosures](docs/disclosures.md) lists every relationship and where each line goes.
 
 ## Changelog
+
+### 2026-11-26: The weekly held-out line's pilots, and why the line stopped
+
+How gbrain compares adds a paragraph on the [weekly held-out line's pilots](docs/benchmarks/2026-11-23-weekly-outcome-line.md):
+a grep agent matched gbrain and two memory servers on public changing-facts worlds whose questions name their subject,
+at 200,000 and 1,000,000 tokens, and held at 151 of 158 when questions describe their subject through plain aliases,
+where gbrain was not run.
+Opus grep missed 12 of 34 misspelling questions. gbrain recovered none of those 12, and the misspellings failed the blind fairness check, so the line stopped before week 1.
 
 ### 2026-11-25: Per-person memory isolation
 

@@ -12,7 +12,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { BudgetRun, closeLedgers, initLedger } from '../../eval/runner/budget-ledger.ts';
 import { keylessUpstream, MeteringProxy } from '../../eval/runner/metering-proxy.ts';
-import { campaignManifest, findCell, loadCellManifest, rs1CellWindow, type UnitSelection } from '../../eval/runner/q1/cell.ts';
+import { campaignManifest, findCell, loadCellManifest, rs1CellWindow, runUpstreamOptions, type UnitSelection } from '../../eval/runner/q1/cell.ts';
 import { ScoreboardError } from '../../eval/runner/q1/scoreboard-errors.ts';
 import { paidWindowArgs, requireRs1Window, WindowRefusal } from '../../eval/runner/rs1/paid-window.ts';
 
@@ -179,6 +179,19 @@ describe('cell.ts run --manifest rs1', () => {
     return proxy;
   };
   const at = (p: MeteringProxy) => `http://127.0.0.1:${p.port}`;
+
+  test('the RS1 run passes the verified proxy mode and accepted window to the cell', async () => {
+    const paid = leaseProxy(50);
+    const rehearsal = new MeteringProxy({ fetchImpl: dead, upstream: keylessUpstream('http://127.0.0.1:9') });
+    const unknown = Bun.serve({ hostname: '127.0.0.1', port: 0, fetch: () => Response.json({ mode: 'lease', lease_usd: 50 }) });
+    rehearsal.start();
+    const options = (proxy: string, flags: string[] = []) => runUpstreamOptions(['--manifest', 'rs1', '--provider-proxy', proxy, ...flags], def, {});
+    try {
+      expect(await options(at(rehearsal))).toEqual({ keyless: true, paidWindow: null });
+      expect(await options(at(paid), window)).toEqual({ keyless: false, paidWindow: 'RS1-WA-CELLS' });
+      expect(await refused(options(`http://127.0.0.1:${unknown.port}`, window))).toMatchObject({ code: 'PREFLIGHT_FAILED' });
+    } finally { paid.stop(); rehearsal.stop(); unknown.stop(true); }
+  });
 
   test('refuses a run without the window, before any provider client, and a lease proxy that cannot be asked is not keyless', async () => {
     const none = { SHOOTOUT_KEYLESS_UPSTREAM: undefined, SHOOTOUT_LEASE_USD: undefined };

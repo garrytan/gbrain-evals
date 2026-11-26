@@ -1,0 +1,14 @@
+{
+  "run_id": "bgw-pilot-alias.baseline-file-agent.baseline-a1-b97fe076",
+  "lease_usd": 4.33,
+  "committed_usd": 0.08539805999999994,
+  "requests": 21,
+  "max_output_tokens": 32768,
+  "cell_exit_code": 143,
+  "timeout_hours": 10,
+  "timed_out": false,
+  "stopped_by": "SIGTERM",
+  "checkpoint_rows": 86,
+  "restored_from": null,
+  "resumed_from_checkpoint": true
+}

@@ -1,0 +1,13 @@
+{
+  "run_id": "bgw-pilot-long.ext-extract-first.common-a1-7757b196",
+  "lease_usd": 72.49,
+  "committed_usd": 21.723245680000083,
+  "requests": 45187,
+  "max_output_tokens": 32768,
+  "cell_exit_code": 0,
+  "timeout_hours": 26,
+  "timed_out": false,
+  "checkpoint_rows": 64,
+  "realization_id": "real-bgw-pilot-long.ext-extract-first.common-e56e66c417dc0d92",
+  "realization_status": "complete"
+}

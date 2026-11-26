@@ -51,7 +51,7 @@ import { requireRs1Window, WindowRefusal } from '../paid-arm.ts';
 import { claimOut, keylessUpstreamArg } from '../q1/calibration-cell.ts';
 import { JUDGED, metering, onSlot, type MeterLine } from '../q1/cell.ts';
 import { BG1_MEASURED, bg1JudgeOf } from '../q1/cells/definitions.ts';
-import { generateWeeklyLineJudgeCheckCells, WEEKLY_LINE_JUDGE_CHECK_PER_JUDGE, WEEKLY_LINE_LABEL_CAP_USD, WEEKLY_LINE_LABELLER, WEEKLY_PILOT_LENGTH_ENV, WEEKLY_PILOT_SETS, weeklyPilotLength, type WeeklyPilotLength } from '../q1/cells/weekly-line.ts';
+import { generateWeeklyLineJudgeCheckCells, WEEKLY_LINE_JUDGE_CHECK_PER_JUDGE, WEEKLY_LINE_LABEL_CAP_USD, WEEKLY_LINE_LABELLER, WEEKLY_LINE_READERS, WEEKLY_PILOT_LENGTH_ENV, WEEKLY_PILOT_SETS, weeklyPilotLength, type WeeklyPilotLength } from '../q1/cells/weekly-line.ts';
 import { classifyV3 } from '../q1/hedge.ts';
 import { exitCodeOf, renderMessage, ScoreboardError } from '../q1/scoreboard-errors.ts';
 import { openRereadLease } from '../q1/reread-cell.ts';
@@ -127,12 +127,13 @@ function drawByKind(xs: readonly PoolAnswer[], n: number, rand: () => number): P
 
 /**
  * Each judge's sample: `perJudge` of its reader's answers with a verdict, half judged wrong where there are enough and never
- * under 40%, drawn by kind. Refuses a judge short of answers or of answers judged wrong.
+ * under 40%, drawn by kind. Refuses a judge short of answers or of answers judged wrong. The judges are both weekly
+ * readers' gating judges and any other judge the answers name, so a judge with no verdict at all is short, not left out.
  */
 export function buildSample(answers: readonly PoolAnswer[], questions: ReadonlyMap<string, Pick<MemoryQuestion, 'id' | 'bg1'>>, seed = WEEKLY_JUDGE_CHECK_SEED, perJudge = WEEKLY_LINE_JUDGE_CHECK_PER_JUDGE): SampleItem[] {
   const rand = seededRandom(seed), minWrong = Math.ceil(perJudge * MIN_WRONG_SHARE);
   const verdicted = answers.filter(a => a.verdict !== null).sort((a, b) => (a.answer_id < b.answer_id ? -1 : a.answer_id > b.answer_id ? 1 : 0));
-  return [...new Set(verdicted.map(a => a.judge))].sort().flatMap(judge => {
+  return [...new Set([...WEEKLY_LINE_READERS.map(bg1JudgeOf), ...answers.map(a => a.judge)])].sort().flatMap(judge => {
     const mine = verdicted.filter(a => a.judge === judge), wrong = mine.filter(a => a.verdict === 0), right = mine.filter(a => a.verdict === 1);
     const takeWrong = Math.min(wrong.length, Math.max(Math.ceil(perJudge / 2), perJudge - right.length));
     if (mine.length < perJudge || takeWrong < minWrong) refuse(`JUDGE_CHECK_SHORT: ${judge} has ${mine.length} answers with a verdict, ${wrong.length} judged wrong; the check needs ${perJudge}, at least ${minWrong} judged wrong`);

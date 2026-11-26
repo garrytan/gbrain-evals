@@ -54,6 +54,8 @@ export const ALLOWED: Record<string, Needle['id'][]> = {
   // Raw model answer text in receipts, where the maker name is an ordinary capitalised verb starting a list item.
   'docs/benchmarks/2026-10-08-beam-1m-failure-analysis/arms/a1-nomem-opus55/shard-1/answers.ndjson.gz': ['maker'],
   'docs/benchmarks/2026-10-08-beam-1m-failure-analysis/arms/a1-nomem-opus55/shard-1/rows.ndjson.gz': ['maker'],
+  // Raw model answer text, where the product name is the idiom "In hindsight" after an escaped newline (\n), so the idiom rule's letter check sees the n.
+  'docs/benchmarks/2026-11-23-weekly-outcome-line/pilot/named-1m/gbrain/answers.ndjson': ['product'],
   // Dated history (a 2026-10-05 plan review); dated history and third-party leaderboard rows stay until Garry decides.
   'docs/plans/2026-10-05-oss-memory-shootout/reviews/ceo-claude.md': ['maker'],
   // Raw receipts of earlier runs: gbrain research file paths inside agent transcripts.

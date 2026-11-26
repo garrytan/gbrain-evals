@@ -630,6 +630,7 @@ describe('metering through a lease proxy', () => {
     const provider: Array<{ path: string; key: string | null }> = [];
     const proxy = Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: async req => {
       const path = new URL(req.url).pathname;
+      if (path === '/__proxy/status') return Response.json({ keyless: true });
       if (path.startsWith('/__proxy/')) {
         const body = await req.json() as Record<string, unknown>;
         control.push({ path, body });

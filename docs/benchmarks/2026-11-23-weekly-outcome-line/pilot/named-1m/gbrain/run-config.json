@@ -1,0 +1,131 @@
+{
+  "schema": "gbrain-evals/q1-run-config/v1",
+  "cell_id": "bgw-pilot-long.gbrain-defaults.rs1-stable.p",
+  "run_cell": "bgw-pilot-long.gbrain-defaults.rs1-stable",
+  "cell": {
+    "schema": "gbrain-evals/q1-cell/v1",
+    "id": "bgw-pilot-long.gbrain-defaults.rs1-stable",
+    "set": "BGW-pilot-long",
+    "block": "BGW-pilot",
+    "benchmark": "bg1-dev",
+    "split": "dev",
+    "selection": {
+      "kind": "all"
+    },
+    "exclusions": [],
+    "system": "gbrain-defaults",
+    "configuration": "rs1-stable",
+    "runner": "shim",
+    "ingest_replicate": 1,
+    "effort": "medium",
+    "canonical_instrument": "bg1",
+    "descriptive_view": false,
+    "probes": {
+      "sample": 0,
+      "seed": "weekly-line-probes",
+      "conversations": 0
+    },
+    "only_conversations": [
+      "bg1-dev-long-01"
+    ],
+    "launch": {
+      "env": {
+        "GBRAIN_BUN_IMAGE": "oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4",
+        "GBRAIN_F6": "1",
+        "GBRAIN_SHA": "38831bb696139024923e9bc43e3da0d7993951e9",
+        "GBRAIN_F6_EXTRACT_CAP_USD": "3"
+      },
+      "config": "recipe"
+    },
+    "gbrain_build": {
+      "release": "v0.60.769.0",
+      "commit": "38831bb696139024923e9bc43e3da0d7993951e9"
+    }
+  },
+  "arm": {
+    "id": "p",
+    "cell_id": "bgw-pilot-long.gbrain-defaults.rs1-stable.p",
+    "set": "BGW-pilot-long",
+    "arm": "component",
+    "mode": "packed",
+    "policy": "fixed-evidence",
+    "retrieval": {
+      "op": "query",
+      "args": {
+        "limit": 50,
+        "token_budget": 5500
+      },
+      "overlay": {
+        "search.evidence_date_header": false,
+        "search.evidence_titles": false,
+        "search.fact_source_pages": false,
+        "search.query_budget_unit": "chunk",
+        "search.query_facts_block": true,
+        "search.saved_facts_supersede": true
+      }
+    },
+    "budget": 8000,
+    "questions": null,
+    "readers": [
+      "anthropic:claude-opus-5-5"
+    ],
+    "reader_replicates": {},
+    "frontier": {
+      "judges": [
+        "openai:gpt-6-astra"
+      ],
+      "readers": null,
+      "sample": null,
+      "per_reader": true,
+      "judge_by_reader": {
+        "anthropic:claude-opus-5-5": "openai:gpt-6-astra"
+      },
+      "settings": {
+        "effort": "medium",
+        "max_tokens": 8000
+      }
+    },
+    "judge_repeats": null,
+    "label": "P: A with the facts block"
+  },
+  "instrument": {
+    "id": "bg1",
+    "sha256": "9598aacb076ba7bc8e589546008d6db30fa57d078e4140194b1ea05e2564102a",
+    "judge": null
+  },
+  "reader": {
+    "effort": "medium",
+    "max_tokens": 2048,
+    "prompt_sha256": "215660c5a2fb85c3068e09b2b02f047c9557393b505ef22c59c08918addfd3be"
+  },
+  "renderer": "memory-render-v2",
+  "counter": {
+    "counter": "reader-max-v1",
+    "tokenizer": "@dqbd/tiktoken@1.0.22",
+    "readers": [
+      {
+        "reader": "anthropic:claude-opus-5-5",
+        "encoding": "cl100k_base",
+        "calibration": 1.4708,
+        "calibrated": true
+      }
+    ]
+  },
+  "dataset": {
+    "name": "BG1 changing-facts dev worlds (world end 2026-11-22)",
+    "files": [
+      {
+        "path": "eval/data/changing-facts-v1/dev/worlds/bg1-dev-long-01/world.json",
+        "sha256": "525ec65255c08d9bea865fb79fc9da980ed76f60c4ee3229f415f5c12cde4b00"
+      },
+      {
+        "path": "eval/data/changing-facts-v1/dev/worlds/bg1-dev-long-01/questions.json",
+        "sha256": "71cb9bf278a7d8477a44842d7005d74f4ff0defa56efb8c089f381c47c7dc306"
+      }
+    ],
+    "revision": "repo",
+    "license": "MIT"
+  },
+  "scheduled_sha256": "aa1df1a72e9693bd632920c7b4626a096da88c14b4771f80b759cd876154855a",
+  "limit": null
+}
