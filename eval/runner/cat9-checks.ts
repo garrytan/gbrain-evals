@@ -136,6 +136,12 @@ export interface Cat9Check extends Omit<Cat9RunStep, 'allow_fail' | 'run'> {
   not_mechanized?: string;
   /** The audit finding this check is expected to fail on, at the audited build. */
   known_failure?: { finding: string; note: string };
+  /**
+   * Earlier checks in the same scenario whose writes this check observes. When given (even empty), it replaces the
+   * brain-wide rule: the check does not run, and reports engine_not_supported_by_runner, when a check it depends on was
+   * refused by the engine or not supported; a check with no refused dependency keeps its own result, pass or fail.
+   */
+  depends_on?: string[];
 }
 
 export type Cat9CheckStatus = 'pass' | 'fail' | 'expected_fail' | 'unexpected_pass' | 'not_run' | 'error' | typeof ENGINE_NOT_SUPPORTED_BY_RUNNER;
@@ -352,7 +358,8 @@ export function validateChecks(s: Cat9CheckedScenario): string[] {
     if (typeof s.engines_note !== 'string' || s.engines_note === '') out.push(`${s.id}: engines needs an engines_note that says why`);
   } else if (s.engines_note !== undefined) out.push(`${s.id}: engines_note without engines`);
   const memberOk = (where: string, m: unknown) => {
-    if (m !== undefined && (typeof m !== 'string' || !/^[a-z0-9][a-z0-9_-]*$/.test(m))) out.push(`${s.id} ${where}: member must be a member id such as bob-example`);
+    // gbrain's member id rule (src/core/access/principals.ts ACCESS_ID_RE).
+    if (m !== undefined && (typeof m !== 'string' || !/^[a-z0-9][a-z0-9._-]{0,63}$/.test(m))) out.push(`${s.id} ${where}: member must be a member id such as bob-example`);
   };
   (s.setup ?? []).forEach((step, i) => {
     const kinds = SETUP_KINDS.filter(k => k in (step as object));
@@ -384,6 +391,10 @@ export function validateChecks(s: Cat9CheckedScenario): string[] {
       out.push(...validateExpect(c.expect, `${s.id}/${c.id}`));
     }
     if (c.known_failure && (!c.known_failure.finding || !c.known_failure.note)) out.push(`${s.id}/${c.id}: known_failure needs finding and note`);
+    if (c.depends_on !== undefined) {
+      if (!Array.isArray(c.depends_on)) out.push(`${s.id}/${c.id}: depends_on must be a list of earlier check ids`);
+      else for (const d of c.depends_on) if (!ids.has(d) || d === c.id) out.push(`${s.id}/${c.id}: depends_on names ${JSON.stringify(d)}, which is not an earlier check`);
+    }
     if ('allow_fail' in c) out.push(`${s.id}/${c.id}: allow_fail is for setup steps only`);
     reqs(c.id, c.requires);
     memberOk(c.id, c.member);
@@ -586,13 +597,27 @@ export function runScenarioChecks(s: Cat9CheckedScenario, o: ScenarioCheckOption
   }
 
   const refusedOn = new Map<string, string>();
+  const statusOf = new Map<string, Cat9CheckStatus>();
   for (const c of checks) {
+    const before = rows.length;
+    runOne(c);
+    if (rows.length > before) statusOf.set(c.id, rows[rows.length - 1].status);
+  }
+  cleanup();
+  return rows;
+
+  function runOne(c: Cat9Check): void {
     const lack = missing(c.requires);
-    if (lack.length > 0) { rows.push(row(c, 'not_run', lack.map(r => REQUIREMENT_REASONS[r]))); continue; }
-    if (!c.run || !c.expect) { rows.push(row(c, 'not_run', [`not mechanized: ${c.not_mechanized ?? 'no run'}`])); continue; }
+    if (lack.length > 0) { rows.push(row(c, 'not_run', lack.map(r => REQUIREMENT_REASONS[r]))); return; }
+    if (!c.run || !c.expect) { rows.push(row(c, 'not_run', [`not mechanized: ${c.not_mechanized ?? 'no run'}`])); return; }
+    const blockedBy = (c.depends_on ?? []).find(d => statusOf.get(d) === ENGINE_NOT_SUPPORTED_BY_RUNNER);
+    if (blockedBy) {
+      rows.push(row(c, ENGINE_NOT_SUPPORTED_BY_RUNNER, [`${ENGINE_NOT_SUPPORTED_BY_RUNNER} (${kind}): this check depends on ${blockedBy}, which the engine refused or could not run, so it would observe nothing`]));
+      return;
+    }
     if (c.expect.datastore_absent !== undefined && datastoreOf(c.expect.datastore_absent) === null) {
       rows.push(row(c, ENGINE_NOT_SUPPORTED_BY_RUNNER, [`${ENGINE_NOT_SUPPORTED_BY_RUNNER} (${kind}): ${unsupported('the datastore_absent expectation').message}`]));
-      continue;
+      return;
     }
     try {
       const { argv, r } = call({ run: c.run, stdin: c.stdin, brain: c.brain, member: c.member });
@@ -605,7 +630,7 @@ export function runScenarioChecks(s: Cat9CheckedScenario, o: ScenarioCheckOption
       const brainName = c.brain ?? 'A';
       const refusal = r.exit !== 0 && ENGINE_REFUSAL_RE.test(`${r.stderr}\n${r.stdout}`);
       const failed = status !== 'pass' && status !== 'unexpected_pass';
-      const earlier = refusedOn.get(brainName);
+      const earlier = c.depends_on === undefined ? refusedOn.get(brainName) : undefined;
       const why = refusal ? `${ENGINE_NOT_SUPPORTED_BY_RUNNER} (${kind}): the CLI call stopped on the engine's typed refusal`
         : failed && earlier ? `${ENGINE_NOT_SUPPORTED_BY_RUNNER} (${kind}): an earlier check on brain ${brainName} (${earlier}) stopped on the engine's typed refusal, so that brain lacks its write`
         : null;
@@ -621,8 +646,6 @@ export function runScenarioChecks(s: Cat9CheckedScenario, o: ScenarioCheckOption
       else rows.push(row(c, 'error', [`harness: ${msg.split(root).join('<tmp>')}`]));
     }
   }
-  cleanup();
-  return rows;
 }
 
 export interface Cat9ChecksSummary {

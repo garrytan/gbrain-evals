@@ -74,7 +74,8 @@
             "stdout_includes": [
               "Kiwizebra"
             ]
-          }
+          },
+          "depends_on": []
         },
         {
           "id": "control-fact-recalled",
@@ -93,7 +94,8 @@
                 "value": "Kiwizebra"
               }
             ]
-          }
+          },
+          "depends_on": []
         },
         {
           "id": "purge-removes-fact",
@@ -120,7 +122,8 @@
                 "value": 1
               }
             ]
-          }
+          },
+          "depends_on": []
         },
         {
           "id": "page-has-no-text",
@@ -137,7 +140,10 @@
             "stdout_excludes": [
               "Kiwizebra"
             ]
-          }
+          },
+          "depends_on": [
+            "purge-removes-fact"
+          ]
         },
         {
           "id": "member-view-has-no-text",
@@ -156,7 +162,10 @@
             "stdout_excludes": [
               "Kiwizebra"
             ]
-          }
+          },
+          "depends_on": [
+            "purge-removes-fact"
+          ]
         },
         {
           "id": "recall-has-no-text",
@@ -171,7 +180,10 @@
             "stdout_excludes": [
               "Kiwizebra"
             ]
-          }
+          },
+          "depends_on": [
+            "purge-removes-fact"
+          ]
         }
       ]
     },
@@ -242,7 +254,8 @@
                 "value": "Plumquokka"
               }
             ]
-          }
+          },
+          "depends_on": []
         },
         {
           "id": "control-take-searchable",
@@ -262,7 +275,8 @@
                 "value": "Plumquokka"
               }
             ]
-          }
+          },
+          "depends_on": []
         },
         {
           "id": "remove-take",
@@ -276,7 +290,8 @@
           ],
           "expect": {
             "exit": "zero"
-          }
+          },
+          "depends_on": []
         },
         {
           "id": "page-has-no-text",
@@ -293,7 +308,10 @@
             "stdout_excludes": [
               "Plumquokka"
             ]
-          }
+          },
+          "depends_on": [
+            "remove-take"
+          ]
         },
         {
           "id": "takes-list-has-no-text",
@@ -308,7 +326,10 @@
             "stdout_excludes": [
               "Plumquokka"
             ]
-          }
+          },
+          "depends_on": [
+            "remove-take"
+          ]
         },
         {
           "id": "member-view-has-no-text",
@@ -324,7 +345,10 @@
             "stdout_excludes": [
               "Plumquokka"
             ]
-          }
+          },
+          "depends_on": [
+            "remove-take"
+          ]
         },
         {
           "id": "takes-search-finds-nothing",
@@ -340,7 +364,10 @@
             "stdout_excludes": [
               "Plumquokka"
             ]
-          }
+          },
+          "depends_on": [
+            "remove-take"
+          ]
         }
       ]
     },
@@ -397,7 +424,8 @@
             "stdout_includes": [
               "Figwombat"
             ]
-          }
+          },
+          "depends_on": []
         },
         {
           "id": "control-entry-searchable",
@@ -416,7 +444,8 @@
                 "value": "people/sage-example"
               }
             ]
-          }
+          },
+          "depends_on": []
         },
         {
           "id": "member-cannot-read-private-page",
@@ -435,7 +464,8 @@
             "output_excludes": [
               "Figwombat"
             ]
-          }
+          },
+          "depends_on": []
         },
         {
           "id": "edit-removes-entry",
@@ -457,7 +487,8 @@
               }
             ]
           },
-          "stdin": "puts/sage-entry-removed.md"
+          "stdin": "puts/sage-entry-removed.md",
+          "depends_on": []
         },
         {
           "id": "timeline-has-no-text",
@@ -475,7 +506,10 @@
             "stdout_excludes": [
               "Figwombat"
             ]
-          }
+          },
+          "depends_on": [
+            "edit-removes-entry"
+          ]
         },
         {
           "id": "page-has-no-text",
@@ -489,7 +523,10 @@
             "stdout_excludes": [
               "Figwombat"
             ]
-          }
+          },
+          "depends_on": [
+            "edit-removes-entry"
+          ]
         },
         {
           "id": "search-finds-nothing",
@@ -507,7 +544,10 @@
                 "op": "empty"
               }
             ]
-          }
+          },
+          "depends_on": [
+            "edit-removes-entry"
+          ]
         }
       ]
     },
@@ -578,7 +618,8 @@
             "stdout_includes": [
               "Friday at noon"
             ]
-          }
+          },
+          "depends_on": []
         },
         {
           "id": "derived-hidden-before",
@@ -594,7 +635,8 @@
             "output_includes": [
               "page_not_found"
             ]
-          }
+          },
+          "depends_on": []
         },
         {
           "id": "control-origin-searchable",
@@ -613,7 +655,8 @@
                 "value": "notes/board-prep"
               }
             ]
-          }
+          },
+          "depends_on": []
         },
         {
           "id": "purge-origin",
@@ -634,7 +677,8 @@
                 "value": "purged"
               }
             ]
-          }
+          },
+          "depends_on": []
         },
         {
           "id": "derived-labelled-private",
@@ -648,7 +692,10 @@
             "stdout_includes": [
               "visibility: private"
             ]
-          }
+          },
+          "depends_on": [
+            "purge-origin"
+          ]
         },
         {
           "id": "derived-hidden-after",
@@ -664,7 +711,10 @@
             "output_includes": [
               "page_not_found"
             ]
-          }
+          },
+          "depends_on": [
+            "purge-origin"
+          ]
         },
         {
           "id": "origin-gone",
@@ -675,7 +725,10 @@
           ],
           "expect": {
             "exit": "nonzero"
-          }
+          },
+          "depends_on": [
+            "purge-origin"
+          ]
         },
         {
           "id": "search-finds-nothing",
@@ -693,7 +746,10 @@
                 "op": "empty"
               }
             ]
-          }
+          },
+          "depends_on": [
+            "purge-origin"
+          ]
         }
       ]
     },
@@ -769,7 +825,8 @@
             ]
           },
           "stdin": "puts/launch-plan-by-bob.md",
-          "member": "bob-example"
+          "member": "bob-example",
+          "depends_on": []
         },
         {
           "id": "unchanged-after-refusal",
@@ -786,7 +843,10 @@
             "stdout_excludes": [
               "Bob Example rewrote"
             ]
-          }
+          },
+          "depends_on": [
+            "unlisted-member-refused"
+          ]
         },
         {
           "id": "listed-reader-rewrites",
@@ -814,7 +874,8 @@
             ]
           },
           "stdin": "puts/launch-plan-by-tess.md",
-          "member": "tess-example"
+          "member": "tess-example",
+          "depends_on": []
         },
         {
           "id": "rewrite-saved-readers-kept",
@@ -829,7 +890,10 @@
               "Revised by Tess Example",
               "tess-example"
             ]
-          }
+          },
+          "depends_on": [
+            "listed-reader-rewrites"
+          ]
         }
       ]
     },
@@ -877,7 +941,8 @@
                 "value": "managed_storage"
               }
             ]
-          }
+          },
+          "depends_on": []
         },
         {
           "id": "writer-status",
@@ -904,7 +969,8 @@
           },
           "capture": {
             "admin_state": "admin_state"
-          }
+          },
+          "depends_on": []
         },
         {
           "id": "turn-off-managed-storage",
@@ -933,7 +999,10 @@
                 "value": "classic"
               }
             ]
-          }
+          },
+          "depends_on": [
+            "writer-status"
+          ]
         },
         {
           "id": "no-shadow-not-ready",
@@ -965,7 +1034,10 @@
                 "value": "no_shadow"
               }
             ]
-          }
+          },
+          "depends_on": [
+            "turn-off-managed-storage"
+          ]
         }
       ]
     },
@@ -1013,7 +1085,8 @@
               }
             ]
           },
-          "stdin": "puts/pat-links-missing.md"
+          "stdin": "puts/pat-links-missing.md",
+          "depends_on": []
         },
         {
           "id": "page-readable",
@@ -1027,7 +1100,10 @@
             "stdout_includes": [
               "on the Widget Co budget"
             ]
-          }
+          },
+          "depends_on": [
+            "put-saves-and-reports-wanted"
+          ]
         },
         {
           "id": "wanted-lists-target",
@@ -1047,7 +1123,10 @@
                 "value": "people/nobody-yet-example"
               }
             ]
-          }
+          },
+          "depends_on": [
+            "put-saves-and-reports-wanted"
+          ]
         },
         {
           "id": "create-target",
@@ -1067,7 +1146,8 @@
               }
             ]
           },
-          "stdin": "puts/nobody-yet.md"
+          "stdin": "puts/nobody-yet.md",
+          "depends_on": []
         },
         {
           "id": "extract-creates-edge",
@@ -1088,7 +1168,11 @@
                 "value": 1
               }
             ]
-          }
+          },
+          "depends_on": [
+            "put-saves-and-reports-wanted",
+            "create-target"
+          ]
         },
         {
           "id": "backlink-exists",
@@ -1107,7 +1191,10 @@
                 "value": "people/pat-example"
               }
             ]
-          }
+          },
+          "depends_on": [
+            "extract-creates-edge"
+          ]
         },
         {
           "id": "nothing-wanted",
@@ -1126,7 +1213,10 @@
                 "op": "empty"
               }
             ]
-          }
+          },
+          "depends_on": [
+            "extract-creates-edge"
+          ]
         }
       ]
     },
@@ -1193,7 +1283,8 @@
                 "value": "work"
               }
             ]
-          }
+          },
+          "depends_on": []
         },
         {
           "id": "unfederate",
@@ -1218,7 +1309,8 @@
                 "value": false
               }
             ]
-          }
+          },
+          "depends_on": []
         },
         {
           "id": "default-search-excludes-work",
@@ -1242,7 +1334,10 @@
                 "value": "projects/kumquat-protocol"
               }
             ]
-          }
+          },
+          "depends_on": [
+            "unfederate"
+          ]
         },
         {
           "id": "named-search-finds-work",
@@ -1263,7 +1358,8 @@
                 "value": "projects/kumquat-protocol"
               }
             ]
-          }
+          },
+          "depends_on": []
         }
       ]
     }

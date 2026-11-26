@@ -41,6 +41,8 @@ describe('engine-coverage catalog', () => {
     expect(catalog.scenarios.length).toBe(8);
     for (const s of catalog.scenarios) {
       expect((s.checks ?? []).length).toBeGreaterThan(0);
+      // Every check declares what it observes, so one refused write never masks or credits another check.
+      for (const c of s.checks ?? []) expect(Array.isArray(c.depends_on)).toBe(true);
       for (const c of s.checks ?? []) expect(c.run && c.expect).toBeTruthy();
     }
   });
@@ -119,6 +121,53 @@ describe('runner: checks run as a member, scenarios scoped to engines', () => {
     expect(validateChecks({ ...base, engines_note: 'why' }).join(' ')).toContain('engines_note without engines');
     expect(validateChecks({ ...base, checks: [{ ...base.checks[0], member: 'Bob Example' }] }).join(' ')).toContain('member must be a member id');
     expect(validateChecks({ ...base, checks: [{ ...base.checks[0], member: 'bob-example' }] })).toEqual([]);
+  });
+
+  const REFUSAL = JSON.stringify({ error: 'engine_capability_missing', code: 'engine_capability_missing', message: "This brain's engine does not support executeRaw yet (it needs the raw_sql capability), so nothing ran." });
+
+  test('a check whose dependency the engine refused is not supported, even when its own output would pass', () => {
+    // A refused purge leaves the private origin in place, and the origin alone keeps the summary hidden: without the
+    // dependency the "still hidden after the purge" check would pass without any purge having happened.
+    const { exec } = stubExec(argv => {
+      if (argv[0] === 'delete') return ok(REFUSAL, '', 1);
+      if (argv[0] === 'get') return ok('', 'Error [page_not_found]: Page not found', 1);
+      return ok('{}');
+    });
+    const rows = runScenarioChecks({
+      id: 's-dep',
+      checks: [
+        { id: 'purge', description: 'purge', run: ['delete', 'notes/o', '--purge'], expect: { exit: 'zero' }, depends_on: [] },
+        { id: 'hidden-after', description: 'hidden', run: ['get', 'notes/d'], expect: { exit: 'nonzero', output_includes: ['page_not_found'] }, depends_on: ['purge'] },
+      ],
+    }, { exec, corpusDir: tinyCorpus(), engine: { kind: 'rust' } });
+    expect(rows.map(r => r.status)).toEqual(['engine_not_supported_by_runner', 'engine_not_supported_by_runner']);
+    expect(rows[1].reasons[0]).toContain('depends on purge');
+  });
+
+  test('with explicit dependencies, a failure of an independent check stays a fail after an earlier refusal', () => {
+    // Without depends_on, the brain-wide rule would turn this wrong slug into "not supported".
+    const { exec } = stubExec(argv => {
+      if (argv[1] === 'people/pat-example') return ok(REFUSAL, '', 1);
+      return ok(JSON.stringify({ slug: 'people/wrong-example' }));
+    });
+    const rows = runScenarioChecks({
+      id: 's-indep',
+      checks: [
+        { id: 'first-put', description: 'p1', run: ['put', 'people/pat-example', '--json'], expect: { exit: 'zero' }, depends_on: [] },
+        { id: 'create-target', description: 'p2', run: ['put', 'people/nobody-yet-example', '--json'], expect: { exit: 'zero', json: [{ path: 'slug', op: 'eq', value: 'people/nobody-yet-example' }] }, depends_on: [] },
+      ],
+    }, { exec, corpusDir: tinyCorpus(), engine: { kind: 'rust' } });
+    expect(rows.map(r => r.status)).toEqual(['engine_not_supported_by_runner', 'fail']);
+  });
+
+  test('depends_on must name an earlier check, and member ids follow gbrain\'s rule', () => {
+    const c = (id: string, extra: Record<string, unknown> = {}) => ({ id, description: 'd', run: ['get', 'x'], expect: { exit: 'zero' as const }, ...extra });
+    expect(validateChecks({ id: 's', checks: [c('a'), c('b', { depends_on: ['a'] })] })).toEqual([]);
+    expect(validateChecks({ id: 's', checks: [c('a', { depends_on: ['b'] }), c('b')] }).join(' ')).toContain('not an earlier check');
+    expect(validateChecks({ id: 's', checks: [c('a', { depends_on: ['a'] })] }).join(' ')).toContain('not an earlier check');
+    expect(validateChecks({ id: 's', checks: [c('a', { member: 'bob.example' })] })).toEqual([]);
+    expect(validateChecks({ id: 's', checks: [c('a', { member: 'b'.repeat(64) })] })).toEqual([]);
+    expect(validateChecks({ id: 's', checks: [c('a', { member: 'b'.repeat(65) })] }).join(' ')).toContain('member must be');
   });
 
   test('the catalog file on disk is the one the runner reads', () => {
