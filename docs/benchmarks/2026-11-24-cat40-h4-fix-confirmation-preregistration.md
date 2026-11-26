@@ -295,6 +295,73 @@ are reported per style rather than per arm.
 Both judges pass every gate (kappa at least 0.6, at least 40 per class, at most 1% unparseable), so counted cells may
 use them.
 
+### U1 to U6 (2026-11-26)
+
+Recorded after setup and the U1 pilots, before any counted cell.
+
+- **Build under test.** gbrain v0.60.775.0, commit `f832b4928844f149fb08657797eaa6fd9daebd5a` (tree
+  `0bbc3ce89faa7b920d7b14440cd868c18605a0da`), the newest release tag on gbrain's master when the tags were re-read
+  at 04:20 UTC on 2026-11-26 and again at 09:26 UTC, just before the first counted cell. It carries GST-3786 (`9df317b1`, checked by
+  each world's `launch-gate` step). Every slot receipt reports this commit and tree, `cli_version_matches: true`,
+  surface `starter`. The build is frozen from the first counted cell.
+- **gbrain's own provider models on the build.** Embeddings `openai:text-embedding-3-large`; reranker
+  `voyage:rerank-3-lite` (the rerank probe passed on every slot). The slots are built once and shared by both gbrain
+  arms.
+- **Harness.** gbrain-evals `e348313ecddd71b43f93424e3838c94d9a72bc69` on every VM, clean checkout. The step program
+  is `h4fix-confirm.ts plan --world <w> --build f832b492… --date 2026-11-26`.
+- **Worlds.** Generated on the seed owner's machine at that harness commit, copied to each VM through one Capy machine
+  with the SHA-256 checked on the owner's machine, on the transit copy and on the VM (all matched), then the transit
+  copy was deleted. `check-world` passed on every VM: digest, generator version `model-ladder-hard-v2`, the
+  generator's checks and `LONG_PAGE_PRECONDITION`. The shortest page of 20,000 characters or more that governs an H4
+  task is 26,581 characters (U1), so no world sits near the threshold.
+
+| World | World file SHA-256 | Documents | Tasks | H4 tasks with a `+long` item | H4 items (`+long`) | Slots (probes, queued effects) | Oracle gate (Opus, Sol) | VM |
+|---|---|---|---|---|---|---|---|---|
+| U1 | `8b8415b3c748d71c8e40557989f69f9f4bc924f643595f398dc4850105b91208` | 56,248 | 100 | 18 | 76 (28) | 5 (all passed, 0) | 198/200 (100/100, 98/100) | `ubirun-gbev134-1795664322-855d1092-t48` |
+| U2 | `2cecc62c1e2b91d543f4393dcec6270d71d71943cf5f3ed14f67a7dd2ee7c506` | 55,778 | 100 | 14 | 71 (26) | 5 (all passed, 0) | 197/200 (99/100, 98/100) | `ubirun-gbev134-1795664342-37a6c8fd-t48` |
+| U3 | `1b1d926844ae06ac85a4d5cff93e57a7c821f194be3e7a5a7ead9f63ea30e478` | 55,489 | 100 | 18 | 68 (37) | 2 (all passed, 0) | 40/40 (20/20, 20/20) | `ubirun-gbev134-1795664362-293f6dde-t48` |
+| U4 | `cb354727d5af7cdeee61469af53916a66bf20cc5cae5a227579c8ddc3818c552` | 54,992 | 100 | 20 | 71 (37) | 2 (all passed, 0) | 40/40 (20/20, 20/20) | `ubirun-gbev134-1795664382-73b61e73-t48` |
+| U5 | `0bd4e8b301a9dbe5d49282555c8e0c6bac71cbc3f496516cab0de983eeb55c81` | 55,680 | 100 | 18 | 72 (30) | 2 (all passed, 0) | 40/40 (20/20, 20/20) | `ubirun-gbev134-1795664403-f1494daf-t48` |
+| U6 | `92bca19cf01014b65eab28088871120e64d2769bb7a10046478040a619ec9c2e` | 55,230 | 100 | 18 | 67 (29) | 2 (all passed, 0) | 40/40 (20/20, 20/20) | `ubirun-gbev134-1795664422-e2c2cd1d-t48` |
+
+- **Model freshness** (2026-11-26, each world's `freshness` step): newest Opus `claude-opus-5-5`, newest GPT
+  `gpt-6.2-sol`, particle `particle-1`, all as preregistered; no blocking item. It warns that `claude-sonnet-5-5` is
+  listed, which is not a model in this run.
+- **Served surface, both gbrain arms.** Served instructions `216535f0d45a5507`, served tools `c009c07af6640b02`
+  (first 16 hex digits of SHA-256), identical on `gbrain-section` and `gbrain-default`. The restore probe reads the
+  slot config back as `{"search.long_page_unit":"section"}` on `gbrain-section` and `{}` on `gbrain-default`.
+  `fs` serves no gbrain surface.
+- **Pilots (U1, never counted).**
+
+  | Pilot | Cells | Submitted | Scored correct | Rows with `reason: "long_page"` (cells) | Calls passing `return_unit` |
+  |---|---|---|---|---|---|
+  | `gbrain-section`, Opus 5.5 | 5 | 4 (1 turn cap) | 4 | 0 (0) | 0 |
+  | `gbrain-section`, Opus 5.5, five more H4 cells | 5 | 5 | 5 | 4 (2) | 1 |
+  | `gbrain-section`, GPT-6.2 Sol | 5 | 5 | 5 | 0 (0) | 7 |
+  | `gbrain-section`, GPT-6.2 Sol, five more H4 cells | 5 | 5 | 5 | 3 (3) | 7 |
+  | `gbrain-default`, Opus 5.5 | 5 | 4 (1 turn cap) | 4 | 0 (0) | 10 |
+  | `gbrain-default`, GPT-6.2 Sol | 5 | 5 | 5 | 0 (0) | 6 |
+  | `fs`, Opus 5.5 | 5 | 4 (1 turn cap) | 4 | — | — |
+  | `fs`, GPT-6.2 Sol | 5 | 5 | 5 | — | — |
+
+  The five-cell pilot draws one task per family, and U1's H4 draw (H4-01) has no long governing page, so the setting
+  had nothing to act on. The preregistered fallback of five more H4 cells per reader then showed section delivery
+  firing on `gbrain-section` for both readers. `gbrain-default` delivered no row with `reason: "long_page"`. Every
+  `fs` cell used both grep and file reads. The `fs` Opus pilot stopped on its own step budget after 2 of 5 cells
+  (requests in flight are reserved before they are sent) and finished on a new budget run of the same step. The
+  particle-1 pilots run last on U1, inside the window, before particle-1's own cells.
+- **Judge check.** As recorded above (2026-11-25). The answer styles there are rule templates, and errors are reported
+  per style.
+- **Ledgers and VMs.** One ledger per VM, one writer, 0 open reservations at this record.
+  - U1: ledger `.budget/cat40-h4fix-u1.sqlite`; slot builds `cat40-slot-build-2026-11-26T04-26-01-754Z-1fdef45f`, `cat40-slot-build-2026-11-26T04-26-32-483Z-da595e02`, `cat40-slot-build-2026-11-26T05-44-04-956Z-d5e038a5`, `cat40-slot-build-2026-11-26T05-44-51-085Z-460fc451`, `cat40-slot-build-2026-11-26T06-55-18-706Z-5142e626`.
+  - U2: ledger `.budget/cat40-h4fix-u2.sqlite`; slot builds `cat40-slot-build-2026-11-26T04-26-27-499Z-ccd638d9`, `cat40-slot-build-2026-11-26T04-26-58-504Z-aa7719f6`, `cat40-slot-build-2026-11-26T05-40-53-200Z-0468accd`, `cat40-slot-build-2026-11-26T05-43-22-193Z-55d57ee0`, `cat40-slot-build-2026-11-26T06-52-35-938Z-3f355042`.
+  - U3: ledger `.budget/cat40-h4fix-u3.sqlite`; slot builds `cat40-slot-build-2026-11-26T04-26-57-386Z-4bda6208`, `cat40-slot-build-2026-11-26T05-41-27-148Z-4a118d3f`.
+  - U4: ledger `.budget/cat40-h4fix-u4.sqlite`; slot builds `cat40-slot-build-2026-11-26T04-27-28-154Z-1225929b`, `cat40-slot-build-2026-11-26T05-38-38-460Z-439dc533`.
+  - U5: ledger `.budget/cat40-h4fix-u5.sqlite`; slot builds `cat40-slot-build-2026-11-26T04-28-05-009Z-79116f02`, `cat40-slot-build-2026-11-26T05-38-53-051Z-f237e41c`.
+  - U6: ledger `.budget/cat40-h4fix-u6.sqlite`; slot builds `cat40-slot-build-2026-11-26T04-28-14-784Z-569c2a31`, `cat40-slot-build-2026-11-26T05-41-51-694Z-a29116b9`.
+- **Step budgets.** Each step's `--budget-usd` is an operator setting inside its world's ledger cap, re-split after
+  the pilots so a step can hold its in-flight reservations. The world caps are unchanged (tracking issue).
+
 ## Amendments
 
 ### 2026-11-25: launch gate met; section delivery counted where the setting fired; gap wording precedence

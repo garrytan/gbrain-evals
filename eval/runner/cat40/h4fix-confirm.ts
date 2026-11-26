@@ -1,6 +1,6 @@
 /**
  * Cat 40 Hard H4 section-delivery confirmation program
- * (docs/benchmarks/2026-11-24-cat40-h4-fix-confirmation-preregistration.md): the preregistered sealed worlds, arms,
+ * (docs/benchmarks/2026-11-24-cat40-h4-fix-confirmation-preregistration.md): the preregistered worlds, arms,
  * readers, judges, halves and ledgers, and the exact command for every step of a world, in order.
  *
  *   bun eval/runner/cat40/h4fix-confirm.ts plan --world u1..u6 --build <40-character gbrain commit> --date YYYY-MM-DD [--stopped] [--json]
