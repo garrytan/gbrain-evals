@@ -43,6 +43,8 @@ export interface Brain {
   databasePath?: string;
   databaseUrl?: string;
   config: Record<string, unknown>;
+  /** What each finished worker process wrote to stderr (tokens redacted), in the order the processes ended. */
+  stderrLog: string[];
   cli(args: string[], o?: { input?: string; timeoutMs?: number }): Promise<{ code: number; stdout: string; stderr: string }>;
   close(): Promise<void>;
 }
@@ -96,7 +98,7 @@ export async function createBrain(o: { gut: GbrainUnderTest; kind: EvalEngineKin
     await close();
     throw new Error(`gbrain init --migrate-only on a ${o.kind} config exited ${init.code}: ${(init.stderr + init.stdout).trim().split('\n').slice(-6).join(' | ').slice(0, 800)}`);
   }
-  return { kind: o.kind, work, home, env, databasePath, databaseUrl, config, cli, close };
+  return { kind: o.kind, work, home, env, databasePath, databaseUrl, config, stderrLog: [], cli, close };
 }
 
 /** A running worker process: its ready line, its op lines as they arrive, and how to start, stop or kill it. */
@@ -155,6 +157,7 @@ export function startWorker(brain: Brain, gut: GbrainUnderTest, plan: Omit<Worke
       else if (line.kind === 'done') { onDone(ops); if (!plan.hold) child.stdin!.end(); }
     }
   });
+  child.on('close', () => { const text = stderr.replace(/gbrain_[a-z]{2}_[0-9a-f]+/g, '<redacted>').trim(); if (text) brain.stderrLog.push(text); });
   child.on('close', code => fail(Object.assign(new Error(`worker exited ${code} before it finished: ${stderr.trim().split('\n').slice(-4).join(' | ').slice(0, 600)}`), { code: 'worker_exit', exit: code })));
   return {
     ready, done, ops, child,

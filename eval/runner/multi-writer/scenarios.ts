@@ -31,6 +31,12 @@ export interface CheckResult {
   phases: PhaseResult[];
   /** Values compared across engines in the matrix report (check 7's numeric outcomes and refusal texts). */
   cross_engine?: Record<string, string>;
+  /**
+   * The distinct stderr texts of the worker processes this check started (last 4,000 characters of each, tokens
+   * redacted, at most 40), so a receipt keeps the error text behind its counts. Best effort: a process that ends after
+   * the check returns is filed with the next check.
+   */
+  writer_stderr?: Array<{ count: number; text: string }>;
   latency?: Record<string, unknown>;
 }
 

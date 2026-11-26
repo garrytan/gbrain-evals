@@ -113,12 +113,20 @@ export async function runArm(o: { gut: GbrainUnderTest; kind: EvalEngineKind; sw
       const fn = CHECKS[id];
       if (!fn) continue;
       o.log(`[mw] ${o.kind}${o.kind === 'rust' ? ` switch=${o.switchSetting}` : ''}: ${id}`);
+      const mark = brain.stderrLog.length;
+      const attachStderr = (c: CheckResult) => {
+        const seen = new Map<string, number>();
+        for (const t of brain.stderrLog.slice(mark)) { const k = t.slice(-4000); seen.set(k, (seen.get(k) ?? 0) + 1); }
+        if (seen.size) c.writer_stderr = [...seen].slice(0, 40).map(([text, count]) => ({ count, text }));
+        return c;
+      };
       try {
         const r = await fn(ctx);
         if (id === 'c1') putMs = ((r.latency?.put_ms as number[] | undefined) ?? []);
-        checks.push(r);
+        checks.push(attachStderr(r));
       } catch (e) {
         checks.push({ id, title: id, status: 'fail', phases: [{ phase: 'processes', status: 'fail', tally: { total: 0, acked: 0, refused: {}, errors: { harness: { count: 1, sample: String((e as Error).message).slice(0, 400) } }, pending_never_applied: 0, write_lock_bug: 0, conflicts: {}, handoff: {} }, findings: [], notes: ['the check threw; see errors.harness'] }] });
+        attachStderr(checks.at(-1)!);
       }
     }
     latency = await measureLatency(ctx, putMs);
