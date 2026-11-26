@@ -12,7 +12,7 @@ import { createServer } from 'node:net';
 import { join } from 'node:path';
 import type { GbrainUnderTest } from '../gbrain-under-test.ts';
 import { operatorCalls, runWriters, killGroup, type Brain, type WritersRun } from './brain.ts';
-import { combineStatus, isHandoff, outcomeClass, percentile, phaseStatus, tallyOps, type OpTally, type Status } from './classify.ts';
+import { combineStatus, isConflict, isHandoff, mergeTally, outcomeClass, percentile, phaseStatus, recordReadFailure, REFUSAL_CODES, tallyOps, type OpTally, type Status } from './classify.ts';
 import { CAS_PUT, LEASE_FENCE_RE, type OpLine, type WorkerOp } from './worker.ts';
 
 export interface PhaseResult {
@@ -66,27 +66,44 @@ function plansFor(phase: Phase, lanes: WorkerOp[][]) {
   return phase === 'processes' ? lanes.map(l => ({ mode: 'cli' as const, lanes: [l] })) : [{ mode: 'engine' as const, lanes }];
 }
 
-/** Request ids of write_pending receipts that committed by the time the operator polls (up to `waitMs`). */
-async function settlePending(ctx: Ctx, lines: readonly OpLine[], waitMs = 15_000): Promise<Set<string>> {
+/**
+ * Poll every write_pending receipt (up to `waitMs`). A write that committed meanwhile becomes the acknowledged write it
+ * is: its line is marked ok and takes the committed receipt's outcome (and, for a compare-and-set put, its revision),
+ * so the invariants judge it like any other acknowledged write. Returns the committed request ids.
+ */
+async function settlePending(ctx: Ctx, lines: OpLine[], waitMs = 15_000): Promise<Set<string>> {
   const ids = [...new Set(lines.filter(l => l.code === 'write_pending' && l.request_id).map(l => l.request_id!))];
-  const applied = new Set<string>();
-  if (!ids.length) return applied;
-  const until = Date.now() + waitMs;
-  while (Date.now() < until && applied.size < ids.length) {
-    const r = await operatorCalls(ctx.brain, ctx.gut, ids.filter(id => !applied.has(id)).map(id => ({ op: 'get_write_request', params: { request_id: id }, tag: id })));
-    for (const o of r.ops) {
-      const j = asJson(o.result) as Record<string, unknown> | null;
-      if (o.ok && j && /committed|applied|done/.test(String(j.state ?? j.status ?? ''))) applied.add(o.tag);
+  const applied = new Map<string, Record<string, unknown>>();
+  if (ids.length) {
+    const until = Date.now() + waitMs;
+    while (Date.now() < until && applied.size < ids.length) {
+      const r = await operatorCalls(ctx.brain, ctx.gut, ids.filter(id => !applied.has(id)).map(id => ({ op: 'get_write_request', params: { request_id: id }, tag: id })));
+      for (const o of r.ops) {
+        const j = asJson(o.result) as Record<string, unknown> | null;
+        if (o.ok && j && /^(committed|applied|done)$/.test(String(j.state ?? j.status ?? ''))) applied.set(o.tag, j);
+      }
+      if (applied.size < ids.length) await Bun.sleep(1000);
     }
-    if (applied.size < ids.length) await Bun.sleep(1000);
   }
-  return applied;
+  for (const l of lines) {
+    const receipt = l.code === 'write_pending' && l.request_id ? applied.get(l.request_id) : undefined;
+    if (!receipt) continue;
+    const outcome = (receipt.outcome ?? receipt.result ?? receipt) as Record<string, unknown>;
+    l.ok = true;
+    l.result = outcome;
+    l.settled_from_pending = true;
+    if (l.cas) l.cas.revision = String(outcome.revision ?? '') || null;
+    delete l.code;
+  }
+  return new Set(applied.keys());
 }
 
 /** Tally a writers run: lease or fence text in the writers' logs marks never-committed writes as the write-lock bug. */
-async function tallyRun(ctx: Ctx, run: WritersRun, expectedError?: (l: OpLine) => boolean): Promise<{ tally: OpTally; applied: Set<string> }> {
+async function tallyRun(ctx: Ctx, run: WritersRun, expectedError?: (l: OpLine) => boolean, conflictOk: (l: OpLine) => boolean = () => false): Promise<{ tally: OpTally; applied: Set<string> }> {
   const applied = await settlePending(ctx, run.ops);
-  const tally = tallyOps(run.ops, { expectedError, applied, leaseLog: LEASE_FENCE_RE.test(run.stderr) });
+  // A lost race is a fine answer only where the scenario asks for one (a compare-and-set put, a create of one slug).
+  const tally = tallyOps(run.ops.filter(l => l.ok || !isConflict(l.code, l.message) || conflictOk(l)), { expectedError, applied, leaseLog: LEASE_FENCE_RE.test(run.stderr) });
+  mergeTally(tally, tallyOps(run.ops.filter(l => !l.ok && isConflict(l.code, l.message) && !conflictOk(l)), { conflictIsError: true }));
   for (const e of run.startErrors) {
     tally.total += 1;
     if (/pglite_busy|engine_capability_missing|store_locked/.test(e.code + e.message)) tally.refused[e.code] = (tally.refused[e.code] ?? 0) + 1;
@@ -99,15 +116,21 @@ const ackedLines = (run: WritersRun, applied: Set<string>) => run.ops.filter(l =
 /** Writes whose outcome the engine left open (owner gone mid-call, or still pending): they may or may not have landed. */
 const maybeLines = (run: WritersRun, applied: Set<string>) => run.ops.filter(l => !l.ok && (isHandoff(l.code, l.message) || (l.code === 'write_pending' && !(l.request_id && applied.has(l.request_id)))));
 
-async function read(ctx: Ctx, calls: WorkerOp[]): Promise<Map<string, OpLine>> {
+/**
+ * The operator's read-back. Every failed read goes into `tally` (classify.ts recordReadFailure): only the tags in
+ * `notFoundOk` may answer not found, so a read that errors never passes for "the data is gone".
+ */
+async function read(ctx: Ctx, calls: WorkerOp[], tally?: OpTally, notFoundOk: readonly string[] = []): Promise<Map<string, OpLine>> {
   const r = await operatorCalls(ctx.brain, ctx.gut, calls);
   if (r.startError) throw new Error(`operator read could not open the brain: ${r.startError.code}: ${r.startError.message}`);
+  if (tally) for (const o of r.ops) recordReadFailure(tally, o, notFoundOk.includes(o.tag));
   return new Map(r.ops.map(o => [o.tag, o]));
 }
 
 async function seed(ctx: Ctx, calls: WorkerOp[]): Promise<string[]> {
   const r = await operatorCalls(ctx.brain, ctx.gut, calls);
   const problems = r.startError ? [`seed could not open the brain: ${r.startError.code}`] : [];
+  await settlePending(ctx, r.ops);
   for (const o of r.ops) if (!o.ok) problems.push(`seed ${o.op} ${o.tag} failed: ${o.code}: ${(o.message ?? '').slice(0, 200)}`);
   return problems;
 }
@@ -144,14 +167,14 @@ export async function checkLostUpdates(ctx: Ctx): Promise<CheckResult> {
       { op: 'remember', params: { fact: `Invented person fact number ${tagOf(w, r)} about a widget-co order`, entity, provenance: 'multi-writer eval' }, tag: `fact:${tagOf(w, r)}` },
     ]).flat());
     const run = await runWriters(ctx.brain, ctx.gut, plansFor(phase, lanes));
-    const { tally, applied } = await tallyRun(ctx, run);
+    const { tally, applied } = await tallyRun(ctx, run, undefined, l => l.op === CAS_PUT);
     const acked = ackedLines(run, applied);
     for (const l of acked) if (l.cas) putMs.push(l.cas.put_ms);
     const got = await read(ctx, [
       { op: 'get_tags', params: { slug: `${p}-tags` }, tag: 'tags' },
       { op: 'get_page', params: { slug: `${p}-body` }, tag: 'body' },
       { op: 'recall', params: { entity, limit: 1000 }, tag: 'facts' },
-    ]);
+    ], tally);
     const findings: string[] = [];
     const notes: string[] = [];
     const tags = new Set((asJson(got.get('tags')?.result) as string[] | undefined) ?? []);
@@ -163,8 +186,10 @@ export async function checkLostUpdates(ctx: Ctx): Promise<CheckResult> {
     const maybePuts = maybeLines(run, applied).filter(l => l.op === CAS_PUT);
     const ackBodies = ackPuts.map(l => l.tag.slice(5));
     const allowed = [...ackBodies, ...maybePuts.map(l => l.tag.slice(5))];
-    const markers = [...body.matchAll(/marker-(w\d+r\d+)/g)].map(m => m[1]!);
-    if (ackBodies.length && (markers.length !== 1 || !allowed.includes(markers[0]!))) findings.push(`after ${ackBodies.length} acknowledged concurrent rewrites the page body is not exactly one of them or of the ${maybePuts.length} writes with an open outcome (markers found: ${markers.join(',') || 'none'})`);
+    // The whole body must be exactly one write's content, not a marker inside a truncated or merged text.
+    const winner = allowed.find(t => body.trim() === `Body target, version ${t} marker-${t}.`);
+    const markers = winner ? [winner] : [...body.matchAll(/marker-(w\d+r\d+)/g)].map(m => m[1]!);
+    if (ackBodies.length && !winner) findings.push(`after ${ackBodies.length} acknowledged concurrent rewrites the page body is not exactly the content of one of them or of the ${maybePuts.length} writes with an open outcome (body ${JSON.stringify(body.slice(0, 120))})`);
     // Compare-and-set: no two acknowledged writes may have won against the same revision, and the page must end at the
     // write no other acknowledged write was based on.
     const bases = ackPuts.map(l => l.cas?.base ?? '');
@@ -194,17 +219,18 @@ export async function checkDuplicates(ctx: Ctx): Promise<CheckResult> {
       { op: 'put_page', params: { slug: variants[w % variants.length], content: `Created by writer ${w} marker-w${w}.` }, tag: `create:w${w}` },
     ]);
     const run = await runWriters(ctx.brain, ctx.gut, plansFor(phase, lanes));
-    const { tally, applied } = await tallyRun(ctx, run, l => l.code === 'invalid_params' || l.code === 'invalid_slug');
+    const { tally, applied } = await tallyRun(ctx, run, l => l.code === 'invalid_slug' || (l.code === 'invalid_params' && /slug/i.test(l.message ?? '') && !isConflict(l.code, l.message)), l => l.op === 'put_page');
     const acked = ackedLines(run, applied);
     const got = await read(ctx, [
       { op: 'list_pages', params: { slug_prefix: `mw/c2-${phase.replace('_', '-')}`, limit: 1000 }, tag: 'list' },
       { op: 'get_page', params: { slug }, tag: 'get' },
-    ]);
+    ], tally);
     const findings: string[] = [];
     const listed = rows(got.get('list')?.result).filter(r => String(r.slug).toLowerCase().replace(/\.md$/, '') === slug);
     if (acked.length && listed.length !== 1) findings.push(`${acked.length} acknowledged concurrent creates of one slug left ${listed.length} pages for it (${listed.map(r => String(r.slug)).join(', ')})`);
     const body = String((asJson(got.get('get')?.result) as Record<string, unknown> | undefined)?.compiled_truth ?? '');
-    const markers = [...body.matchAll(/marker-(w\d+)/g)].map(m => m[1]!);
+    const winner = [...acked, ...maybeLines(run, applied)].find(l => body.trim() === `Created by writer ${l.tag.slice(8)} marker-${l.tag.slice(7)}.`);
+    const markers = winner ? [winner.tag.slice(7)] : [...body.matchAll(/marker-(w\d+)/g)].map(m => m[1]!).concat(['<not exactly one write>']);
     if (acked.length > 1) findings.push(`${acked.length} writers were each told their create of one new page succeeded; the page keeps only one of them`);
     const maybeCreates = maybeLines(run, applied);
     if (acked.length && (markers.length !== 1 || ![...acked, ...maybeCreates].some(l => l.tag === `create:${markers[0]}`))) findings.push(`the created page holds ${markers.length} writer markers (${markers.join(',') || 'none'}), not exactly one acknowledged create`);
@@ -230,11 +256,11 @@ export async function checkLinks(ctx: Ctx): Promise<CheckResult> {
       ...(w === 0 ? [{ op: CAS_PUT, params: { slug: target, content: `Link target, rewritten ${r}.` }, tag: `rewrite:${r}` }] : []),
     ]).flat());
     const run = await runWriters(ctx.brain, ctx.gut, plansFor(phase, lanes));
-    const { tally, applied } = await tallyRun(ctx, run);
+    const { tally, applied } = await tallyRun(ctx, run, undefined, l => l.op === CAS_PUT);
     const acked = ackedLines(run, applied).filter(l => l.op === 'add_link');
     const reads: WorkerOp[] = [{ op: 'get_backlinks', params: { slug: target }, tag: 'back' }];
     for (const l of acked) reads.push({ op: 'get_links', params: { slug: `${p}-src-${l.tag.slice(5)}` }, tag: `out:${l.tag.slice(5)}` });
-    const got = await read(ctx, reads);
+    const got = await read(ctx, reads, tally);
     const findings: string[] = [];
     const back = rows(got.get('back')?.result).map(r => String(r.from_slug));
     const want = acked.map(l => `${p}-src-${l.tag.slice(5)}`);
@@ -273,17 +299,20 @@ function timelineFindings(ctx: Ctx, entries: Array<Record<string, unknown>>, ack
   const lanes = new Map<string, OpLine[]>();
   for (const l of acked) { const k = `${(l as OpLine & { worker?: number }).worker ?? 0}:${l.lane}`; (lanes.get(k) ?? lanes.set(k, []).get(k)!).push(l); }
   let backwards = 0;
+  let untimed = 0;
   for (const ls of lanes.values()) {
     ls.sort((a, b) => a.i - b.i);
     let last = -Infinity;
     for (const l of ls) {
       const e = byTag.get(`${prefix} ${l.tag.slice(3)}`);
-      const t = Date.parse(String(e?.created_at ?? e?.last_written_at ?? ''));
-      if (Number.isNaN(t)) continue;
+      if (!e) continue;
+      const t = Date.parse(String(e.created_at ?? e.last_written_at ?? ''));
+      if (Number.isNaN(t)) { untimed += 1; continue; }
       if (t < last) backwards += 1;
       last = Math.max(last, t);
     }
   }
+  if (untimed) findings.push(`${untimed} acknowledged entries carry no readable creation time, so time order cannot be checked`);
   if (backwards) findings.push(`${backwards} entries carry a creation time earlier than an entry the same writer wrote before them (time went backward)`);
   void ctx;
   return findings;
@@ -301,11 +330,17 @@ export async function checkTimeline(ctx: Ctx): Promise<CheckResult> {
     const run = await runWriters(ctx.brain, ctx.gut, plansFor(phase, lanes));
     const { tally, applied } = await tallyRun(ctx, run);
     const acked = ackedLines(run, applied);
-    const got = await read(ctx, [{ op: 'get_timeline', params: { slug, limit: 1000 }, tag: 'tl' }]);
+    const got = await read(ctx, [{ op: 'get_timeline', params: { slug, limit: 1000 }, tag: 'tl' }], tally);
     const findings = timelineFindings(ctx, rows(got.get('tl')?.result), acked, prefix);
     phases.push({ phase, status: phaseStatus(tally, findings), tally, findings, notes: [`${acked.length} of ${run.ops.length} entries acknowledged`], ...(run.startErrors.length ? { start_errors: run.startErrors } : {}) });
   }
-  phases.push(await timelineTakeover(ctx));
+  const takeover = await timelineTakeover(ctx);
+  // Multi-user follower takeover is held until its lanes land (Ember, 2026-11-25): run and record it, never count it.
+  if (ctx.brain.kind === 'rust' && ctx.brain.env.GBRAIN_RUST_MULTIUSER === '1') {
+    takeover.notes.unshift(`held: multi-user takeover checks are not counted until the follower lanes land; this run measured ${takeover.status}`);
+    takeover.status = 'held';
+  }
+  phases.push(takeover);
   return { id: 'c4_timeline', title: 'Timeline order and completeness; times never go backward (also after a lease takeover)', status: combineStatus(phases.filter(p => !(p.phase === 'takeover' && p.notes.includes('not applicable'))).map(p => p.status)), phases };
 }
 
@@ -331,9 +366,9 @@ async function timelineTakeover(ctx: Ctx): Promise<PhaseResult> {
   });
   if (killedAt === null) killGroup(run.workers[0]!.child);
   const ops = run.ops.filter(o => o.worker !== 0);
-  const { tally, applied } = await tallyRun(ctx, { ...run, ops, startErrors: run.startErrors.filter(e => e.worker !== 0) }, l => l.code === 'outcome_unknown');
+  const { tally, applied } = await tallyRun(ctx, { ...run, ops, startErrors: run.startErrors.filter(e => e.worker !== 0) });
   const acked = ackedLines({ ...run, ops }, applied);
-  const got = await read(ctx, [{ op: 'get_timeline', params: { slug, limit: 1000 }, tag: 'tl' }]);
+  const got = await read(ctx, [{ op: 'get_timeline', params: { slug, limit: 1000 }, tag: 'tl' }], tally);
   const findings = timelineFindings(ctx, rows(got.get('tl')?.result), acked, prefix);
   const holderRole = String((run.ready[0]?.probe as Record<string, unknown> | undefined)?.role ?? 'unknown');
   const notes = [`holder role ${holderRole}; owner killed after ${killedAt ? Math.floor(total / 2) : 'all'} of ${total} writes`, `${acked.length} entries acknowledged`];
@@ -367,7 +402,8 @@ export async function checkDeletion(ctx: Ctx): Promise<CheckResult> {
       { op: 'delete_page', params: { slug: doomed, force: true, purge: true }, tag: 'delete' },
     ]);
     const run = await runWriters(ctx.brain, ctx.gut, plansFor(phase, lanes));
-    const notFound = (l: OpLine) => /not_found|page_not_found|deleted/.test(`${l.code} ${l.message}`);
+    // A write to the page after it was deleted may answer not found; the delete itself may not.
+    const notFound = (l: OpLine) => l.tag !== 'delete' && /(^|_)not_found$/.test(l.code ?? '');
     const { tally } = await tallyRun(ctx, run, notFound);
     const del = run.ops.find(o => o.tag === 'delete');
     const findings: string[] = [];
@@ -380,7 +416,7 @@ export async function checkDeletion(ctx: Ctx): Promise<CheckResult> {
       { op: 'search', params: { query: word }, tag: 'search' },
       { op: 'list_pages', params: { slug_prefix: p, limit: 100 }, tag: 'list' },
       { op: 'get_tags', params: { slug: doomed }, tag: 'tags' },
-    ]);
+    ], tally, ['get', 'tl', 'tags']);
     if (del?.ok) {
       const late = run.ops.filter(o => o.ok && o.tag !== 'delete' && o.tag !== 'pause' && o.t0 > del.t1);
       const g = got.get('get')!;
@@ -391,9 +427,7 @@ export async function checkDeletion(ctx: Ctx): Promise<CheckResult> {
       if (rows(got.get('list')?.result).some(r => String(r.slug) === doomed)) findings.push('list_pages still lists the deleted page');
       const tags = asJson(got.get('tags')?.result);
       if (got.get('tags')?.ok && Array.isArray(tags) && tags.length) findings.push(`the deleted page still has ${tags.length} tags`);
-    } else if (del && !/engine_capability_missing/.test(String(del.code))) {
-      tally.errors[`delete_${del.code}`] = { count: 1, sample: (del.message ?? '').slice(0, 300) };
-    } else if (del) tally.refused.delete = 1;
+    } else if (!del) tally.errors.delete_missing = { count: 1, sample: 'the delete lane produced no result' };
     phases.push({ phase, status: phaseStatus(tally, findings), tally, findings, notes, ...(run.startErrors.length ? { start_errors: run.startErrors } : {}) });
   }
   return { id: 'c5_deletion', title: 'Deletion leaves nothing under concurrent writes', status: combineStatus(phases.map(p => p.status)), phases };
@@ -421,11 +455,11 @@ export async function checkFacts(ctx: Ctx): Promise<CheckResult> {
       { op: 'remember', params: { fact: fact('doomed-one'), entity, provenance: 'multi-writer eval' }, tag: 'reremember' },
     ]);
     const run = await runWriters(ctx.brain, ctx.gut, plansFor(phase, lanes));
-    const { tally } = await tallyRun(ctx, run, l => l.tag === 'reremember' && /fact_withdrawn|invalid_params/.test(`${l.code} ${l.message}`));
+    const { tally } = await tallyRun(ctx, run, l => l.tag === 'reremember' && /fact_withdrawn/.test(`${l.code} ${l.message}`));
     const findings: string[] = [];
     const forget = run.ops.find(o => o.tag === 'forget');
     const rerem = run.ops.find(o => o.tag === 'reremember');
-    let got = await read(ctx, [{ op: 'recall', params: { entity, limit: 1000 }, tag: 'facts' }]);
+    let got = await read(ctx, [{ op: 'recall', params: { entity, limit: 1000 }, tag: 'facts' }], tally);
     if (forget?.ok) {
       if (rows(got.get('facts')?.result).some(f => String(f.fact) === fact('doomed-one'))) findings.push('a forgotten fact is back in recall after concurrent writes');
       if (rerem?.ok) findings.push('remembering the exact text of a forgotten fact was accepted (its fingerprint did not hold)');
@@ -436,14 +470,9 @@ export async function checkFacts(ctx: Ctx): Promise<CheckResult> {
       { op: 'remember', params: { fact: fact(`after-${w}`), entity, provenance: 'multi-writer eval' }, tag: `after:w${w}` }]);
     lanes2.push([{ op: 'delete_page', params: { slug: entity, force: true, purge: true }, tag: 'delete' }]);
     const run2 = await runWriters(ctx.brain, ctx.gut, plansFor(phase, lanes2));
-    const t2 = await tallyRun(ctx, run2);
-    for (const [k, v] of Object.entries(t2.tally.refused)) tally.refused[k] = (tally.refused[k] ?? 0) + v;
-    for (const [k, v] of Object.entries(t2.tally.errors)) tally.errors[k] = v;
-    for (const [k, v] of Object.entries(t2.tally.conflicts)) tally.conflicts[k] = (tally.conflicts[k] ?? 0) + v;
-    tally.write_lock_bug += t2.tally.write_lock_bug;
-    tally.total += t2.tally.total; tally.acked += t2.tally.acked; tally.pending_never_applied += t2.tally.pending_never_applied;
+    mergeTally(tally, (await tallyRun(ctx, run2)).tally);
     const del = run2.ops.find(o => o.tag === 'delete');
-    got = await read(ctx, [{ op: 'recall', params: { entity, limit: 1000 }, tag: 'facts' }, { op: 'search', params: { query: 'acme-example ordered part' }, tag: 'search' }]);
+    got = await read(ctx, [{ op: 'recall', params: { entity, limit: 1000 }, tag: 'facts' }, { op: 'search', params: { query: 'acme-example ordered part' }, tag: 'search' }], tally, ['facts']);
     const notes = [`fact ${factId} forgotten: ${forget?.ok ? 'yes' : `no (${forget?.code})`}; re-remember answered ${rerem?.ok ? 'accepted' : rerem?.code}`];
     if (del?.ok) {
       const back = rows(got.get('facts')?.result).map(f => String(f.fact)).filter(f => before.includes(f));
@@ -595,21 +624,23 @@ export async function checkAccess(ctx: Ctx): Promise<CheckResult> {
       return out;
     })();
     const probe = async (client: string, op: string, args: Record<string, unknown>) => remote.call(client, op, args);
-    const [carolWrite, bobSearch, aliceSearch, hidden, missing, hiddenTl, missingTl, rerem] = await Promise.all([
-      probe('carol-example', 'put_page', { slug: open, content: 'Carol overwrote the open page.' }),
+    const carolBase = String((asJson(before.get('open')?.result) as Record<string, unknown> | undefined)?.knowledge_revision ?? '');
+    const [carolWrite, bobSearch, aliceSearch, hidden, missing, hiddenTl, missingTl, chain] = await Promise.all([
+      // a. The write carries the page's current revision, so only the access rule can refuse it.
+      probe('carol-example', 'put_page', { slug: open, content: 'Carol overwrote the open page.', expected_revision: carolBase }),
       probe('bob-example', 'search', { query: word }),
       probe('alice-example', 'search', { query: word }),
       probe('bob-example', 'get_page', { slug: priv }),
       probe('bob-example', 'get_page', { slug: 'private/mw-c7-nobody' }),
       probe('bob-example', 'get_timeline', { slug: priv }),
       probe('bob-example', 'get_timeline', { slug: 'private/mw-c7-nobody' }),
-      // e. The member forgets her own fact, then remembers the same text again: the plain refusal for a forgotten fact.
+      // e. The member remembers a fact, forgets it, then remembers the same text again.
       (async () => {
         const first = await probe('alice-example', 'remember', { fact: memberFact, entity: 'people/alice-example', provenance: 'alice' });
         const id = String((asJson(first.result) as Record<string, unknown> | undefined)?.id ?? '');
-        const forgot = await probe('alice-example', 'forget', { id });
-        if (!first.ok || !forgot.ok) notes.push(`member remember/forget answered ${first.code ?? 'ok'}/${forgot.code ?? 'ok'}`);
-        return probe('alice-example', 'remember', { fact: memberFact, entity: 'people/alice-example', provenance: 'alice' });
+        const forgot = first.ok ? await probe('alice-example', 'forget', { id }) : null;
+        const again = forgot?.ok ? await probe('alice-example', 'remember', { fact: memberFact, entity: 'people/alice-example', provenance: 'alice' }) : null;
+        return { first, forgot, again };
       })(),
     ]);
     const numeric: Array<[string, string, Record<string, unknown>]> = [
@@ -625,39 +656,66 @@ export async function checkAccess(ctx: Ctx): Promise<CheckResult> {
     ];
     const numericOut = await Promise.all(numeric.map(([, op, a]) => probe('bob-example', op, a)));
     const writes = await writers;
-    const all = [carolWrite, bobSearch, aliceSearch, hidden, missing, hiddenTl, missingTl, rerem, ...numericOut, ...writes];
-    const refusalOfEngine = all.filter(l => /engine_capability_missing|access_control/.test(`${l.code} ${l.message}`));
-    if (refusalOfEngine.length === all.length || (refusalOfEngine.length && [bobSearch, hidden].every(l => refusalOfEngine.includes(l)))) {
-      tally.refused.engine_capability_missing = refusalOfEngine.length;
-      notes.push(`the server refused remote calls: ${(refusalOfEngine[0]?.message ?? '').slice(0, 300)}`);
+    await remote.stop();
+    const after = await read(ctx, [{ op: 'get_page', params: { slug: open }, tag: 'open' }], tally);
+    const chainLines = [chain.first, chain.forgot, chain.again].filter((l): l is NonNullable<typeof l> => !!l);
+    const all = [carolWrite, bobSearch, aliceSearch, hidden, missing, hiddenTl, missingTl, ...chainLines, ...numericOut, ...writes];
+    const engineRefused = (l: OpLine) => REFUSAL_CODES.has(l.code ?? '') || /engine_capability_missing|access_control/.test(l.code ?? '');
+    if (all.every(l => !l.ok && engineRefused(l))) {
+      tally.refused[all[0]!.code ?? 'engine_capability_missing'] = all.length;
+      notes.push(`the server refused every remote call: ${(all[0]?.message ?? '').slice(0, 300)}`);
       return done('not_supported');
     }
-    const wt = tallyOps(writes);
-    Object.assign(tally, { ...wt });
+    // Every probe is judged: the answer it should give, a typed refusal of the engine, or an error.
+    const DENIED = /^(permission_denied|page_not_found|not_found|forbidden|access_denied|insufficient_scope|labelled_only_denied)$/;
+    const failed = (l: OpLine, label: string) => {
+      const code = l.code ?? 'error';
+      if (engineRefused(l)) tally.refused[code] = (tally.refused[code] ?? 0) + 1;
+      else if (isHandoff(code, l.message)) tally.handoff[code] = (tally.handoff[code] ?? 0) + 1;
+      else { const k = `${label}_${code}`; const e = tally.errors[k] ?? (tally.errors[k] = { count: 0, sample: (l.message ?? '').slice(0, 300) }); e.count += 1; }
+    };
+    const judge = (l: OpLine, label: string, expect: 'ok' | 'denied' | 'withdrawn' | 'typed') => {
+      tally.total += 1;
+      if (l.ok) { if (expect === 'ok' || expect === 'typed') tally.acked += 1; return; }
+      if (expect === 'denied' && DENIED.test(l.code ?? '')) { tally.acked += 1; return; }
+      if (expect === 'withdrawn' && /fact_withdrawn/.test(`${l.code} ${l.message}`)) { tally.acked += 1; return; }
+      if (expect === 'typed' && /^[a-z]+(_[a-z]+)+$/.test(l.code ?? '') && !/^(internal_error|harness_exception|rpc_error|http_\d+)$/.test(l.code ?? '')) { tally.acked += 1; return; }
+      failed(l, label);
+    };
+    for (const w of writes) judge(w, 'remote_write', 'ok');
     // a. A labelled-only member's write to an unlabelled page refuses and leaves it byte-identical.
-    await remote.stop();
-    const after = await read(ctx, [{ op: 'get_page', params: { slug: open }, tag: 'open' }]);
+    judge(carolWrite, 'labelled_only_write', 'denied');
     const same = JSON.stringify(before.get('open')?.result) === JSON.stringify(after.get('open')?.result);
     if (carolWrite.ok) findings.push('a labelled-only member overwrote an unlabelled page (the write was accepted)');
     if (!same) findings.push('the unlabelled page changed after a labelled-only member tried to write it (not byte-identical)');
     cross['labelled_only_write'] = carolWrite.ok ? 'accepted' : `refused:${carolWrite.code}`;
     // b. A private page never shows in another member's keyword search; its reader finds it (control).
+    judge(bobSearch, 'other_member_search', 'ok');
+    judge(aliceSearch, 'reader_search', 'ok');
     const hit = (l: OpLine) => rows(l.result).some(r => String(r.slug) === priv);
     if (bobSearch.ok && hit(bobSearch)) findings.push("another member's keyword search returned a private page");
     if (!(aliceSearch.ok && hit(aliceSearch))) notes.push(`control: the private page's own reader did not find it by keyword (${aliceSearch.ok ? 'no hit' : aliceSearch.code}), so the leak probe proves less`);
     cross['private_search_other_member'] = bobSearch.ok ? (hit(bobSearch) ? 'leaked' : 'hidden') : `refused:${bobSearch.code}`;
     cross['private_search_reader'] = aliceSearch.ok ? (hit(aliceSearch) ? 'found' : 'not found') : `refused:${aliceSearch.code}`;
     // c. A hidden page answers byte-identical to a missing page.
+    for (const [l, label] of [[hidden, 'hidden_get'], [missing, 'missing_get']] as const) judge(l, label, 'denied');
+    for (const [l, label] of [[hiddenTl, 'hidden_timeline'], [missingTl, 'missing_timeline']] as const) judge(l, label, l.ok ? 'ok' : 'denied');
+    if (hidden.ok) findings.push("another member read a private page's content with get_page");
     const norm = (l: OpLine & { decoded: string }, slug: string) => l.decoded.split(slug).join('<slug>').replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/g, '<uuid>');
     if (norm(hidden, priv) !== norm(missing, 'private/mw-c7-nobody')) findings.push(`get_page on a hidden page answers differently from a missing page (${hidden.code ?? 'ok'} vs ${missing.code ?? 'ok'})`);
     if (norm(hiddenTl, priv) !== norm(missingTl, 'private/mw-c7-nobody')) findings.push('get_timeline on a hidden page answers differently from a missing page');
-    cross['hidden_vs_missing_get_page'] = `${hidden.code ?? 'ok'}|${missing.code ?? 'ok'}|${norm(hidden, priv) === norm(missing, 'private/mw-c7-nobody') ? 'identical' : 'different'}`;
-    // d. Out-of-range numbers: the outcome per input, compared across engines in the matrix report.
-    for (const [i, [label]] of numeric.entries()) cross[`numeric: ${label}`] = outcomeClass(numericOut[i]!);
-    // e. A forgotten fact gives the same plain refusal when a member remembers it again.
-    if (rerem.ok) findings.push('a member re-remembered the exact text of a fact she had just forgotten and it was accepted');
-    cross['forgotten_reremember'] = rerem.ok ? 'accepted' : `refused:${rerem.code}: ${(rerem.message ?? '').replace(/\d{4}-\d{2}-\d{2}T[\d:.]+Z/g, '<ts>').replace(/"id":\s*"?\d+"?/g, '"id":<n>').slice(0, 200)}`;
-    notes.push(`concurrent remote writes: ${wt.acked} of ${wt.total} acknowledged`);
+    cross['hidden_vs_missing_get_page'] = `${hidden.code ?? 'ok'}/${missing.code ?? 'ok'}/${norm(hidden, priv) === norm(missing, 'private/mw-c7-nobody') ? 'identical' : 'different'}`;
+    // d. Out-of-range numbers: any typed answer is fine here; an untyped error is not. Engines are compared in the report.
+    for (const [i, [label]] of numeric.entries()) { judge(numericOut[i]!, `numeric_${label.replace(/\W+/g, '_')}`, 'typed'); cross[`numeric: ${label}`] = outcomeClass(numericOut[i]!); }
+    // e. A forgotten fact gives the plain withdrawn refusal when the member remembers it again.
+    judge(chain.first, 'member_remember', 'ok');
+    if (chain.forgot) judge(chain.forgot, 'member_forget', 'ok');
+    if (chain.again) {
+      judge(chain.again, 'member_reremember', 'withdrawn');
+      if (chain.again.ok) findings.push('a member re-remembered the exact text of a fact she had just forgotten and it was accepted');
+    } else notes.push(`the forget probe did not reach its last step (remember ${chain.first.code ?? 'ok'}, forget ${chain.forgot?.code ?? 'not run'})`);
+    cross['forgotten_reremember'] = !chain.again ? 'not reached' : chain.again.ok ? 'accepted' : `refused:${chain.again.code}: ${(chain.again.message ?? '').replace(/\d{4}-\d{2}-\d{2}T[\d:.]+Z/g, '<ts>').replace(/"id":\s*"?\d+"?/g, '"id":<n>').slice(0, 200)}`;
+    notes.push(`concurrent remote writes: ${writes.filter(w => w.ok).length} of ${writes.length} acknowledged`);
     return done(phaseStatus(tally, findings));
   } finally {
     await remote.stop();

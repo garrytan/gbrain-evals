@@ -5,7 +5,7 @@
  * switch-on run passes only when the running engine proved multi-user mode.
  */
 import { describe, expect, test } from 'bun:test';
-import { combineStatus, judgeSwitch, normalizeForParity, outcomeClass, percentile, phaseStatus, tallyOps } from '../../eval/runner/multi-writer/classify.ts';
+import { combineStatus, isConflict, judgeSwitch, mergeTally, MOVED_UNDER_WRITE, normalizeForParity, outcomeClass, percentile, phaseStatus, recordReadFailure, tallyOps } from '../../eval/runner/multi-writer/classify.ts';
 import { childEnv } from '../../eval/runner/multi-writer/brain.ts';
 import { errorCodeOf, type OpLine } from '../../eval/runner/multi-writer/worker.ts';
 import { asJson } from '../../eval/runner/multi-writer/scenarios.ts';
@@ -37,6 +37,35 @@ describe('tallyOps and phaseStatus', () => {
     const t = tallyOps([line({ ok: false, code: 'write_pending', request_id: 'r1' }), line({ ok: false, code: 'page_not_found' })], { applied: new Set(['r1']), expectedError: l => l.code === 'page_not_found' });
     expect(t.acked).toBe(1);
     expect(t.errors).toEqual({});
+  });
+
+  test('a lost race is judged by code, never by free text inside an untyped error', () => {
+    expect(isConflict('revision_conflict')).toBe(true);
+    expect(isConflict('invalid_params', `{"message":"${MOVED_UNDER_WRITE}"}`)).toBe(true);
+    expect(isConflict('internal_error', 'expected revision no longer matches')).toBe(false);
+    const t = tallyOps([line({ ok: false, code: 'internal_error', message: 'revision no longer matches' })]);
+    expect(phaseStatus(t, [])).toBe('fail');
+  });
+
+  test('a store owner that went away is not_supported, kept apart, and survives a merge', () => {
+    const a = tallyOps([line({ ok: false, code: 'owner_unavailable', message: 'The process that owns this brain exited' })]);
+    expect(a.handoff).toEqual({ owner_unavailable: 1 });
+    expect(phaseStatus(a, [])).toBe('not_supported');
+    const merged = mergeTally(tallyOps([line({})]), a);
+    expect(merged.handoff).toEqual({ owner_unavailable: 1 });
+    expect(merged.total).toBe(2);
+    expect(phaseStatus(merged, [])).toBe('not_supported');
+  });
+
+  test('a failed read-back never counts as the data being gone', () => {
+    const t = tallyOps([]);
+    recordReadFailure(t, { ok: false, code: 'page_not_found', op: 'get_page' }, true);
+    expect(phaseStatus(t, [])).toBe('pass');
+    recordReadFailure(t, { ok: false, code: 'internal_error', op: 'search', message: 'boom' }, true);
+    expect(phaseStatus(t, [])).toBe('fail');
+    const u = tallyOps([]);
+    recordReadFailure(u, { ok: false, code: 'page_not_found', op: 'get_page' }, false);
+    expect(phaseStatus(u, [])).toBe('fail');
   });
 
   test('combineStatus: fail beats not_supported beats pass, and an invalid run marks every check invalid', () => {

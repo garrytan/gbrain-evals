@@ -16,7 +16,8 @@
  */
 import type { OpLine } from './worker.ts';
 
-export type Status = 'pass' | 'fail' | 'not_supported' | 'invalid';
+/** `held` marks a phase run on purpose but not counted (its lane's fixes have not landed); a check is never held. */
+export type Status = 'pass' | 'fail' | 'not_supported' | 'invalid' | 'held';
 
 /** Typed refusals: the engine says it cannot do this, and writes nothing. */
 export const REFUSAL_CODES = new Set([
@@ -48,8 +49,18 @@ export function isHandoff(code: string | undefined, message = ''): boolean {
   return code === 'owner_unavailable' || code === 'outcome_unknown' || (code === 'unavailable' && /owner|second process|closing/i.test(message));
 }
 
-/** gbrain's typed answers to a writer that lost a race; the write did nothing and the caller is told so. */
-export const CONFLICT_RE = /revision_conflict|revision_required|no longer matches|expected revision/;
+/**
+ * gbrain's typed answers to a writer that lost a race; the write did nothing and the caller is told so. Judged by code,
+ * never by free text, except gbrain's one fixed sentence for a write whose page moved under it, which arrives as
+ * invalid_params (a concurrent remember on one entity gets it).
+ */
+export const CONFLICT_CODES = new Set(['revision_conflict', 'revision_required']);
+export const MOVED_UNDER_WRITE = 'The accepted page identity or revision no longer matches.';
+
+export function isConflict(code: string | undefined, message = ''): boolean {
+  if (CONFLICT_CODES.has(code ?? '')) return true;
+  return code === 'invalid_params' && message.includes(MOVED_UNDER_WRITE);
+}
 
 export function emptyTally(): OpTally {
   return { total: 0, acked: 0, refused: {}, errors: {}, pending_never_applied: 0, write_lock_bug: 0, conflicts: {}, handoff: {} };
@@ -70,13 +81,37 @@ export function tallyOps(lines: readonly OpLine[], o: { expectedError?: (l: OpLi
     const code = l.code ?? 'error';
     if (REFUSAL_CODES.has(code)) { t.refused[code] = (t.refused[code] ?? 0) + 1; continue; }
     if (isHandoff(code, l.message)) { t.handoff[code] = (t.handoff[code] ?? 0) + 1; continue; }
-    if (CONFLICT_RE.test(`${code} ${l.message ?? ''}`) && !o.conflictIsError) { t.conflicts[code] = (t.conflicts[code] ?? 0) + 1; continue; }
+    if (isConflict(code, l.message) && !o.conflictIsError) { t.conflicts[code] = (t.conflicts[code] ?? 0) + 1; continue; }
     if (code === 'write_pending') t.pending_never_applied += 1;
     if (l.lease_fence || (code === 'write_pending' && o.leaseLog) || code === 'lease_lost') t.write_lock_bug += 1;
     const e = t.errors[code] ?? (t.errors[code] = { count: 0, sample: (l.message ?? '').slice(0, 300) });
     e.count += 1;
   }
   return t;
+}
+
+/** Add `b` into `a`, every field. */
+export function mergeTally(a: OpTally, b: OpTally): OpTally {
+  a.total += b.total; a.acked += b.acked; a.pending_never_applied += b.pending_never_applied; a.write_lock_bug += b.write_lock_bug;
+  for (const k of ['refused', 'conflicts', 'handoff'] as const) for (const [c, n] of Object.entries(b[k])) a[k][c] = (a[k][c] ?? 0) + n;
+  for (const [c, e] of Object.entries(b.errors)) { const x = a.errors[c]; if (x) x.count += e.count; else a.errors[c] = { ...e }; }
+  return a;
+}
+
+/**
+ * Record a failed verification read (the operator reading the brain back). A not-found answer the check expects is
+ * fine; a refusal or owner hand-off means the check could not verify (not_supported); anything else is an error, so a
+ * read that fails can never stand in for "the data is gone".
+ */
+export function recordReadFailure(t: OpTally, l: Pick<OpLine, 'ok' | 'code' | 'message' | 'op'>, notFoundOk: boolean): void {
+  if (l.ok) return;
+  const code = l.code ?? 'error';
+  if (notFoundOk && /(^|_)not_found$/.test(code)) return;
+  if (REFUSAL_CODES.has(code)) { t.refused[`read_${code}`] = (t.refused[`read_${code}`] ?? 0) + 1; return; }
+  if (isHandoff(code, l.message)) { t.handoff[`read_${code}`] = (t.handoff[`read_${code}`] ?? 0) + 1; return; }
+  const k = `read_${l.op}_${code}`;
+  const e = t.errors[k] ?? (t.errors[k] = { count: 0, sample: (l.message ?? '').slice(0, 300) });
+  e.count += 1;
 }
 
 /** A phase verdict from its tally and its invariant findings (each finding is one plain sentence of wrong data). */
@@ -87,8 +122,9 @@ export function phaseStatus(t: OpTally, findings: readonly string[]): Status {
 }
 
 /** A check's verdict from its phases: any fail fails it, then any refusal; a run that failed its switch proof is invalid. */
-export function combineStatus(phases: readonly Status[], runInvalid = false): Status {
+export function combineStatus(all: readonly Status[], runInvalid = false): Status {
   if (runInvalid) return 'invalid';
+  const phases = all.filter(p => p !== 'held');
   if (phases.includes('fail')) return 'fail';
   if (phases.includes('invalid')) return 'invalid';
   if (phases.includes('not_supported')) return 'not_supported';

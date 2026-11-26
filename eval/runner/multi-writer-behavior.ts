@@ -207,7 +207,10 @@ function buildAddon(gut: GbrainUnderTest, cargoTarget: string, log: (s: string) 
   const dest = join(OVERLAY_ROOT, 'addons', `gbrain_engine-${sha}.node`);
   if (existsSync(dest)) return dest;
   log(`[mw] building the Rust addon at ${sha.slice(0, 10)}`);
-  const r = spawnSync('bun', ['run', 'rust:build'], { cwd: gut.root, env: { ...process.env, CARGO_TARGET_DIR: cargoTarget }, encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 });
+  // The build runs code from the ref under test, so it gets the toolchain's variables and nothing else (no provider key).
+  const env: Record<string, string> = { CARGO_TARGET_DIR: cargoTarget };
+  for (const k of ['PATH', 'HOME', 'USER', 'LANG', 'TMPDIR', 'CARGO_HOME', 'RUSTUP_HOME', 'RUSTUP_TOOLCHAIN', 'CC', 'CXX']) if (process.env[k]) env[k] = process.env[k]!;
+  const r = spawnSync('bun', ['run', 'rust:build'], { cwd: gut.root, env, encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 });
   const built = /GBRAIN_RUST_ENGINE_ADDON=(\S+)/.exec(`${r.stdout}\n${r.stderr}`)?.[1];
   if (r.status !== 0 || !built) throw new Error(`rust:build at ${sha} failed: ${`${r.stderr}${r.stdout}`.trim().split('\n').slice(-5).join(' | ')}`);
   mkdirSync(join(OVERLAY_ROOT, 'addons'), { recursive: true });

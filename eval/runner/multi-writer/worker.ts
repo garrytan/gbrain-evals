@@ -64,6 +64,8 @@ export interface OpLine {
   request_id?: string;
   /** For a careful (compare-and-set) put: the revision it read, the revision its write produced, and the put's own time. */
   cas?: { base: string; revision: string | null; put_ms: number };
+  /** Set by the parent when this write answered write_pending and its receipt later showed it committed. */
+  settled_from_pending?: boolean;
 }
 
 /** A pseudo-operation: get_page, then put_page with expected_revision set to the revision just read. */
