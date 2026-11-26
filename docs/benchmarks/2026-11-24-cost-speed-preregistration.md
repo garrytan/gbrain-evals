@@ -582,6 +582,33 @@ Added after the paid pilot (window CS1-PILOT), before any counted cell. These it
     The plan table above carries the new values, and `cs1-cells.json` is regenerated from them. The counted run's
     caps follow from them; their amounts are in the paid-window request, as the Plan section says.
 
+### 2026-11-26: gbrain v0.60.776.0
+
+Made on the results branch before any counted cell. Where this amendment and the text above differ, this amendment
+wins.
+
+20. **gbrain build v0.60.776.0.** gbrain released v0.60.776.0 (`3a360389f152e62ccb627ab96eccfad8a9204e75`) on
+    2026-11-26, 5 releases and 103 commits after v0.60.771.0, and before any counted gbrain cell started. So every
+    counted gbrain cell runs it (`CS1_GBRAIN_BUILD`), and the build freezes here instead of at item 1's. The gbrain
+    pilot row ran v0.60.771.0 and stands, for these reasons:
+    - The facts backstop's eligibility rule is byte-identical (`src/core/facts/eligibility.ts`), so conversation pages
+      are still skipped with reason `conversation_pipeline`. Item 19's finding on gbrain's write rate rests on that rule.
+      The commits that touch fact extraction change how a page's own facts block is reconciled, and none of them adds
+      a provider call.
+    - The background jobs in `CS1_IDLE_JOBS` keep their cadences. The files they cite change only in an opt-in socket
+      and in the addon install after a self-upgrade, and their citations now name v0.60.776.0.
+    - Two keyless checks ran on v0.60.776.0 on one VM, behind the fake upstream:
+      - The capacity cell wrote all 154 sessions of `bg1-dev-12` and found 21 of 21 held-back probes, each started
+        with the system idle, and 20 of 20 bulk probes.
+      - A rehearsal of the gbrain pilot cell wrote `bg1-dev-11` and found 20 of 20 held-back and 20 of 20 bulk
+        probes, and its 2-hour idle window held no request.
+    - In both checks, gbrain's write, probe and background traffic was embedding and rerank requests only. The only chat
+      and messages requests were the readers' answers. The rehearsal's write and background embedding requests matched
+      the v0.60.771.0 rehearsal's to within one request.
+
+    gbrain v0.60.776.0 names an installed Rust addon by its SHA-256, so the harness test that plants a stray addon
+    now writes it where gbrain looks. That is the only harness change.
+
 ## Disclosures
 
 gbrain is Garry Tan's own project.
