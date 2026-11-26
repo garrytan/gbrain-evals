@@ -552,7 +552,8 @@ Added after the paid pilot (window CS1-PILOT), before any counted cell. These it
     the amount amendment item 2 already planned per probe. It changes every row's probe procedure, not only
     extract-first's. The other rows' pilots stand: none of their probes waited more than 10 minutes, so a 20-minute cap
     would have given them the same records. The probe horizon (10 minutes to be found) is unchanged. Extract-first is
-    piloted again alone under the new wait before its counted cell.
+    piloted again alone under the new wait before its counted cell. In that re-pilot all 20 probes started with the
+    system idle (the longest wait was 18 minutes) and all 20 were found, so its probe window counts.
 18. **World end and the pilot method.** The pool's world end is 2026-11-22 (`GBRAIN_EVALS_BG1_WORLD_END`); the
     development default of 2026-11-08 is refused because it lies more than 14 days before launch, so every counted cell
     starts by 2026-12-06 or this item is amended again. The pilot ran all eight pilot cells as local cells of one
