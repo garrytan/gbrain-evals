@@ -60,8 +60,10 @@ if [ "$PG_IMAGE" != none ]; then
   step "postgres: ${mem_mb} MB RAM, shared_buffers ${shared}MB, effective_cache_size ${cache}MB"
   sudo mkdir -p /var/lib/fv-pg
   docker rm -f fv-pg >/dev/null 2>&1 || true
+  data_mount=/var/lib/postgresql/data
+  case "$PG_IMAGE" in *-pg1[89]*) data_mount=/var/lib/postgresql ;; esac
   docker run -d --name fv-pg --shm-size="${shm}m" -p 127.0.0.1:5434:5432 -e POSTGRES_PASSWORD=postgres \
-    -v /var/lib/fv-pg:/var/lib/postgresql/data "$PG_IMAGE" \
+    -v /var/lib/fv-pg:"$data_mount" "$PG_IMAGE" \
     -c shared_buffers="${shared}MB" -c effective_cache_size="${cache}MB" -c random_page_cost=1.1 -c effective_io_concurrency=200 >/dev/null
   for _ in $(seq 1 90); do PGPASSWORD=postgres psql -h 127.0.0.1 -p 5434 -U postgres -tAc 'select 1' >/dev/null 2>&1 && break; sleep 1; done
   PGPASSWORD=postgres psql -h 127.0.0.1 -p 5434 -U postgres -tAc "select version(), (select default_version from pg_available_extensions where name = 'vector')"
