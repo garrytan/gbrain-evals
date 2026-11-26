@@ -39,6 +39,15 @@ export const SECTION_CONFIG = 'search.long_page_unit=section';
 export const ARMS = { section: 'gbrain-section', default: 'gbrain-default' } as const;
 export const FRONTIER = ['claude-opus-5-5', 'gpt-6.2-sol'] as const;
 export const PARTICLE = 'particle-1';
+/** The world digests recorded before generation (amendment 2026-11-26), the only Hard worlds of this plan particle-1 runs on. */
+export const H4FIX_WORLD_DIGESTS: Record<H4FixWorld, string> = {
+  u1: '7d4d8e5332a943386c52412fddb53d4adebd94f9cc82a549ae6cad9b5b55ea56',
+  u2: '38de2aa3ff9d73de2eecb2ada8f32e90f77ebb672f3fb505b06e1a4e09b60fa6',
+  u3: 'f8a0f3eedbe5643fd4abcc0b2cf2ff1862d328158d714db7aecf5479b5c58b9f',
+  u4: '68cde0d248bd46d6f279e5ee457043ac49319381ed3da781d4d6f34e8dd3ab9b',
+  u5: '2d36f25c5861852f342f079e0a0537f4dd7ac96cb65670706e434f7508518554',
+  u6: '70384a6e3c0369234bac99eb3e650ac50a8704e5a6962af5a3c3581624d79704',
+};
 /** The claims judge per reader: no family grades its own rows, particle-1 never judges. */
 export const JUDGE_FOR: Record<string, string> = { 'claude-opus-5-5': 'gpt-6.2-sol', 'gpt-6.2-sol': 'claude-opus-5-5', 'particle-1': 'claude-opus-5-5' };
 export const SLOTS: Record<H4FixWorld, number> = { u1: 5, u2: 5, u3: 2, u4: 2, u5: 2, u6: 2 };

@@ -8,8 +8,9 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { ARMS, FRONTIER, FULL_WORLDS, GREP_FIX_COMMIT, H4FIX_WORLDS, JUDGE_FOR, LONG_PAGE_MIN_CHARS, N1_LONG_H4_TASKS, PARTICLE, SECTION_CONFIG, checkWorld, h4Half, longH4Tasks, worldPlan } from '../../eval/runner/cat40/h4fix-confirm.ts';
-import { generateHardWorld } from '../../eval/generators/model-ladder-hard.ts';
+import { ARMS, FRONTIER, FULL_WORLDS, GREP_FIX_COMMIT, H4FIX_WORLD_DIGESTS, H4FIX_PREREG, H4FIX_WORLDS, JUDGE_FOR, LONG_PAGE_MIN_CHARS, N1_LONG_H4_TASKS, PARTICLE, SECTION_CONFIG, checkWorld, h4Half, longH4Tasks, worldPlan } from '../../eval/runner/cat40/h4fix-confirm.ts';
+import { generateHardWorld, hardWorldDigest } from '../../eval/generators/model-ladder-hard.ts';
+import { main, particleRunsOnHardWorld } from '../../eval/runner/cat40-model-ladder.ts';
 import { validateKnobs } from '../../eval/generators/hard/schema.ts';
 
 const BUILD = 'e'.repeat(40);
@@ -265,4 +266,27 @@ describe('h4fix_analysis.py', () => {
       'gbrain-section|claude-opus-5-5': { search: 2, search_calls_long_page: 1, search_rows_long_page: 1, search_explicit_return_unit: 1 },
     });
   });
+});
+
+describe('particle-1 on this plan\'s worlds (the U digests recorded before generation)', () => {
+  const small = generateHardWorld(20261127);
+  test('the recorded digests are the six in the preregistration\'s amendment, one per world', () => {
+    const prereg = readFileSync(H4FIX_PREREG, 'utf8');
+    expect(Object.keys(H4FIX_WORLD_DIGESTS).sort()).toEqual([...H4FIX_WORLDS].sort());
+    for (const d of Object.values(H4FIX_WORLD_DIGESTS)) { expect(d).toMatch(/^[0-9a-f]{64}$/); expect(prereg).toContain(d); }
+    expect(new Set(Object.values(H4FIX_WORLD_DIGESTS)).size).toBe(6);
+  });
+  test('a Hard world passes only when its digest is recorded, or its seed is one of the newest-build worlds', () => {
+    expect(particleRunsOnHardWorld(small)).toBe(false);
+    expect(particleRunsOnHardWorld(small, [hardWorldDigest(small)])).toBe(true);
+    expect(particleRunsOnHardWorld(small, ['0'.repeat(64)])).toBe(false);
+  });
+  test('the ladder still refuses particle-1 on a Hard world no plan lists', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'h4fix-particle-'));
+    try {
+      const file = join(dir, 'world.json');
+      writeFileSync(file, JSON.stringify(small));
+      await expect(main(['--world', file, '--models', 'particle-1', '--judge', 'claude-opus-5-5', '--arms', 'fs', '--out', join(dir, 'out'), '--preflight'])).rejects.toThrow('particle-1 does not run on Hard worlds');
+    } finally { rmSync(dir, { recursive: true, force: true }); }
+  }, 60_000);
 });
