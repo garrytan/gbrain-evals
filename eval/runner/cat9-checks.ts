@@ -7,13 +7,18 @@
  * two optional fields next to its judged rubric:
  *
  *   setup   steps that build the brain state the scenario needs, in order:
- *           { run: [argv...], stdin?, brain?, capture?, allow_fail? } runs
- *           `gbrain <argv>`; { capture_time: name } records the current time;
+ *           { run: [argv...], stdin?, brain?, member?, capture?, allow_fail? }
+ *           runs `gbrain <argv>` (as `member` under GBRAIN_ENFORCED_MEMBER
+ *           when given); { capture_time: name } records the current time;
  *           { remove_datastore: brain } moves a brain's PGLite directory away.
  *   checks  { id, description, run, expect, requires?, known_failure? }: one
  *           CLI call and the result it must give. `expect` is mechanical
  *           (exit code, JSON paths, text that must or must not appear), so the
  *           same output always gives the same verdict.
+ *
+ * A scenario that applies to some engines only lists them in `engines`, with
+ * the reason in `engines_note`; on any other engine its checks report
+ * engine_not_supported_by_runner with that reason and nothing runs.
  *
  * Each scenario gets fresh brains (one PGLite brain per name used, `A` by
  * default) under a throwaway GBRAIN_HOME and its own copy of the fixture
@@ -48,7 +53,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { HERMETIC_KEY_PATTERN, HERMETIC_STRIPPED_KEYS, redactUrlPasswords } from './hermetic-env.ts';
-import { ENGINE_NOT_SUPPORTED_BY_RUNNER, ENGINE_REFUSAL_TEXT_RE, EvalEngineUnavailable, cliEngineConfig, redactConnection, rustAddonEnv, type EvalEngineKind } from './eval-engine.ts';
+import { ENGINE_NOT_SUPPORTED_BY_RUNNER, ENGINE_REFUSAL_TEXT_RE, EVAL_ENGINES, EvalEngineUnavailable, cliEngineConfig, redactConnection, rustAddonEnv, type EvalEngineKind } from './eval-engine.ts';
 
 // ─── Types ────────────────────────────────────────────────────────────
 
@@ -73,6 +78,11 @@ export interface Cat9RunStep {
   stdin?: string;
   /** Named brain; default `A`. Each name is its own GBRAIN_HOME. */
   brain?: string;
+  /**
+   * Run the call as this brain member: the child gets GBRAIN_ENFORCED_MEMBER=<member>, so gbrain applies that member's
+   * read and write rules to the local CLI (gbrain docs/guides/enforced-member.md). Omitted: the trusted local CLI.
+   */
+  member?: string;
   /** Captured variable name -> JSON path into stdout. */
   capture?: Record<string, string>;
   /** A setup step that may exit non-zero (setup only). */
@@ -126,6 +136,12 @@ export interface Cat9Check extends Omit<Cat9RunStep, 'allow_fail' | 'run'> {
   not_mechanized?: string;
   /** The audit finding this check is expected to fail on, at the audited build. */
   known_failure?: { finding: string; note: string };
+  /**
+   * Earlier checks in the same scenario whose writes this check observes. When given (even empty), it replaces the
+   * brain-wide rule: the check does not run, and reports engine_not_supported_by_runner, when a check it depends on was
+   * refused by the engine or not supported; a check with no refused dependency keeps its own result, pass or fail.
+   */
+  depends_on?: string[];
 }
 
 export type Cat9CheckStatus = 'pass' | 'fail' | 'expected_fail' | 'unexpected_pass' | 'not_run' | 'error' | typeof ENGINE_NOT_SUPPORTED_BY_RUNNER;
@@ -145,7 +161,7 @@ export interface Cat9CheckRow {
 }
 
 export interface ExecResult { exit: number; stdout: string; stderr: string }
-export type GbrainExec = (argv: string[], opts: { home: string; cwd: string; stdin?: string }) => ExecResult;
+export type GbrainExec = (argv: string[], opts: { home: string; cwd: string; stdin?: string; env?: Record<string, string> }) => ExecResult;
 
 /** The checks-related part of a scenario; WorkflowScenario carries these as optional fields. */
 export interface Cat9CheckedScenario {
@@ -153,6 +169,10 @@ export interface Cat9CheckedScenario {
   setup?: Cat9SetupStep[];
   checks?: Cat9Check[];
   requires?: Cat9Requirement[];
+  /** The engines the scenario applies to; omitted means every engine. */
+  engines?: EvalEngineKind[];
+  /** Why the scenario applies to `engines` only; required with `engines`. */
+  engines_note?: string;
 }
 
 // ─── Pure helpers ─────────────────────────────────────────────────────
@@ -333,6 +353,14 @@ export function validateChecks(s: Cat9CheckedScenario): string[] {
     if (!Array.isArray(r) || r.some(x => !known.has(String(x)))) out.push(`${s.id} ${where}: requires must list only ${CAT9_REQUIREMENTS.join(', ')}`);
   };
   reqs('scenario', s.requires);
+  if (s.engines !== undefined) {
+    if (!Array.isArray(s.engines) || s.engines.length === 0 || s.engines.some(e => !(EVAL_ENGINES as readonly string[]).includes(String(e)))) out.push(`${s.id}: engines must list only ${EVAL_ENGINES.join(', ')}`);
+    if (typeof s.engines_note !== 'string' || s.engines_note === '') out.push(`${s.id}: engines needs an engines_note that says why`);
+  } else if (s.engines_note !== undefined) out.push(`${s.id}: engines_note without engines`);
+  const memberOk = (where: string, m: unknown) => {
+    // gbrain's member id rule (src/core/access/principals.ts ACCESS_ID_RE).
+    if (m !== undefined && (typeof m !== 'string' || !/^[a-z0-9][a-z0-9._-]{0,63}$/.test(m))) out.push(`${s.id} ${where}: member must be a member id such as bob-example`);
+  };
   (s.setup ?? []).forEach((step, i) => {
     const kinds = SETUP_KINDS.filter(k => k in (step as object));
     if (kinds.length !== 1) out.push(`${s.id} setup[${i}]: needs exactly one of ${SETUP_KINDS.join(', ')}`);
@@ -341,6 +369,7 @@ export function validateChecks(s: Cat9CheckedScenario): string[] {
       if (step.run.length === 0 || step.run.some(a => typeof a !== 'string')) out.push(`${s.id} setup[${i}]: run must be a non-empty string array`);
       if (step.run[0] === 'gbrain') out.push(`${s.id} setup[${i}]: run omits the leading gbrain`);
       reqs(`setup[${i}]`, step.requires);
+      memberOk(`setup[${i}]`, step.member);
     }
     if ('manual' in step) {
       if (!Array.isArray(step.requires) || step.requires.length === 0) out.push(`${s.id} setup[${i}]: a manual step must say what it requires`);
@@ -362,8 +391,13 @@ export function validateChecks(s: Cat9CheckedScenario): string[] {
       out.push(...validateExpect(c.expect, `${s.id}/${c.id}`));
     }
     if (c.known_failure && (!c.known_failure.finding || !c.known_failure.note)) out.push(`${s.id}/${c.id}: known_failure needs finding and note`);
+    if (c.depends_on !== undefined) {
+      if (!Array.isArray(c.depends_on)) out.push(`${s.id}/${c.id}: depends_on must be a list of earlier check ids`);
+      else for (const d of c.depends_on) if (!ids.has(d) || d === c.id) out.push(`${s.id}/${c.id}: depends_on names ${JSON.stringify(d)}, which is not an earlier check`);
+    }
     if ('allow_fail' in c) out.push(`${s.id}/${c.id}: allow_fail is for setup steps only`);
     reqs(c.id, c.requires);
+    memberOk(c.id, c.member);
   }
   return out;
 }
@@ -388,9 +422,9 @@ export function hermeticChildEnv(home: string, env: Record<string, string | unde
  */
 export function cliExec(gbrainRoot: string, timeoutMs = 120_000, extraEnv: Record<string, string> = {}): GbrainExec {
   const cli = join(gbrainRoot, 'src/cli.ts');
-  return (argv, { home, cwd, stdin }) => {
+  return (argv, { home, cwd, stdin, env }) => {
     const p = Bun.spawnSync([process.execPath, cli, ...argv], {
-      cwd, env: { ...hermeticChildEnv(home), ...extraEnv }, stdin: stdin === undefined ? 'ignore' : Buffer.from(stdin), stdout: 'pipe', stderr: 'pipe', timeout: timeoutMs,
+      cwd, env: { ...hermeticChildEnv(home), ...extraEnv, ...(env ?? {}) }, stdin: stdin === undefined ? 'ignore' : Buffer.from(stdin), stdout: 'pipe', stderr: 'pipe', timeout: timeoutMs,
     });
     return { exit: p.exitCode ?? -1, stdout: p.stdout.toString(), stderr: p.stderr.toString() };
   };
@@ -449,6 +483,11 @@ export function runScenarioChecks(s: Cat9CheckedScenario, o: ScenarioCheckOption
     scenario_id: s.id, check_id: c.id, status, finding: c.known_failure?.finding ?? null, reasons: reasons.map(mask), exit_code: null, argv: null, ...extra,
   });
 
+  // A scenario scoped to other engines: nothing runs, and the reason is the scenario's own note.
+  if (s.engines && !s.engines.includes(kind)) {
+    return checks.map(c => row(c, ENGINE_NOT_SUPPORTED_BY_RUNNER, [`${ENGINE_NOT_SUPPORTED_BY_RUNNER} (${kind}): this scenario applies to ${s.engines!.join(' and ')} only. ${s.engines_note ?? ''}`.trim()]));
+  }
+
   // A scenario-level or setup-level requirement the run lacks: nothing runs.
   const setupMissing = [...missing(s.requires), ...(s.setup ?? []).flatMap(st => ('requires' in st ? missing(st.requires) : []))];
   if (setupMissing.length > 0) {
@@ -499,11 +538,11 @@ export function runScenarioChecks(s: Cat9CheckedScenario, o: ScenarioCheckOption
     vars[`home:${name}`] = home;
     return home;
   };
-  const call = (step: Pick<Cat9RunStep, 'run' | 'stdin' | 'brain'>) => {
+  const call = (step: Pick<Cat9RunStep, 'run' | 'stdin' | 'brain' | 'member'>) => {
     const home = brain(step.brain);
     const argv = step.run.map(a => substitute(a, vars));
     const stdin = step.stdin === undefined ? undefined : readFileSync(join(corpus, substitute(step.stdin, vars)), 'utf8');
-    const r = o.exec(argv, { home, cwd: root, stdin });
+    const r = o.exec(argv, { home, cwd: root, stdin, ...(step.member ? { env: { GBRAIN_ENFORCED_MEMBER: step.member } } : {}) });
     return { argv, r };
   };
   const capture = (step: Pick<Cat9RunStep, 'capture'>, stdout: string): string[] => {
@@ -558,16 +597,30 @@ export function runScenarioChecks(s: Cat9CheckedScenario, o: ScenarioCheckOption
   }
 
   const refusedOn = new Map<string, string>();
+  const statusOf = new Map<string, Cat9CheckStatus>();
   for (const c of checks) {
+    const before = rows.length;
+    runOne(c);
+    if (rows.length > before) statusOf.set(c.id, rows[rows.length - 1].status);
+  }
+  cleanup();
+  return rows;
+
+  function runOne(c: Cat9Check): void {
     const lack = missing(c.requires);
-    if (lack.length > 0) { rows.push(row(c, 'not_run', lack.map(r => REQUIREMENT_REASONS[r]))); continue; }
-    if (!c.run || !c.expect) { rows.push(row(c, 'not_run', [`not mechanized: ${c.not_mechanized ?? 'no run'}`])); continue; }
+    if (lack.length > 0) { rows.push(row(c, 'not_run', lack.map(r => REQUIREMENT_REASONS[r]))); return; }
+    if (!c.run || !c.expect) { rows.push(row(c, 'not_run', [`not mechanized: ${c.not_mechanized ?? 'no run'}`])); return; }
+    const blockedBy = (c.depends_on ?? []).find(d => statusOf.get(d) === ENGINE_NOT_SUPPORTED_BY_RUNNER);
+    if (blockedBy) {
+      rows.push(row(c, ENGINE_NOT_SUPPORTED_BY_RUNNER, [`${ENGINE_NOT_SUPPORTED_BY_RUNNER} (${kind}): this check depends on ${blockedBy}, which the engine refused or could not run, so it would observe nothing`]));
+      return;
+    }
     if (c.expect.datastore_absent !== undefined && datastoreOf(c.expect.datastore_absent) === null) {
       rows.push(row(c, ENGINE_NOT_SUPPORTED_BY_RUNNER, [`${ENGINE_NOT_SUPPORTED_BY_RUNNER} (${kind}): ${unsupported('the datastore_absent expectation').message}`]));
-      continue;
+      return;
     }
     try {
-      const { argv, r } = call({ run: c.run, stdin: c.stdin, brain: c.brain });
+      const { argv, r } = call({ run: c.run, stdin: c.stdin, brain: c.brain, member: c.member });
       const reasons = evaluateExpect(substituteDeep(c.expect, vars), r, { datastoreExists: name => existsSync(datastoreOf(name)!) });
       const errs = capture(c, r.stdout);
       let status = classify([...reasons, ...errs], c.known_failure);
@@ -577,7 +630,7 @@ export function runScenarioChecks(s: Cat9CheckedScenario, o: ScenarioCheckOption
       const brainName = c.brain ?? 'A';
       const refusal = r.exit !== 0 && ENGINE_REFUSAL_RE.test(`${r.stderr}\n${r.stdout}`);
       const failed = status !== 'pass' && status !== 'unexpected_pass';
-      const earlier = refusedOn.get(brainName);
+      const earlier = c.depends_on === undefined ? refusedOn.get(brainName) : undefined;
       const why = refusal ? `${ENGINE_NOT_SUPPORTED_BY_RUNNER} (${kind}): the CLI call stopped on the engine's typed refusal`
         : failed && earlier ? `${ENGINE_NOT_SUPPORTED_BY_RUNNER} (${kind}): an earlier check on brain ${brainName} (${earlier}) stopped on the engine's typed refusal, so that brain lacks its write`
         : null;
@@ -593,8 +646,6 @@ export function runScenarioChecks(s: Cat9CheckedScenario, o: ScenarioCheckOption
       else rows.push(row(c, 'error', [`harness: ${msg.split(root).join('<tmp>')}`]));
     }
   }
-  cleanup();
-  return rows;
 }
 
 export interface Cat9ChecksSummary {
