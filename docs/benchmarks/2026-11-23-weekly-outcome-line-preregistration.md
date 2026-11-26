@@ -460,6 +460,17 @@ owner re-cuts both in custody for @3 (a new private phrasing set with @3's quest
 subject and never name it), and launch amendment A publishes their commitment and phrasing SHA-256 as frozen above. No
 world of set W has been minted, so no counted world changes.
 
+### Results note (2026-11-26): stage 2 as it ran
+
+Written after stage 2 ran and the line stopped. It changes no rule above and records where stage 2 departed from its
+dated lines; the [results page](2026-11-23-weekly-outcome-line.md#where-stage-2-departed-from-its-plan) gives each with
+its reason. The stage-2 answers gpt-6-astra judged wrong did not join its judge-check pool, because the pool code
+(`judge-check.ts poolAnswers`) accepts only the grep agent's cells and refuses others; with claude-opus-5-5's pool still
+short, labelling would not have run either way. Stage 2 followed its own reader line (claude-opus-5-5 only), not the
+closing "Readers and judges" line above. The gbrain and memory-bank cells stopped on their first leases before the cell
+boundary and were resumed on fresh campaigns. The misspelling fairness check and the continue-or-stop rule stage 2 was
+read against are not in this file.
+
 ## Disclosures
 
 gbrain is Garry Tan's own project. Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, which makes

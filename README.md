@@ -464,7 +464,7 @@ one world at each length, gbrain (v0.60.768.0 and v0.60.769.0) and the extract-f
 grep agent's 63 and 64, and the memory-bank server 59 and 62. When the questions describe their subject instead, the grep agent
 still scored 151 of 158 where the chats use nicknames, roles or full names; gbrain was not run on those questions.
 Opus grep missed 12 of 34 misspelling questions. gbrain recovered none of those 12, and the misspellings failed the blind fairness check, so the line stopped before week 1.
-The judges here were never checked against people. gbrain is Garry
+The judges here were never checked. gbrain is Garry
 Tan's own project. Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, which makes particle-1.
 Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator.
 Garry Tan runs Y Combinator.
@@ -698,6 +698,13 @@ Garry Tan runs Y Combinator.
 [Disclosures](docs/disclosures.md) lists every relationship and where each line goes.
 
 ## Changelog
+
+### 2026-11-26: Weekly line judges described as never checked
+
+The weekly held-out line's paragraph under how gbrain compares now says its judges "were never checked" in place of
+"were never checked against people", because the line's planned judge check would have used gold answers and model
+labels, not people, and it never ran. The [results page](docs/benchmarks/2026-11-23-weekly-outcome-line.md) now
+describes stage 2 as it ran. No number changed.
 
 ### 2026-11-26: The weekly held-out line's pilots, and why the line stopped
 

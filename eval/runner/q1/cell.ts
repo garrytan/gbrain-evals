@@ -370,11 +370,11 @@ export function needsCustody(def: Pick<CellDefinition, 'benchmark' | 'split'>): 
  * Where a cell's reader and judge replies are cached. A sealed cell, a cost-and-speed cell (every read is a metered
  * call it prices, so no reply may come from another cell or run) and any run behind a keyless upstream (whose stand-in
  * replies must never answer a later paid run on the same machine) keep the cache inside the cell's own --out; other
- * cells share GBRAIN_EVALS_QA_CACHE or ~/.cache/gbrain-evals/qa-cache.
+ * cells share GBRAIN_EVALS_QA_CACHE or ~/.cache/gbrain-evals/qa-cache, in its keyless/ or paid/ folder by the run's upstream.
  */
-export function qaCacheRoot(def: Pick<CellDefinition, 'block'>, out: string, env: Record<string, string | undefined>, custody: boolean): string {
+export function qaCacheRoot(def: Pick<CellDefinition, 'block'>, out: string, env: Record<string, string | undefined>, custody: boolean, keyless: boolean): string {
   const own = custody || (CS1_BLOCK_IDS as readonly string[]).includes(def.block) || !!env.SHOOTOUT_KEYLESS_UPSTREAM;
-  return own ? join(out, 'cache', 'qa') : env.GBRAIN_EVALS_QA_CACHE ?? join(homedir(), '.cache', 'gbrain-evals', 'qa-cache');
+  return own ? join(out, 'cache', 'qa') : join(env.GBRAIN_EVALS_QA_CACHE ?? join(homedir(), '.cache', 'gbrain-evals', 'qa-cache'), keyless ? 'keyless' : 'paid');
 }
 
 /**
@@ -665,7 +665,7 @@ export function systemFor(def: CellDefinition, opts: CellOptions, sanitizer: San
     case 'baseline-recency': return new FullContextSystem('recency');
     case 'baseline-none': return new NoMemorySystem();
     case 'baseline-hybrid': return new PlainHybridSystem(opts.embed === 'hash' ? async texts => texts.map(t => hashEmbed(t, PG_EMBED_DIMS))
-      : cachedOpenAIEmbedder(uncachedCell(def) ? null : join(process.env.GBRAIN_EVALS_EMBED_CACHE ?? join(homedir(), '.cache', 'gbrain-evals', 'embed-cache'), 'plain-hybrid-te3l-1536.json'), fetch, opts.providerProxy ? `${opts.providerProxy}/${def.system}/openai/v1` : undefined), opts.embed === 'hash' ? `hash@${PG_EMBED_DIMS} (keyless control)` : undefined);
+      : cachedOpenAIEmbedder(uncachedCell(def) ? null : join(process.env.GBRAIN_EVALS_EMBED_CACHE ?? join(homedir(), '.cache', 'gbrain-evals', 'embed-cache'), opts.keyless === true ? 'keyless' : 'paid', 'plain-hybrid-te3l-1536.json'), fetch, opts.providerProxy ? `${opts.providerProxy}/${def.system}/openai/v1` : undefined), opts.embed === 'hash' ? `hash@${PG_EMBED_DIMS} (keyless control)` : undefined);
     case 'baseline-file-agent': return new FileAgentSystem({ workDir: join(opts.out, 'runs', def.id, 'file-agent'), effort: def.effort });
     case 'gbrain-defaults':
       if (opts.providerProxy) throw refuse({ code: 'NOT_YET_AVAILABLE', message: `cell ${def.id} runs the gbrain agent in process, and a metering proxy was given`,
@@ -863,7 +863,7 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
 
   const meter = metering(opts.providerProxy ?? null, staging, env);
   const sanitizer = new Sanitizer(corpus, `${def.id}|${def.ingest_replicate}`);
-  const system = deps.system ?? systemFor(def, opts, sanitizer);
+  const system = deps.system ?? systemFor(def, { ...opts, keyless: upstream.keyless }, sanitizer);
   const capabilities = await system.capabilities();
   const slot = def.runner === 'shim' ? capabilities.system : def.system;
   /** The sessions a conversation writes, in order; an ingest probe with `ingest_sessions` writes only that prefix. */
@@ -893,7 +893,7 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
         : runnable.length ? { next: 'run', argv: [...FRONT, 'run', '--cell', def.id, '--arms', runnable.join(',')], user_message: 'run the other arms now; the blocked arms wait for the system\'s answer route' } : { next: 'report', user_message: 'the cell waits for an answer route in the system\'s shim' } });
   }
   const readersOf = new Map(arms.map(a => [a.id, armReaders(a, capabilities)]));
-  const chat = deps.reader ?? deps.judge ?? new ChatClient(qaCacheRoot(def, out, env, custody), undefined, undefined, { noCache: uncachedCell(def) });
+  const chat = deps.reader ?? deps.judge ?? new ChatClient(qaCacheRoot(def, out, env, custody, upstream.keyless), undefined, undefined, { noCache: uncachedCell(def) });
   const reader = onSlot(deps.reader ?? chat, meter, 'harness');
   const judge = onSlot(deps.judge ?? chat, meter, 'judge');
   const fitTokenizer = deps.fitTokenizer ?? readerFitTokenizer;
@@ -1723,9 +1723,17 @@ export function mergeCell(def: CellDefinition, from: string[], out: string, o: {
   const offWeek = weekCorpusProblems(def, corpus);
   if (offWeek) throw refuse({ code: 'PREFLIGHT_FAILED', message: offWeek, why: "a weekly cell's shards merge only its own week's worlds", fix: { next: 'report' } });
   const selected = selectCellQuestions(corpus.questions.filter(q => splitConversations(def.benchmark, def.split, corpus).has(q.conversation)), def.selection);
-  const receipt = (f: string, cellId: string) => JSON.parse(readFileSync(join(f, 'cells', cellId, 'receipt.json'), 'utf8')) as { invalid_reasons?: string[]; system: { capabilities: CapabilityRecord }; upstream?: CellUpstream };
-  const capabilities = receipt(from[0], def.arms[0].cell_id).system.capabilities;
-  const invalidReasons = def.week ? [...new Set(def.arms.flatMap(a => from.flatMap(f => receipt(f, a.cell_id).invalid_reasons ?? [])))] : [];
+  const receiptPath = (f: string, cellId: string) => join(f, 'cells', cellId, 'receipt.json');
+  const missing = def.arms.flatMap(a => from.map(f => receiptPath(f, a.cell_id))).filter(p => !existsSync(p));
+  if (missing.length) throw refuse({ code: 'NOT_YET_AVAILABLE', message: `${def.id} can't merge: ${missing.map(rel).join(', ')} ${missing.length === 1 ? 'is' : 'are'} missing`,
+    why: "a merge publishes every unit's upstream mode and system from its receipt, so it reads them all before it writes anything", fix: { next: 'report', user_message: 'finish or resume the units that have no receipt, then merge again' } });
+  const receipts = new Map(def.arms.map(a => [a.cell_id, from.map(f => JSON.parse(readFileSync(receiptPath(f, a.cell_id), 'utf8')) as { invalid_reasons?: string[]; system: { capabilities: CapabilityRecord }; upstream?: CellUpstream })]));
+  const capabilities = receipts.get(def.arms[0].cell_id)![0].system.capabilities;
+  const invalidReasons = def.week ? [...new Set(def.arms.flatMap(a => receipts.get(a.cell_id)!.flatMap(r => r.invalid_reasons ?? [])))] : [];
+  const ups = def.arms.flatMap(a => receipts.get(a.cell_id)!.map(r => r.upstream));
+  const modes = new Set(ups.map(u => (u ? String(u.keyless) : 'unrecorded')));
+  if (modes.size > 1) throw refuse({ code: 'PREFLIGHT_FAILED', message: `${def.id} can't merge units that ran under different upstream modes: ${[...modes].map(k => ({ true: 'keyless rehearsal', false: 'paid', unrecorded: 'no upstream record' })[k]).join(', ')}`,
+    why: 'a merged cell is one score, so it never counts a rehearsal\'s answers beside paid ones', fix: { next: 'report', user_message: 'merge only units that ran under the same upstream mode' } });
   // A weekly cell split across VMs publishes the week's run config: its units' configs, each with its own worlds' part of
   // the week's schedule and dataset, agree in everything else and cover the week exactly, and the merged one freezes all of it.
   const split = !!def.week && def.shards > 1;
@@ -1738,11 +1746,10 @@ export function mergeCell(def: CellDefinition, from: string[], out: string, o: {
       if (problems.length) throw refuse({ code: 'PREFLIGHT_FAILED', message: `${def.id}'s units can't merge: ${problems.join('; ')}`, why: "a split weekly cell merges only its launch units, which together run the week's schedule exactly", fix: { next: 'report' } });
       t = JSON.stringify({ ...JSON.parse(t), dataset: corpus.source, scheduled_sha256: sha256(selected.map(q => q.id).join('\n')) }, null, 2) + '\n';
     }
-    writeAtomic(join(out, 'cells', a.cell_id, 'run-config.json'), t);
     return [a.id, { text: t, sha: sha256(t) }];
   }));
-  const ups = def.arms.flatMap(a => from.map(f => receipt(f, a.cell_id).upstream));
-  const keyless = ups.some(u => u?.keyless), windows = new Set(ups.map(u => u?.paid_window));
+  for (const a of def.arms) writeAtomic(join(out, 'cells', a.cell_id, 'run-config.json'), configs.get(a.id)!.text);
+  const keyless = modes.has('true'), windows = new Set(ups.map(u => u?.paid_window));
   const upstream = ups.every(u => u) ? { keyless, paid_window: !keyless && windows.size === 1 ? ups[0]!.paid_window : null } : undefined;
   return publishCell(def, def.arms, from, out, { instrument: instrumentFor(def.canonical_instrument), selected, invalidReasons, configs, capabilities, stopped: null, maxAttempts: DEFAULT_MAX_ATTEMPTS, upstream });
 }
@@ -1995,16 +2002,21 @@ export function weeklyCampaignManifest(w: WeeklyCellsFile, o: { cellsPath: strin
  * paid window at the campaign's cap, as BG1's campaigns do. Every unit's command exports the world end its bg1-dev load
  * resolves dates from, the gbrain build the manifest was generated at (WEEKLY_PILOT_GBRAIN_ENV) and its world length
  * (WEEKLY_PILOT_LENGTH_ENV), so the VM's run regenerates exactly these cells. The units read public dev worlds only, so none is sealed or pushed from custody, and
- * none is given Gemini. Refused without a granted window before any file is written.
+ * none is given Gemini. Every campaign of one window reserves from that window's ledger, whose program cap is the part of
+ * the window's cap left after the caps of the window's mint, re-read and labelling commands (windowCapUsd), so a fresh
+ * campaign counts what the window's other campaigns hold or have settled. The ledger sits under eval/reports/ in the
+ * checkout, so every campaign of a window starts from one checkout. Refused without a granted window before any file is
+ * written.
  */
-export function weeklyPilotCampaignManifest(m: WeeklyPilotManifest, o: { units: string[]; campaign_id: string; cap_usd: number; window: string; worldEnd: string }): Q1Campaign {
-  if (!/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(o.window ?? '') || !(o.cap_usd > 0)) throw refuse({ code: 'PAID_FLAGS_MISSING', message: 'a weekly pilot campaign needs the granted paid window and its cap',
+export function weeklyPilotCampaignManifest(m: WeeklyPilotManifest, o: { units: string[]; campaign_id: string; cap_usd: number; window: string; windowCapUsd: number; worldEnd: string }): Q1Campaign {
+  if (!/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(o.window ?? '') || !(o.cap_usd > 0) || !(o.windowCapUsd >= o.cap_usd)) throw refuse({ code: 'PAID_FLAGS_MISSING', message: 'a weekly pilot campaign needs the granted paid window and its cap',
     why: 'every pilot unit spends real keys, so its command carries the granted window and the unit refuses outside it', fix: { next: 'run', argv: ['bun', 'eval/runner/weekly-line/pilot.ts', 'campaigns', '--out', '<dir>', '--window-granted', '<unit>', '--world-end', '<Sunday>'] } });
   const worldEnd = bg1WorldEnd({ worldEnd: o.worldEnd });
   const campaign = campaignManifest(m, { units: { campaign_id: o.campaign_id, cap_usd: o.cap_usd, units: o.units, cell_manifest: 'weekly-pilot' } });
   const out = ' --out "$SHOOTOUT_OUT"';
   const exports = `export GBRAIN_EVALS_BG1_WORLD_END=${worldEnd}; export ${WEEKLY_PILOT_GBRAIN_ENV}=${m.gbrain_build.release}@${m.gbrain_build.commit}; export ${WEEKLY_PILOT_LENGTH_ENV}=${m.length}; `;
-  return { ...campaign, executes: [...(campaign.executes ?? []), ...BG1_DATA_PATHS], cells: campaign.cells.map(cell => {
+  return { ...campaign, ledger: `eval/reports/scoreboard/windows/${o.window}.sqlite`, paid_window: { unit: o.window, cap_usd: o.windowCapUsd },
+    executes: [...(campaign.executes ?? []), ...BG1_DATA_PATHS], cells: campaign.cells.map(cell => {
     if (cell.command.split(out).length !== 2) throw new Error(`weekly pilot unit ${cell.id} has no single${out} in its command to put the paid window before`);
     return { ...cell, command: `${exports}${cell.command.replace(out, () => ` --paid-window ${o.window} --window-cap-usd ${o.cap_usd}${out}`)}` };
   }) };
@@ -2125,16 +2137,17 @@ function reanswerOutcomes(raw: string | undefined): Outcome[] | null {
 
 const usage = (message: string): ScoreboardMessage => ({ code: 'USAGE', message, why: 'the cell runner has four subcommands: plan, show, run, merge', fix: { next: 'run', argv: [...FRONT, 'plan'] } });
 
-type CellProxyStatus = { keyless?: unknown; mode?: unknown; lease_usd?: unknown };
+type CellProxyStatus = { keyless?: unknown; paid?: unknown; mode?: unknown; lease_usd?: unknown };
 const cellProxyStatus = (proxy: string): Promise<CellProxyStatus | null> =>
   fetch(`${proxy.replace(/\/$/, '')}/__proxy/status`, { signal: AbortSignal.timeout(5000) })
     .then(r => r.ok ? r.json() as Promise<CellProxyStatus | null> : null).catch(() => null);
 
 function verifiedProxyMode(status: CellProxyStatus | null): boolean {
-  if (typeof status?.keyless === 'boolean') return status.keyless;
-  throw refuse({ code: 'PREFLIGHT_FAILED', message: 'the upstream mode is unknown',
-    why: 'a cell must not label staged work or its receipt as paid without a verified upstream mode',
-    fix: { next: 'report', user_message: 'check that the lease proxy serves /__proxy/status with a boolean keyless field, or run through the required paid ledger guard' } });
+  if (status?.keyless === true) return true;
+  if (status?.keyless === false && status.paid === true) return false;
+  throw refuse({ code: 'PREFLIGHT_FAILED', message: `the upstream mode is unknown (the lease proxy reports keyless ${String(status?.keyless ?? 'nothing')}, paid ${String(status?.paid ?? 'nothing')})`,
+    why: 'a cell labels staged work or its receipt keyless only when the lease proxy reports a keyless upstream, and paid only when it reports that every provider goes to its real host; any other proxy, such as a stand-in with dummy keys, is neither',
+    fix: { next: 'report', user_message: 'start the lease proxy with keylessUpstream and placeholder keys for a rehearsal, or with no --upstream for a paid run, or run through the required paid ledger guard' } });
 }
 
 /**

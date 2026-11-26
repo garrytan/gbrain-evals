@@ -156,10 +156,11 @@ describe('cs1-cells.json', () => {
 describe('reply cache', () => {
   test("a cost-and-speed cell and any keyless run cache replies in their own --out; other cells share the machine's cache", () => {
     const shared = { GBRAIN_EVALS_QA_CACHE: '/shared/qa' };
-    for (const block of ['CS1', 'CS1-pilot', 'CS1-capacity'] as const) expect(qaCacheRoot({ block }, '/o', shared, false)).toBe('/o/cache/qa');
-    expect(qaCacheRoot({ block: 'BG1' }, '/o', { ...shared, SHOOTOUT_KEYLESS_UPSTREAM: 'http://127.0.0.1:18999' }, false)).toBe('/o/cache/qa');
-    expect(qaCacheRoot({ block: 'BG1' }, '/o', shared, true)).toBe('/o/cache/qa');
-    expect(qaCacheRoot({ block: 'BG1' }, '/o', shared, false)).toBe('/shared/qa');
+    for (const block of ['CS1', 'CS1-pilot', 'CS1-capacity'] as const) expect(qaCacheRoot({ block }, '/o', shared, false, false)).toBe('/o/cache/qa');
+    expect(qaCacheRoot({ block: 'BG1' }, '/o', { ...shared, SHOOTOUT_KEYLESS_UPSTREAM: 'http://127.0.0.1:18999' }, false, true)).toBe('/o/cache/qa');
+    expect(qaCacheRoot({ block: 'BG1' }, '/o', shared, true, false)).toBe('/o/cache/qa');
+    expect(qaCacheRoot({ block: 'BG1' }, '/o', shared, false, false)).toBe('/shared/qa/paid');
+    expect(qaCacheRoot({ block: 'BG1' }, '/o', shared, false, true)).toBe('/shared/qa/keyless');
   });
 
   test('cost-and-speed cells run with the reply and embedding caches off: every repeat goes to the provider and nothing is stored', async () => {

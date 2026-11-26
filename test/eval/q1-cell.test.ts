@@ -12,7 +12,7 @@ import { afterAll, afterEach, beforeEach, describe, expect, test } from 'bun:tes
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { campaignCells, campaignManifest, cellAggregates, contextKey, paidGuard, publishCell, frontierInstrumentId, probeSample, realizationId, runCell, scoreboardCampaignCell, selectCellQuestions, type CellDeps, type CellOptions, type CellResult } from '../../eval/runner/q1/cell.ts';
+import { campaignCells, campaignManifest, cellAggregates, contextKey, paidGuard, publishCell, frontierInstrumentId, probeSample, realizationId, runCell, runUpstreamOptions, scoreboardCampaignCell, selectCellQuestions, systemFor, type CellDeps, type CellOptions, type CellResult } from '../../eval/runner/q1/cell.ts';
 import { buildManifest, COUNTED_READERS, definitionProblems, estimateCell, loadManifest, manifestText, MANIFEST_PATH, SETS, type ArmDefinition, type CellDefinition } from '../../eval/runner/q1/cells/definitions.ts';
 import { ScoreboardError } from '../../eval/runner/q1/scoreboard-errors.ts';
 import { classifyV2, CLASSIFIER_VERSION_V2, RULES_SHA256_V2 } from '../../eval/runner/q1/hedge.ts';
@@ -23,9 +23,10 @@ import { ChatClient, type ChatLike, type ChatOptions, type ChatResult } from '..
 import { answerProblems, judgmentProblems, rowProblems } from '../../eval/runner/memory-qa/records.ts';
 import { FakeMemorySystem, FAKE_CAPABILITIES, serveProtocol } from '../../eval/runner/systems/fake.ts';
 import { FullContextSystem } from '../../eval/runner/systems/baselines.ts';
+import { Sanitizer } from '../../eval/runner/systems/sanitize.ts';
 import { FileAgentSystem } from '../../eval/runner/systems/file-agent.ts';
 import { BudgetExceededError, BudgetRun, closeLedgers } from '../../eval/runner/budget-ledger.ts';
-import { DEFAULT_ROUTE_CAPS, MeteringProxy } from '../../eval/runner/metering-proxy.ts';
+import { DEFAULT_ROUTE_CAPS, keylessKeys, keylessUpstream, MeteringProxy } from '../../eval/runner/metering-proxy.ts';
 import type { ScriptedModel } from '../../eval/runner/cat40/loop.ts';
 import { CAMPAIGN_SCHEMA, type CampaignManifest } from '../../eval/runner/scoreboard.ts';
 
@@ -670,6 +671,90 @@ describe('metering through a lease proxy', () => {
       for (const k of Object.keys(process.env)) if (!(k in saved)) delete process.env[k];
       Object.assign(process.env, saved);
       proxy.stop(true);
+    }
+  });
+});
+
+describe('a cell takes its upstream mode only from positive proof, and replays a cached reply only under the mode that bought it', () => {
+  afterEach(() => closeLedgers());
+  const dead = (async () => { throw new Error('no provider is reachable in this test'); }) as unknown as typeof fetch;
+  const def = () => cellDef('ext-graph-pipeline', 'shim', [component({ reader_replicates: {} })], { selection: { kind: 'shootout-slice', limit: 2, seed: 42 } });
+  const refusal = async (p: Promise<unknown>) => { try { await p; return null; } catch (e) { if (e instanceof ScoreboardError) return e.op; throw e; } };
+  let k = 0;
+  /** A real lease proxy whose provider fetch is dead, at the given upstreams and with the given keys. */
+  function leaseProxy(o: { upstream?: ReturnType<typeof keylessUpstream>; env: Record<string, string> }) {
+    const lease = BudgetRun.openLease({ runId: `mode-${++k}`, leaseUsd: 1, ledgerPath: join(tmp, `mode-${k}.sqlite`) });
+    const proxy = new MeteringProxy({ fetchImpl: dead, ...(o.upstream ? { upstream: o.upstream } : {}), policy: { lease, env: o.env } });
+    proxy.start();
+    return { url: `http://127.0.0.1:${proxy.port}`, stop: () => proxy.stop() };
+  }
+
+  // Value: protects=a cell's receipt and staged work are labelled paid only when the lease proxy proves every provider goes to its real host; fails_when=verifiedProxyMode reads keyless false (a stand-in upstream with dummy keys, an unrecognised rehearsal) as paid; why_new=#652 round-1 note on cell.ts:1933; seam=metering-proxy.ts status().paid and cell.ts verifiedProxyMode; no_claim=a real provider call
+  test('a stand-in upstream with dummy keys that are not the placeholder is neither keyless nor paid, so the run refuses before it writes anything', async () => {
+    const dummy = { OPENAI_API_KEY: 'sk-dummy-0000', ANTHROPIC_API_KEY: 'sk-ant-dummy-0000', VOYAGE_API_KEY: 'pa-dummy-0000', PARTICLE_API_KEY: 'dummy-particle-0000', GEMINI_API_KEY: 'dummy-gemini-0000' };
+    const standIn = leaseProxy({ upstream: keylessUpstream('http://127.0.0.1:9'), env: dummy });
+    const rehearsal = leaseProxy({ upstream: keylessUpstream('http://127.0.0.1:9'), env: keylessKeys() });
+    const real = leaseProxy({ env: dummy });
+    try {
+      expect(await refusal(runUpstreamOptions(['--provider-proxy', standIn.url], def(), {}))).toMatchObject({ code: 'PREFLIGHT_FAILED', message: expect.stringContaining('upstream mode is unknown') });
+      const out = join(tmp, 'stand-in');
+      expect(await refusal(runCell(def(), { out, providerProxy: standIn.url, ...quiet }, { corpus, system: new FakeMemorySystem() }))).toMatchObject({ code: 'PREFLIGHT_FAILED' });
+      expect(existsSync(join(out, 'cells'))).toBe(false);
+      expect(await runUpstreamOptions(['--provider-proxy', rehearsal.url], def(), {})).toEqual({ keyless: true, paidWindow: null });
+      expect(await runUpstreamOptions(['--provider-proxy', real.url], def(), {})).toEqual({ keyless: false, paidWindow: null });
+    } finally { standIn.stop(); rehearsal.stop(); real.stop(); }
+  });
+
+  // Value: protects=a paid run never scores a rehearsal's cached reader or judge reply; fails_when=the shared reader and judge cache keys no upstream mode, so a paid run replays a keyless rehearsal's replies to identical prompts; why_new=#652 round-1 note on cell.ts:841; seam=cell.ts runCell's ChatClient root; no_claim=the custody cache, which the upstream-mode marker binds to one --out
+  test('with identical prompts, a simulated paid run\'s reader and judge call their own upstream instead of replaying the rehearsal\'s replies', async () => {
+    const offline = (calls: string[]) => Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: async req => {
+      const path = new URL(req.url).pathname;
+      if (path === '/__proxy/status') return Response.json({ keyless: true });
+      if (path.startsWith('/__proxy/')) { await req.json(); return Response.json(path === '/__proxy/finalize' ? { usd: 0, requests: 0, unpriced: 0, byModel: {} } : { ok: true }); }
+      calls.push(path);
+      await req.json();
+      const text = path.startsWith('/judge/') ? 'yes' : 'From the history: something.';
+      return Response.json(path.includes('/anthropic/') ? { content: [{ type: 'text', text }], usage: { input_tokens: 5, output_tokens: 2 } } : { choices: [{ message: { content: text } }], usage: { prompt_tokens: 5, completion_tokens: 2 } });
+    } });
+    const rehearsalCalls: string[] = [], paidCalls: string[] = [];
+    const rehearsal = offline(rehearsalCalls), paid = offline(paidCalls);
+    const saved = { ...process.env };
+    process.env.SHOOTOUT_CELL_TOKEN = 'cell-token-test';
+    process.env.GBRAIN_EVALS_QA_CACHE = join(tmp, 'qa-cache-both-modes');
+    const slot = (calls: string[], name: string) => calls.filter(p => p.startsWith(`/${name}/`)).length;
+    try {
+      const run = (out: string, port: number | undefined, keyless: boolean) => runCell(def(), { out: join(tmp, out), providerProxy: `http://127.0.0.1:${port}`, keyless, ...quiet }, { corpus, system: new FakeMemorySystem() });
+      expect((await run('cache-rehearsal', rehearsal.port, true)).status).toBe('complete');
+      expect((await run('cache-paid', paid.port, false)).status).toBe('complete');
+      expect([slot(rehearsalCalls, 'harness'), slot(rehearsalCalls, 'judge')].every(n => n > 0)).toBe(true);
+      expect([slot(paidCalls, 'harness'), slot(paidCalls, 'judge')]).toEqual([slot(rehearsalCalls, 'harness'), slot(rehearsalCalls, 'judge')]);
+    } finally {
+      for (const key of Object.keys(process.env)) if (!(key in saved)) delete process.env[key];
+      Object.assign(process.env, saved);
+      rehearsal.stop(true); paid.stop(true);
+    }
+  });
+
+  // Value: protects=a paid baseline-hybrid cell never retrieves with a rehearsal's synthetic embeddings; fails_when=the shared embedding cache keys no upstream mode, so a paid run reuses vectors a keyless rehearsal cached for the same text; why_new=#661 round-1 outside voice; seam=cell.ts systemFor's embedding cache path; no_claim=the gbrain agent's own embeddings, which never run behind the proxy
+  test('a paid baseline-hybrid embeds through its own upstream instead of reusing a rehearsal\'s cached vectors', async () => {
+    const embeddings = (calls: number[]) => Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: async req => {
+      const body = await req.json() as { input: string[] };
+      calls.push(body.input.length);
+      return Response.json({ data: body.input.map((_, index) => ({ index, embedding: Array(1536).fill(0.5) })), usage: { prompt_tokens: 3, total_tokens: 3 } });
+    } });
+    const rehearsalCalls: number[] = [], paidCalls: number[] = [];
+    const rehearsal = embeddings(rehearsalCalls), paid = embeddings(paidCalls);
+    const saved = process.env.GBRAIN_EVALS_EMBED_CACHE;
+    process.env.GBRAIN_EVALS_EMBED_CACHE = join(tmp, 'embed-both-modes');
+    try {
+      const hybrid = cellDef('baseline-hybrid', 'in-process', [component({ reader_replicates: {} })]);
+      const embed = (port: number | undefined, keyless: boolean) => (systemFor(hybrid, { out: join(tmp, 'hybrid'), providerProxy: `http://127.0.0.1:${port}`, keyless }, new Sanitizer(corpus, 'test')) as unknown as { embed: (texts: string[]) => Promise<number[][]> }).embed(['the same session text']);
+      await embed(rehearsal.port, true);
+      await embed(paid.port, false);
+      expect([rehearsalCalls.length, paidCalls.length]).toEqual([1, 1]);
+    } finally {
+      if (saved === undefined) delete process.env.GBRAIN_EVALS_EMBED_CACHE; else process.env.GBRAIN_EVALS_EMBED_CACHE = saved;
+      rehearsal.stop(true); paid.stop(true);
     }
   });
 });
