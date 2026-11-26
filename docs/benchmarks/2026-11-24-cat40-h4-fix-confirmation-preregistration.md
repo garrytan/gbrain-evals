@@ -382,6 +382,25 @@ Made after the S3 pilots and before any counted cell, on the results branch.
   gbrain's one-hour embed timeout), oracle gates and S3 pilots. The tracking issue carries the amount. One `fs` pilot
   cell (Opus 5.5) ended in a context overflow after an unbounded `grep` returned about 2.2 million characters; that is
   a harness outcome of the `hard` tool limits and is reported as such.
+- **U1 to U6 minted (2026-11-26).** Drawn with `od` on the seed owner's machine into owner custody (mode 600, never
+  printed, never committed), from a temporary gbrain-evals checkout at harness commit
+  `08eaf81ce63197e080b8aa63847791d0d27ba698`, removed afterwards. Each world was built in memory only to record its
+  digest and check the precondition; no document was written. No seed matched a fixed, test or sibling seed. Five draws
+  failed the generator's own invariants and were replaced by the next seed in steps of 1,000; seven draws fell short of
+  the precondition (10 to 13 long H4 tasks) and were replaced by fresh draws. Knob digest
+  `37a16085e0fbf2e92072b2e7cf00468d43451dd4fb35bb1232ebbf79d3027434` (the freeze).
+
+  | World | 50k world digest | Documents | Tasks | H4 tasks with a long governing page | H4 tasks with `+long` | H4 items (`+long`) |
+  |---|---|---|---|---|---|---|
+  | U1 | `7d4d8e5332a943386c52412fddb53d4adebd94f9cc82a549ae6cad9b5b55ea56` | 56,248 | 100 | 17 | 18 | 76 (28) |
+  | U2 | `38de2aa3ff9d73de2eecb2ada8f32e90f77ebb672f3fb505b06e1a4e09b60fa6` | 55,778 | 100 | 14 | 14 | 71 (26) |
+  | U3 | `f8a0f3eedbe5643fd4abcc0b2cf2ff1862d328158d714db7aecf5479b5c58b9f` | 55,489 | 100 | 18 | 18 | 68 (37) |
+  | U4 | `68cde0d248bd46d6f279e5ee457043ac49319381ed3da781d4d6f34e8dd3ab9b` | 54,992 | 100 | 18 | 20 | 71 (37) |
+  | U5 | `2d36f25c5861852f342f079e0a0537f4dd7ac96cb65670706e434f7508518554` | 55,680 | 100 | 17 | 18 | 72 (30) |
+  | U6 | `70384a6e3c0369234bac99eb3e650ac50a8704e5a6962af5a3c3581624d79704` | 55,230 | 100 | 15 | 18 | 67 (29) |
+
+  The precondition selects worlds by how many long pages they hold, which the setting needs in order to fire; it
+  reads nothing about any arm's answers. The results page says the worlds were selected this way.
 
 ## Disclosures
 
