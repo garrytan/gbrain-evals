@@ -5,7 +5,7 @@
 # ~/gbrain-material-off, and starts one Postgres server on 127.0.0.1:5434 sized as gbrain's own bench sizes it
 # (scripts/bench/hnsw-scale-vm-setup.sh at the pin): shared_buffers 25% and effective_cache_size 75% of memory,
 # random_page_cost 1.1, effective_io_concurrency 200, everything else at Postgres defaults. PG_IMAGE=none skips
-# Postgres (the PGLite VM).
+# Postgres (the PGLite VM); WIKI=1 adds pyarrow for gbrain's Wikipedia corpus prep.
 #
 #   PG_IMAGE=pgvector/pgvector:0.8.7-pg17 GBRAIN_REF=<sha> bash scripts/ubicloud/filtered-vector-setup.sh
 set -euo pipefail
@@ -19,9 +19,10 @@ echo force-unsafe-io | sudo tee /etc/dpkg/dpkg.cfg.d/99-fv-bench >/dev/null
 apt_get() { sudo DEBIAN_FRONTEND=noninteractive NEEDRESTART_SUSPEND=1 apt-get -qq -o Acquire::Languages=none "$@" >/dev/null; }
 step apt
 apt_get update
-apt_get install -y --no-install-recommends docker.io git ca-certificates python3 python3-pyarrow procps postgresql-client jq unzip curl
+apt_get install -y --no-install-recommends docker.io git ca-certificates python3 python3-pip procps postgresql-client jq unzip curl
 sudo systemctl start docker
 sudo chmod 666 /var/run/docker.sock
+[ "${WIKI:-0}" != 1 ] || pip3 install -q --break-system-packages pyarrow
 
 pull=
 if [ "$PG_IMAGE" != none ]; then
