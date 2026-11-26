@@ -13,7 +13,7 @@
 - **What didn't work: none of the question designs we built got grep below the line's 0.95 ceiling on a fair set of
   questions.** Grep fell well below it on the 34 questions where the chats spell the subject's name with one
   letter changed (22 of 34), and two people asked blind agreed that such a pair is the same entity on 1 of 20. On those 34 questions every memory system scored below grep (gbrain 2 of 34), but because the items failed that
-  check, those numbers are descriptive only and come from a judge nobody has checked against people.
+  check, those numbers are descriptive only and come from a judge whose agreement check never ran.
 
 Settled call: the weekly held-out line stops before week 1. No counted week runs, gbrain is not ranked against a grep
 agent on held-out worlds, and the long and alias development worlds stay public so anyone can reproduce these pilots.
@@ -127,8 +127,9 @@ counted toward continuing the line.
 
 While the fairness check ran, gbrain and the two servers each ingested all three alias worlds whole and were asked
 only the 34 misspelling questions. These items failed the fairness check above, so this table is descriptive,
-and its judge (gpt-6-astra) is an **unchecked judge**: the agreement check against people that this line requires
-never ran (below).
+and its judge (gpt-6-astra) is an **unchecked judge**: the judge check this line requires, which compares a judge's
+verdicts with labelled answers, never ran (below). The fairness check is a different check. Its two people labelled
+pairs of names, not answers, so their labels can't check a judge.
 
 | claude-opus-5-5 reading, 34 questions | Right | By world (14, 6, 14) | Minus grep, paired (95% Wald) | Row right, grep wrong | Grep right, row wrong | Exact McNemar p | $ per right answer |
 |---|---:|---|---|---:|---:|---:|---:|
@@ -147,6 +148,37 @@ In the gbrain answers we read, the reader says its memories describe the subject
 customer. What didn't come back was the line that ties a description or a misspelled name to the entity. That points
 at entity resolution, but these questions can't settle it, because the items themselves failed the fairness check.
 
+### Where stage 2 departed from its plan
+
+Stage 2's plan is the dated "Stage 2 on the misspelling questions" part of
+[Amendment 1](2026-11-23-weekly-outcome-line-preregistration.md#amendment-1-2026-11-25-questions-that-describe-their-subject-at-200000-tokens-before-week-1).
+The question filter, the gbrain build and the judge ran as it says. These parts did not, and none of them changes a
+number on this page:
+
+- **Judge pool.** The plan says the stage-2 answers gpt-6-astra judged wrong join that judge's pool beside the grep
+  agent's. They did not. The pool code (`poolAnswers` in
+  [eval/runner/weekly-line/judge-check.ts](../../eval/runner/weekly-line/judge-check.ts)) was never changed to take them:
+  it accepts only the grep agent's pilot and judge-check cells, and given a stage-2 cell it stops with "not a weekly
+  grep-agent pilot or judge-check cell" instead of pooling it. Had they joined, gpt-6-astra's pool would have passed 40
+  answers judged wrong (its 19 from the grep agent plus the stage-2 misses), but claude-opus-5-5's pool would have
+  stayed at 20, because stage 2 has no particle-1 answers for it to judge. Labelling runs only when every judge's pool
+  reaches 40, so it would not have run either way, and the table carries the unchecked-judge label the plan sets for
+  that case.
+- **Readers.** Stage 2's reader line has claude-opus-5-5 read each row live, leaves particle-1 out on cost and has no
+  re-reads, and that is what ran. Amendment 1's closing "Readers and judges" line, which says both readers read every
+  row, was written before stage 2 and was not updated, so the two lines disagree. Stage 2 followed its own line.
+- **Paused cells.** The plan says a row that reaches its cap pauses at the cell boundary for an extension. The gbrain
+  and memory-bank cells instead stopped on their first budget leases partway through the cell (33 and 31 of 34
+  answered), and each was resumed once on a fresh campaign with a new lease rather than an extension of the first
+  ("Resumed cells" below).
+- **Interval.** The plan's test is the exact McNemar test. The 95% Wald interval in the table is not in the plan; it is
+  added as a rough guide to the size of each gap.
+- **Discordant ids.** The plan lists the discordant pairs by id. This page gives their counts and names grep's misses
+  that a row got right; the full lists are in the recount's `--json` output.
+- **What the result decided.** The plan's stage-2 lines set no rule for continuing or stopping the line, and they don't
+  include the fairness check. Both were set outside the plan: the owner's decision is in the next section, and the
+  fairness rule was written down before any labeller's answers were opened.
+
 ## Why the line stops
 
 [Amendment 1](2026-11-23-weekly-outcome-line-preregistration.md#amendment-1-2026-11-25-questions-that-describe-their-subject-at-200000-tokens-before-week-1)
@@ -163,8 +195,9 @@ before week 1.
 
 - **gbrain on plain aliases.** Stage 2 asked only the 34 misspelling questions, so there is no gbrain number on the 158
   plain-alias questions, where the grep agent scored 151.
-- **particle-1 on gbrain and the servers** at 1,000,000 tokens and in stage 2. The 1,000,000-token re-reads were
-  skipped once the stop rules fired. The stage 2 plan left out particle-1 on cost.
+- **particle-1 on gbrain and the servers.** The 1,000,000-token re-reads were skipped once the stop rules fired, and
+  the stage 2 plan left out particle-1 on cost. At 200,000 tokens particle-1 re-read the three rows' contexts, but those
+  records are not committed with this page, so it reports no number from them.
 - **More than one world per length** for gbrain and the two servers on named subjects.
 
 ## The judge check never ran
@@ -172,9 +205,11 @@ before week 1.
 This line requires each judge to agree with at least 100 labelled grep-agent answers (kappa at least 0.6), with at
 least 40 of them judged wrong, before its numbers count. The grep agent was too accurate to supply that many wrong
 answers: 12 among 384 at 1,000,000 tokens, all particle-1's, and 19 and 20 per judge on the alias worlds. So no labels
-were bought for the judge check, and no kappa exists. The model scores come from judges this line never checked against
-people, so read them as descriptive. Stage 2's wrong answers would not have joined the pool either: the pool code accepts
-only the grep agent's cells, and it fails closed.
+were bought for the judge check, and no kappa exists. The model scores come from judges this line never checked, so
+read them as descriptive. The plan's check labels answers from the question's gold where it settles them and with
+gemini-3.8-flash elsewhere (model-labelled); it is not the people's fairness check above, which labelled name pairs.
+The plan also had stage 2's wrong answers join the pool, but the pool code never took them, and that would not have
+let the check run ("Where stage 2 departed from its plan" above).
 
 The line's own stop rule also had a model-free construction-label reading of the alias pilot. That scorer misread
 answers that give the current value and then narrate its history, counting them as unsettled, so it was not used and
@@ -182,8 +217,8 @@ its reading is not reported.
 
 ## Method notes
 
-- **Readers and judges.** claude-opus-5-5 and particle-1 read at medium effort. gpt-6-astra grades claude-opus-5-5's
-  answers and claude-opus-5-5 grades particle-1's; no model grades its own family.
+- **Readers and judges.** claude-opus-5-5 and particle-1 read at medium effort; stage 2 had claude-opus-5-5 only.
+  gpt-6-astra grades claude-opus-5-5's answers and claude-opus-5-5 grades particle-1's; no model grades its own family.
 - **Resumed cells.** In stage 2, the gbrain and memory-bank cells stopped after 33 and 31 of 34 questions on their
   first budget leases and were resumed once on fresh campaigns. A resume restores the earlier lease's store snapshot and
   its checkpointed answers, and the cell then asks only the questions without an answer
@@ -220,6 +255,23 @@ answers, gating judgments, receipt, run config and per-question rows, and a `lea
 summary. `named-200k/` and `named-1m/` hold the named-subject pilots, `alias-stage1/` the grep agent on the alias
 worlds and `alias-stage2/` the misspelling stage. The fairness check's labels stay private; this page gives only their
 counts.
+
+## Changelog
+
+### 2026-11-26: Stage 2 described as it ran
+
+A new part, "Where stage 2 departed from its plan", names each place stage 2 differs from its dated plan in Amendment
+1: the judge pool (the plan added stage 2's wrong answers to it; the pool code never took them, and labelling could not
+have run either way), the readers (claude-opus-5-5 only, against Amendment 1's closing line), the two resumed cells,
+the unplanned Wald interval, where the discordant ids are, and the continue-or-stop rule and fairness check, which the
+plan doesn't hold. The judge-check wording no longer says the check was against people: it uses gold and model labels,
+and the people's fairness check is a separate check. "What we didn't measure" now says the 200,000-token particle-1
+re-reads ran but are not committed. No number changed. Why: the results audit of #652 found the page and the plan
+disagreeing on the judge pool and the readers.
+
+### 2026-11-26: Results published
+
+First version (#652).
 
 ## Disclosures
 
