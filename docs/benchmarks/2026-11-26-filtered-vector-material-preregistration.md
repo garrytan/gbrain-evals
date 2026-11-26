@@ -285,4 +285,24 @@ its work ends. Amounts are in GST-4006, not here.
 
 ## Amendments
 
-None yet.
+### 2026-11-26: the pin, the oracle's boost factor, and an affected set that is never reached
+
+Committed on the results branch before any pilot or counted cell. It changes no arm, cell, metric or threshold.
+
+1. **Pin.** The results branch's first commit runs `bun eval/runner/gbrain-pin.ts bump`, which moves `package.json`
+   to v0.60.776.0 ([`3a360389`](https://github.com/garrytan/gbrain/tree/3a360389f152e62ccb627ab96eccfad8a9204e75)),
+   the build this plan already names and still gbrain's newest release.
+2. **Why the oracle's factor is 1.** "Exact ground truth" says every page's factor is 1 because `GBRAIN_SOURCE_BOOST`
+   and `GBRAIN_SEARCH_EXCLUDE` are unset. That alone isn't enough: gbrain always merges its default source boosts
+   (for example `originals/` 1.5, `daily/` 0.8, `archive/` 0.5) and the brain's `search.source_boosts` config, and
+   always applies its default hard excludes (`test/`, `attachments/`, `.raw/`), in
+   `src/core/search/source-boost.ts` at the pin. The factor is 1 because the corpus slugs (`bench/latent/p<n>` on L,
+   `bench/wiki/<article id>` on W, the slugs gbrain's own `scripts/bench/hnsw-iterative-scan.ts` gives that corpus) match no prefix in the resolved boost map or hard-exclude list, the brain sets no
+   `search.source_boosts`, and the two variables are unset. Before loading, the harness checks every slug against
+   `resolveBoostMap()` and `resolveHardExcludes()` at the pin and refuses to run if one matches. The pilot's brute-force
+   check (scores within 1e-5) still catches any factor other than 1.
+3. **No reached cell.** If no realistic affected warm cell is reached (every arm-T search there was answered by an index
+   walk, a scope scan or the exact fallback), latency does not improve on the realistic affected cells and the outcome
+   is **Close**, reported with every cell's reached share.
+
+Both 2 and 3 were raised by the preregistration's second review round and left open on #662 for this amendment.
