@@ -1,0 +1,8 @@
+- **New free checks cover behavior that had no end-to-end check on the Rust engine: deleting private facts, takes and timeline entries, privacy of pages derived from a purged page, reader rewrites, the engine-swap refusal, links to missing pages and `sources unfederate`.**
+
+### Added
+
+- `eval/data/cat9-engine-coverage-v1/scenarios.json` holds eight Cat 9 free-check scenarios with an invented corpus. Run them with `bun eval/runner/cat9-workflows.ts --checks --scenarios eval/data/cat9-engine-coverage-v1/scenarios.json` and pick the engine with `GBRAIN_EVAL_ENGINE`. The default Cat 9 catalog does not change.
+- The scenarios check that a purged private fact, a removed take and a removed timeline entry leave no text in the page, a member's view of it or keyword search; that purging a private page labels the pages derived from it `visibility: private`; that a member a page lists as a reader can rewrite it and an unlisted member cannot; that `gbrain engine swap --plan` refuses a brain on managed storage and says `NOT READY` with `no_shadow` once managed storage is off; that a page linking to a page that does not exist yet is saved and gains the link after the target exists; and that `sources unfederate` keeps a source out of default search. Each deletion scenario first checks that the text is there, so a later "no text" check cannot pass on an empty brain.
+- A Cat 9 check or setup step can run as a brain member (`member`, which sets `GBRAIN_ENFORCED_MEMBER` for that call), and a scenario can name the engines it applies to (`engines` with `engines_note`); on any other engine its checks report `engine_not_supported_by_runner` with that note.
+- Tests in `test/eval/cat9-engine-coverage.test.ts`.

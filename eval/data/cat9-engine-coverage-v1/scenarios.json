@@ -1,0 +1,1271 @@
+{
+  "version": 1,
+  "status": "draft: free checks only; the judged rubric is a placeholder that no judged run reads. Run with `bun eval/runner/cat9-workflows.ts --checks --scenarios eval/data/cat9-engine-coverage-v1/scenarios.json`",
+  "about": "Free behavior scenarios for behavior the Rust engine had no end-to-end check for: deleting a private fact, a take or a private timeline entry leaves no text behind; purging a private page keeps pages derived from it private; a member listed as a reader can rewrite a page and an unlisted member cannot; the engine-swap refusal; a link to a page that does not exist yet; and sources unfederate. Every check is a gbrain CLI call with a fixed expectation, on a fresh keyword-only brain with no provider key. All names and text are invented.",
+  "fixture": {
+    "corpus_dir": "corpus",
+    "free_run": "each scenario gets fresh keyword-only brains on the engine GBRAIN_EVAL_ENGINE names and its own copy of the corpus"
+  },
+  "scenarios": [
+    {
+      "id": "ec-01-private-fact-purged",
+      "workflow": "email_to_brain",
+      "origin": "Rust coverage hole: deleting a private fact leaves no text behind",
+      "text": "Forget the private note about Olive Example's offer completely.",
+      "ground_truth_slugs": [
+        "people/olive-example"
+      ],
+      "rubric": [
+        {
+          "id": "gone",
+          "criterion": "After the purge, nothing in the brain shows the offer's code name",
+          "weight": 2
+        }
+      ],
+      "setup": [
+        {
+          "run": [
+            "put",
+            "people/olive-example",
+            "--json"
+          ],
+          "stdin": "puts/olive.md"
+        },
+        {
+          "run": [
+            "access",
+            "member",
+            "add",
+            "bob-example",
+            "--name",
+            "Bob Example",
+            "--json"
+          ]
+        },
+        {
+          "run": [
+            "remember",
+            "Olive Example is weighing a private offer code-named Kiwizebra from Orbit Labs",
+            "--entity",
+            "people/olive-example",
+            "--provenance",
+            "invented test note",
+            "--visibility",
+            "private",
+            "--content-origin",
+            "user_said",
+            "--json"
+          ],
+          "capture": {
+            "fact_id": "id"
+          }
+        }
+      ],
+      "checks": [
+        {
+          "id": "control-fact-on-page",
+          "description": "Before the purge, the private fact's text is in the page's Facts block (so the later checks can see it leave).",
+          "run": [
+            "get",
+            "people/olive-example"
+          ],
+          "expect": {
+            "exit": "zero",
+            "stdout_includes": [
+              "Kiwizebra"
+            ]
+          }
+        },
+        {
+          "id": "control-fact-recalled",
+          "description": "Before the purge, recall returns the private fact to the local owner.",
+          "run": [
+            "recall",
+            "people/olive-example",
+            "--json"
+          ],
+          "expect": {
+            "exit": "zero",
+            "json": [
+              {
+                "path": "facts[*].fact",
+                "op": "some_match",
+                "value": "Kiwizebra"
+              }
+            ]
+          }
+        },
+        {
+          "id": "purge-removes-fact",
+          "description": "gbrain forget --purge removes the fact row. Exit 10 (effects still queued) is allowed: a brain with no resident gbrain process cannot run them.",
+          "run": [
+            "forget",
+            "{fact_id}",
+            "--purge",
+            "--yes",
+            "--request-id",
+            "6a0e1f2c-0000-4000-8000-000000000001",
+            "--json"
+          ],
+          "expect": {
+            "json": [
+              {
+                "path": "state",
+                "op": "eq",
+                "value": "committed"
+              },
+              {
+                "path": "purge.removed.facts",
+                "op": "eq",
+                "value": 1
+              }
+            ]
+          }
+        },
+        {
+          "id": "page-has-no-text",
+          "description": "The page no longer shows the purged fact.",
+          "run": [
+            "get",
+            "people/olive-example"
+          ],
+          "expect": {
+            "exit": "zero",
+            "stdout_includes": [
+              "Olive Example runs finance"
+            ],
+            "stdout_excludes": [
+              "Kiwizebra"
+            ]
+          }
+        },
+        {
+          "id": "member-view-has-no-text",
+          "description": "A member's view of the public page has no text from the purged fact.",
+          "run": [
+            "get",
+            "people/olive-example",
+            "--as",
+            "bob-example"
+          ],
+          "expect": {
+            "exit": "zero",
+            "stdout_includes": [
+              "Olive Example runs finance"
+            ],
+            "stdout_excludes": [
+              "Kiwizebra"
+            ]
+          }
+        },
+        {
+          "id": "recall-has-no-text",
+          "description": "recall no longer returns the purged fact. (Keyword search does not index facts, so search cannot show it either way.)",
+          "run": [
+            "recall",
+            "people/olive-example",
+            "--json"
+          ],
+          "expect": {
+            "exit": "zero",
+            "stdout_excludes": [
+              "Kiwizebra"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "ec-02-take-removed",
+      "workflow": "email_to_brain",
+      "origin": "Rust coverage hole: deleting a take leaves no text behind",
+      "text": "Remove my take that Quinn Example may leave Widget Co.",
+      "ground_truth_slugs": [
+        "people/quinn-example"
+      ],
+      "rubric": [
+        {
+          "id": "gone",
+          "criterion": "After the removal, nothing in the brain shows the take",
+          "weight": 2
+        }
+      ],
+      "setup": [
+        {
+          "run": [
+            "put",
+            "people/quinn-example",
+            "--json"
+          ],
+          "stdin": "puts/quinn.md"
+        },
+        {
+          "run": [
+            "access",
+            "member",
+            "add",
+            "bob-example",
+            "--name",
+            "Bob Example",
+            "--json"
+          ]
+        },
+        {
+          "run": [
+            "takes",
+            "add",
+            "people/quinn-example",
+            "--claim",
+            "Quinn Example may leave Widget Co for Plumquokka Inc",
+            "--kind",
+            "take",
+            "--who",
+            "owner-example"
+          ]
+        }
+      ],
+      "checks": [
+        {
+          "id": "control-take-listed",
+          "description": "Before the removal, the take is listed for the page.",
+          "run": [
+            "takes",
+            "people/quinn-example",
+            "--json"
+          ],
+          "expect": {
+            "exit": "zero",
+            "json": [
+              {
+                "path": "[*].claim",
+                "op": "some_match",
+                "value": "Plumquokka"
+              }
+            ]
+          }
+        },
+        {
+          "id": "control-take-searchable",
+          "description": "Before the removal, takes search finds the take.",
+          "run": [
+            "takes",
+            "search",
+            "Plumquokka",
+            "--json"
+          ],
+          "expect": {
+            "exit": "zero",
+            "json": [
+              {
+                "path": "[*].claim",
+                "op": "some_match",
+                "value": "Plumquokka"
+              }
+            ]
+          }
+        },
+        {
+          "id": "remove-take",
+          "description": "takes remove deletes row 1.",
+          "run": [
+            "takes",
+            "remove",
+            "people/quinn-example",
+            "--row",
+            "1"
+          ],
+          "expect": {
+            "exit": "zero"
+          }
+        },
+        {
+          "id": "page-has-no-text",
+          "description": "The page no longer shows the take.",
+          "run": [
+            "get",
+            "people/quinn-example"
+          ],
+          "expect": {
+            "exit": "zero",
+            "stdout_includes": [
+              "Quinn Example leads design"
+            ],
+            "stdout_excludes": [
+              "Plumquokka"
+            ]
+          }
+        },
+        {
+          "id": "takes-list-has-no-text",
+          "description": "No active take across the brain mentions it.",
+          "run": [
+            "takes",
+            "list",
+            "--json"
+          ],
+          "expect": {
+            "exit": "zero",
+            "stdout_excludes": [
+              "Plumquokka"
+            ]
+          }
+        },
+        {
+          "id": "member-view-has-no-text",
+          "description": "A member's view of the page has no text from the removed take.",
+          "run": [
+            "get",
+            "people/quinn-example",
+            "--as",
+            "bob-example"
+          ],
+          "expect": {
+            "exit": "zero",
+            "stdout_excludes": [
+              "Plumquokka"
+            ]
+          }
+        },
+        {
+          "id": "takes-search-finds-nothing",
+          "description": "takes search no longer finds the take. (Page keyword search does not index takes.)",
+          "run": [
+            "takes",
+            "search",
+            "Plumquokka",
+            "--json"
+          ],
+          "expect": {
+            "exit": "zero",
+            "stdout_excludes": [
+              "Plumquokka"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "ec-03-private-timeline-entry-removed",
+      "workflow": "meeting_ingestion",
+      "origin": "Rust coverage hole: deleting a timeline entry from a private page leaves no text behind",
+      "text": "Remove the interview entry from Sage Example's timeline.",
+      "ground_truth_slugs": [
+        "people/sage-example"
+      ],
+      "rubric": [
+        {
+          "id": "gone",
+          "criterion": "After the edit, nothing in the brain shows the interview",
+          "weight": 2
+        }
+      ],
+      "setup": [
+        {
+          "run": [
+            "access",
+            "member",
+            "add",
+            "bob-example",
+            "--name",
+            "Bob Example",
+            "--json"
+          ]
+        },
+        {
+          "run": [
+            "put",
+            "people/sage-example",
+            "--json"
+          ],
+          "stdin": "puts/sage-with-entry.md",
+          "capture": {
+            "rev": "revision"
+          }
+        }
+      ],
+      "checks": [
+        {
+          "id": "control-entry-listed",
+          "description": "Before the edit, the interview entry is in the page's timeline.",
+          "run": [
+            "timeline",
+            "people/sage-example",
+            "--json"
+          ],
+          "expect": {
+            "exit": "zero",
+            "stdout_includes": [
+              "Figwombat"
+            ]
+          }
+        },
+        {
+          "id": "control-entry-searchable",
+          "description": "Before the edit, keyword search finds the entry in the page text.",
+          "run": [
+            "search",
+            "Figwombat",
+            "--json"
+          ],
+          "expect": {
+            "exit": "zero",
+            "json": [
+              {
+                "path": "[*].slug",
+                "op": "includes",
+                "value": "people/sage-example"
+              }
+            ]
+          }
+        },
+        {
+          "id": "member-cannot-read-private-page",
+          "description": "The page is private, so a member cannot open it.",
+          "run": [
+            "get",
+            "people/sage-example",
+            "--as",
+            "bob-example"
+          ],
+          "expect": {
+            "exit": "nonzero",
+            "output_includes": [
+              "page_not_found"
+            ],
+            "output_excludes": [
+              "Figwombat"
+            ]
+          }
+        },
+        {
+          "id": "edit-removes-entry",
+          "description": "Saving the page without the bullet is how gbrain removes a timeline entry.",
+          "run": [
+            "put",
+            "people/sage-example",
+            "--expected-revision",
+            "{rev}",
+            "--json"
+          ],
+          "expect": {
+            "exit": "zero",
+            "json": [
+              {
+                "path": "slug",
+                "op": "eq",
+                "value": "people/sage-example"
+              }
+            ]
+          },
+          "stdin": "puts/sage-entry-removed.md"
+        },
+        {
+          "id": "timeline-has-no-text",
+          "description": "The timeline keeps the other entry and loses the removed one.",
+          "run": [
+            "timeline",
+            "people/sage-example",
+            "--json"
+          ],
+          "expect": {
+            "exit": "zero",
+            "stdout_includes": [
+              "research handbook"
+            ],
+            "stdout_excludes": [
+              "Figwombat"
+            ]
+          }
+        },
+        {
+          "id": "page-has-no-text",
+          "description": "The page no longer shows the removed entry.",
+          "run": [
+            "get",
+            "people/sage-example"
+          ],
+          "expect": {
+            "exit": "zero",
+            "stdout_excludes": [
+              "Figwombat"
+            ]
+          }
+        },
+        {
+          "id": "search-finds-nothing",
+          "description": "Keyword search for the removed entry finds nothing.",
+          "run": [
+            "search",
+            "Figwombat",
+            "--json"
+          ],
+          "expect": {
+            "exit": "zero",
+            "json": [
+              {
+                "path": "",
+                "op": "empty"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "ec-04-private-origin-purged",
+      "workflow": "briefing",
+      "origin": "Rust coverage hole: purging a private page keeps the pages derived from it private (gbrain 99f0f3072e)",
+      "text": "Delete my private board prep notes for good.",
+      "ground_truth_slugs": [
+        "notes/board-prep-summary"
+      ],
+      "rubric": [
+        {
+          "id": "stays_private",
+          "criterion": "The summary derived from the notes stays hidden from other members after the notes are purged",
+          "weight": 2
+        }
+      ],
+      "setup": [
+        {
+          "run": [
+            "access",
+            "member",
+            "add",
+            "bob-example",
+            "--name",
+            "Bob Example",
+            "--json"
+          ]
+        },
+        {
+          "run": [
+            "put",
+            "notes/team-lunch",
+            "--json"
+          ],
+          "stdin": "puts/team-lunch.md"
+        },
+        {
+          "run": [
+            "put",
+            "notes/board-prep",
+            "--json"
+          ],
+          "stdin": "puts/board-prep-private.md"
+        },
+        {
+          "run": [
+            "put",
+            "notes/board-prep-summary",
+            "--json"
+          ],
+          "stdin": "puts/board-prep-summary.md"
+        }
+      ],
+      "checks": [
+        {
+          "id": "control-member-reads-public-page",
+          "description": "A member reads a page with no designation (shows the member view works).",
+          "run": [
+            "get",
+            "notes/team-lunch",
+            "--as",
+            "bob-example"
+          ],
+          "expect": {
+            "exit": "zero",
+            "stdout_includes": [
+              "Friday at noon"
+            ]
+          }
+        },
+        {
+          "id": "derived-hidden-before",
+          "description": "Before the purge, the summary is private through its private origin.",
+          "run": [
+            "get",
+            "notes/board-prep-summary",
+            "--as",
+            "bob-example"
+          ],
+          "expect": {
+            "exit": "nonzero",
+            "output_includes": [
+              "page_not_found"
+            ]
+          }
+        },
+        {
+          "id": "control-origin-searchable",
+          "description": "Before the purge, keyword search finds the origin's codename.",
+          "run": [
+            "search",
+            "Mangopanda",
+            "--json"
+          ],
+          "expect": {
+            "exit": "zero",
+            "json": [
+              {
+                "path": "[*].slug",
+                "op": "includes",
+                "value": "notes/board-prep"
+              }
+            ]
+          }
+        },
+        {
+          "id": "purge-origin",
+          "description": "delete --purge removes the private origin page.",
+          "run": [
+            "delete",
+            "notes/board-prep",
+            "--purge",
+            "--force",
+            "--json"
+          ],
+          "expect": {
+            "exit": "zero",
+            "json": [
+              {
+                "path": "status",
+                "op": "eq",
+                "value": "purged"
+              }
+            ]
+          }
+        },
+        {
+          "id": "derived-labelled-private",
+          "description": "The summary now carries its own visibility: private label.",
+          "run": [
+            "get",
+            "notes/board-prep-summary"
+          ],
+          "expect": {
+            "exit": "zero",
+            "stdout_includes": [
+              "visibility: private"
+            ]
+          }
+        },
+        {
+          "id": "derived-hidden-after",
+          "description": "After the purge, a member still cannot open the summary.",
+          "run": [
+            "get",
+            "notes/board-prep-summary",
+            "--as",
+            "bob-example"
+          ],
+          "expect": {
+            "exit": "nonzero",
+            "output_includes": [
+              "page_not_found"
+            ]
+          }
+        },
+        {
+          "id": "origin-gone",
+          "description": "The purged page is gone.",
+          "run": [
+            "get",
+            "notes/board-prep"
+          ],
+          "expect": {
+            "exit": "nonzero"
+          }
+        },
+        {
+          "id": "search-finds-nothing",
+          "description": "Keyword search for the origin's codename finds nothing.",
+          "run": [
+            "search",
+            "Mangopanda",
+            "--json"
+          ],
+          "expect": {
+            "exit": "zero",
+            "json": [
+              {
+                "path": "",
+                "op": "empty"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "ec-05-listed-reader-rewrites-page",
+      "workflow": "email_to_brain",
+      "origin": "Rust coverage hole: a plain member can rewrite a page that lists them as a reader (gbrain test/access-writes.test.ts)",
+      "text": "Tess wants to revise the launch plan she can read.",
+      "ground_truth_slugs": [
+        "notes/launch-plan"
+      ],
+      "rubric": [
+        {
+          "id": "rule",
+          "criterion": "A listed reader's rewrite is saved and keeps the reader list; an unlisted member's rewrite is refused",
+          "weight": 2
+        }
+      ],
+      "setup": [
+        {
+          "run": [
+            "access",
+            "member",
+            "add",
+            "bob-example",
+            "--name",
+            "Bob Example",
+            "--json"
+          ]
+        },
+        {
+          "run": [
+            "access",
+            "member",
+            "add",
+            "tess-example",
+            "--name",
+            "Tess Example",
+            "--json"
+          ]
+        },
+        {
+          "run": [
+            "put",
+            "notes/launch-plan",
+            "--json"
+          ],
+          "stdin": "puts/launch-plan.md",
+          "capture": {
+            "rev": "revision"
+          }
+        }
+      ],
+      "checks": [
+        {
+          "id": "unlisted-member-refused",
+          "description": "A member the page does not list cannot rewrite it, and nothing changes.",
+          "run": [
+            "put",
+            "notes/launch-plan",
+            "--expected-revision",
+            "{rev}",
+            "--json"
+          ],
+          "expect": {
+            "exit": "nonzero",
+            "json": [
+              {
+                "path": "code",
+                "op": "eq",
+                "value": "enforced_member_refused"
+              }
+            ]
+          },
+          "stdin": "puts/launch-plan-by-bob.md",
+          "member": "bob-example"
+        },
+        {
+          "id": "unchanged-after-refusal",
+          "description": "The page still has its first text.",
+          "run": [
+            "get",
+            "notes/launch-plan"
+          ],
+          "expect": {
+            "exit": "zero",
+            "stdout_includes": [
+              "Tess Example drafts the launch plan."
+            ],
+            "stdout_excludes": [
+              "Bob Example rewrote"
+            ]
+          }
+        },
+        {
+          "id": "listed-reader-rewrites",
+          "description": "A member the page lists as a reader rewrites it.",
+          "run": [
+            "put",
+            "notes/launch-plan",
+            "--expected-revision",
+            "{rev}",
+            "--json"
+          ],
+          "expect": {
+            "exit": "zero",
+            "json": [
+              {
+                "path": "slug",
+                "op": "eq",
+                "value": "notes/launch-plan"
+              },
+              {
+                "path": "status",
+                "op": "eq",
+                "value": "created_or_updated"
+              }
+            ]
+          },
+          "stdin": "puts/launch-plan-by-tess.md",
+          "member": "tess-example"
+        },
+        {
+          "id": "rewrite-saved-readers-kept",
+          "description": "The rewrite is saved and the reader list is kept.",
+          "run": [
+            "get",
+            "notes/launch-plan"
+          ],
+          "expect": {
+            "exit": "zero",
+            "stdout_includes": [
+              "Revised by Tess Example",
+              "tess-example"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "ec-06-engine-swap-refusal",
+      "workflow": "sync",
+      "origin": "Rust coverage hole: the engine-swap refusal from gbrain pull request 10117",
+      "text": "Can I move this brain to the Rust engine now?",
+      "ground_truth_slugs": [],
+      "rubric": [
+        {
+          "id": "refuses",
+          "criterion": "Says the brain is not ready, names the reason, and changes nothing",
+          "weight": 2
+        }
+      ],
+      "engines": [
+        "pglite",
+        "postgres"
+      ],
+      "engines_note": "gbrain engine swap moves a PGLite or Postgres brain to the Rust engine; a brain already on Rust has nothing to swap.",
+      "checks": [
+        {
+          "id": "managed-brain-refused",
+          "description": "A brain on managed storage is refused with engine_swap_refused, reason managed_storage, before anything is read or written.",
+          "run": [
+            "engine",
+            "swap",
+            "--to",
+            "rust",
+            "--plan",
+            "--json"
+          ],
+          "expect": {
+            "exit": "nonzero",
+            "json": [
+              {
+                "path": "code",
+                "op": "eq",
+                "value": "engine_swap_refused"
+              },
+              {
+                "path": "reason",
+                "op": "eq",
+                "value": "managed_storage"
+              }
+            ]
+          }
+        },
+        {
+          "id": "writer-status",
+          "description": "The writer status names the admin state a deactivation must quote.",
+          "run": [
+            "sources",
+            "writer",
+            "status",
+            "--json"
+          ],
+          "expect": {
+            "exit": "zero",
+            "json": [
+              {
+                "path": "enabled",
+                "op": "eq",
+                "value": true
+              },
+              {
+                "path": "admin_state",
+                "op": "exists"
+              }
+            ]
+          },
+          "capture": {
+            "admin_state": "admin_state"
+          }
+        },
+        {
+          "id": "turn-off-managed-storage",
+          "description": "sources writer deactivate turns managed storage off.",
+          "run": [
+            "sources",
+            "writer",
+            "deactivate",
+            "--admin-intent",
+            "writer_deactivate",
+            "--expected-state",
+            "{admin_state}",
+            "--json"
+          ],
+          "expect": {
+            "exit": "zero",
+            "json": [
+              {
+                "path": "deactivated",
+                "op": "eq",
+                "value": true
+              },
+              {
+                "path": "mode",
+                "op": "eq",
+                "value": "classic"
+              }
+            ]
+          }
+        },
+        {
+          "id": "no-shadow-not-ready",
+          "description": "With no shadow, the plan says NOT READY with reason no_shadow.",
+          "run": [
+            "engine",
+            "swap",
+            "--to",
+            "rust",
+            "--plan",
+            "--json"
+          ],
+          "expect": {
+            "exit": "zero",
+            "json": [
+              {
+                "path": "to",
+                "op": "eq",
+                "value": "rust"
+              },
+              {
+                "path": "verdict",
+                "op": "eq",
+                "value": "NOT READY"
+              },
+              {
+                "path": "reason",
+                "op": "eq",
+                "value": "no_shadow"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "ec-07-link-to-missing-page",
+      "workflow": "email_to_brain",
+      "origin": "Rust coverage gap 1: saving a page that links to a page that does not exist yet",
+      "text": "Save a note that Pat Example works with someone who has no page yet.",
+      "ground_truth_slugs": [
+        "people/pat-example"
+      ],
+      "rubric": [
+        {
+          "id": "saved",
+          "criterion": "The page is saved, the missing target is reported as wanted, and the link appears once the target exists",
+          "weight": 2
+        }
+      ],
+      "checks": [
+        {
+          "id": "put-saves-and-reports-wanted",
+          "description": "put saves the page and lists the missing target as wanted.",
+          "run": [
+            "put",
+            "people/pat-example",
+            "--json"
+          ],
+          "expect": {
+            "exit": "zero",
+            "json": [
+              {
+                "path": "slug",
+                "op": "eq",
+                "value": "people/pat-example"
+              },
+              {
+                "path": "auto_links.errors",
+                "op": "eq",
+                "value": 0
+              },
+              {
+                "path": "auto_links.wanted[*].slug",
+                "op": "includes",
+                "value": "people/nobody-yet-example"
+              }
+            ]
+          },
+          "stdin": "puts/pat-links-missing.md"
+        },
+        {
+          "id": "page-readable",
+          "description": "The saved page opens.",
+          "run": [
+            "get",
+            "people/pat-example"
+          ],
+          "expect": {
+            "exit": "zero",
+            "stdout_includes": [
+              "on the Widget Co budget"
+            ]
+          }
+        },
+        {
+          "id": "wanted-lists-target",
+          "description": "wanted lists the missing target and the page that links to it.",
+          "run": [
+            "wanted",
+            "--source-id",
+            "default",
+            "--json"
+          ],
+          "expect": {
+            "exit": "zero",
+            "json": [
+              {
+                "path": "targets[*].target",
+                "op": "includes",
+                "value": "people/nobody-yet-example"
+              }
+            ]
+          }
+        },
+        {
+          "id": "create-target",
+          "description": "Saving the target page works.",
+          "run": [
+            "put",
+            "people/nobody-yet-example",
+            "--json"
+          ],
+          "expect": {
+            "exit": "zero",
+            "json": [
+              {
+                "path": "slug",
+                "op": "eq",
+                "value": "people/nobody-yet-example"
+              }
+            ]
+          },
+          "stdin": "puts/nobody-yet.md"
+        },
+        {
+          "id": "extract-creates-edge",
+          "description": "The next link extraction creates the edge.",
+          "run": [
+            "extract",
+            "links",
+            "--source",
+            "db",
+            "--json"
+          ],
+          "expect": {
+            "exit": "zero",
+            "json": [
+              {
+                "path": "links_created",
+                "op": "gte",
+                "value": 1
+              }
+            ]
+          }
+        },
+        {
+          "id": "backlink-exists",
+          "description": "The new page now has a backlink from the page that linked to it early.",
+          "run": [
+            "backlinks",
+            "people/nobody-yet-example",
+            "--json"
+          ],
+          "expect": {
+            "exit": "zero",
+            "json": [
+              {
+                "path": "[*].from_slug",
+                "op": "includes",
+                "value": "people/pat-example"
+              }
+            ]
+          }
+        },
+        {
+          "id": "nothing-wanted",
+          "description": "No link target is still wanted.",
+          "run": [
+            "wanted",
+            "--source-id",
+            "default",
+            "--json"
+          ],
+          "expect": {
+            "exit": "zero",
+            "json": [
+              {
+                "path": "targets",
+                "op": "empty"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "ec-08-sources-unfederate",
+      "workflow": "sync",
+      "origin": "Rust coverage gap 2: gbrain sources unfederate",
+      "text": "Keep my work notes out of my default searches.",
+      "ground_truth_slugs": [
+        "projects/kumquat-protocol"
+      ],
+      "rubric": [
+        {
+          "id": "isolated",
+          "criterion": "After unfederate, default search returns no work page; naming the work source still finds it",
+          "weight": 2
+        }
+      ],
+      "setup": [
+        {
+          "run": [
+            "import",
+            "{corpus}/default",
+            "--no-embed",
+            "--json"
+          ]
+        },
+        {
+          "run": [
+            "sources",
+            "add",
+            "work",
+            "--path",
+            "{corpus}/work",
+            "--json"
+          ]
+        },
+        {
+          "run": [
+            "import",
+            "{corpus}/work",
+            "--source",
+            "work",
+            "--no-embed",
+            "--json"
+          ]
+        }
+      ],
+      "checks": [
+        {
+          "id": "control-federated-search",
+          "description": "Before unfederate, a default search finds the work page (a new source is federated).",
+          "run": [
+            "search",
+            "Kumquat Protocol",
+            "--json"
+          ],
+          "expect": {
+            "exit": "zero",
+            "json": [
+              {
+                "path": "[*].source_id",
+                "op": "includes",
+                "value": "work"
+              }
+            ]
+          }
+        },
+        {
+          "id": "unfederate",
+          "description": "sources unfederate work says the source is no longer federated.",
+          "run": [
+            "sources",
+            "unfederate",
+            "work",
+            "--json"
+          ],
+          "expect": {
+            "exit": "zero",
+            "json": [
+              {
+                "path": "id",
+                "op": "eq",
+                "value": "work"
+              },
+              {
+                "path": "federated",
+                "op": "eq",
+                "value": false
+              }
+            ]
+          }
+        },
+        {
+          "id": "default-search-excludes-work",
+          "description": "A default search returns no page from the work source.",
+          "run": [
+            "search",
+            "Kumquat Protocol",
+            "--json"
+          ],
+          "expect": {
+            "exit": "zero",
+            "json": [
+              {
+                "path": "[*].source_id",
+                "op": "excludes",
+                "value": "work"
+              },
+              {
+                "path": "[*].slug",
+                "op": "excludes",
+                "value": "projects/kumquat-protocol"
+              }
+            ]
+          }
+        },
+        {
+          "id": "named-search-finds-work",
+          "description": "Naming the work source still finds the page.",
+          "run": [
+            "search",
+            "Kumquat Protocol",
+            "--source",
+            "work",
+            "--json"
+          ],
+          "expect": {
+            "exit": "zero",
+            "json": [
+              {
+                "path": "[*].slug",
+                "op": "includes",
+                "value": "projects/kumquat-protocol"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

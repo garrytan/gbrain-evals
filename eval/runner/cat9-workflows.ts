@@ -149,6 +149,10 @@ export interface WorkflowScenario {
   checks?: Cat9Check[];
   /** Free path only: what the whole scenario needs that a free run lacks. */
   requires?: Cat9Requirement[];
+  /** Free path only: the engines the scenario applies to (cat9-checks.ts); omitted means every engine. */
+  engines?: EvalEngineKind[];
+  /** Free path only: why the scenario applies to `engines` only. */
+  engines_note?: string;
 }
 
 export interface Cat9Catalog {
