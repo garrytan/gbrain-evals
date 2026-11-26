@@ -756,6 +756,12 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
   const arms = def.arms.filter(a => !opts.arms || opts.arms.includes(a.id));
   if (!arms.length) throw refuse({ code: 'USAGE', message: `--arms ${opts.arms?.join(',')} names no arm of ${def.id}`, why: 'a run needs at least one arm', fix: { next: 'run', argv: [...FRONT, 'show', '--cell', def.id] } });
   if (opts.frontier === false && def.descriptive_view === false) throw refuse({ code: 'USAGE', message: `--no-frontier on ${def.id} would leave every answer ungraded: the cell has no canonical judge (descriptive_view false), so its per-reader judge is the only grade`, why: 'a paid run must not buy answers it cannot grade', fix: { next: 'ask_user', user_message: 'rerun your original command without --no-frontier, keeping every other flag' } });
+  for (const a of arms) {
+    const path = join(out, 'cells', a.cell_id, 'receipt.json');
+    const prior = existsSync(path) ? (JSON.parse(readFileSync(path, 'utf8')) as { upstream?: CellUpstream }).upstream : undefined;
+    if (prior && prior.keyless !== upstream.keyless) throw refuse({ code: 'RESUME_REFUSED', message: `${rel(path)} was written by ${prior.keyless ? 'a keyless rehearsal' : 'a paid run'}, and this run is ${upstream.keyless ? 'a keyless rehearsal' : 'paid'} (${a.cell_id})`,
+      why: 'a run carries forward every answer and judgment already in --out, so a paid receipt would count a rehearsal\'s answers, or a rehearsal would write into a paid cell', fix: { next: 'run', argv: [...FRONT, 'run', '--cell', def.id, '--out', '<a fresh directory>'] } });
+  }
   const instrument = instrumentFor(def.canonical_instrument);
   refuseCompatJudges(def.id, [...(def.descriptive_view === false ? [] : [instrument.canonical_judge]), ...(opts.frontier === false ? [] : arms.flatMap(a => a.frontier?.judges ?? []))]);
 
