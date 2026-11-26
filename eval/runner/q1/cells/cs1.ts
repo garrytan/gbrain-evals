@@ -76,7 +76,7 @@ export const CS1_EFFORT = 'medium';
  * by the dated freeze amendment to v0.60.771.0 (read the same way on 2026-11-25 UTC, before any counted gbrain cell). A newer
  * release before the first counted gbrain cell re-pins here by a dated amendment; the build freezes once it starts.
  */
-export const CS1_GBRAIN_BUILD = { release: 'v0.60.771.0', commit: '97ef356f574a66709ef1bf4ae1cad604727852d8' } as const;
+export const CS1_GBRAIN_BUILD = { release: 'v0.60.776.0', commit: '3a360389f152e62ccb627ab96eccfad8a9204e75' } as const;
 
 /**
  * Hosting's price ladders (preregistration, "Hosting"): the primary is one public cloud's general-purpose family, the
