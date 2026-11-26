@@ -195,6 +195,20 @@ describe('pilot.ts', () => {
     for (const c of r.commands) expect(c.argv).toEqual(expect.arrayContaining(['--paid-window', 'weekly-line-pilot']));
   });
 
+  // Value: protects=every pilot campaign of one granted window reserves from that window's ledger at the window's cap less its mint, re-read and labelling caps, so a fresh campaign written later counts what the earlier ones settled and leaves the commands their share; fails_when=each campaign names a ledger of its own at its own cap, or the window ledger lets campaigns take the commands' share; why_new=#652 round-1 note on pilot.ts:226; seam=cell.ts weeklyPilotCampaignManifest; no_claim=the reservation itself (shootout-cell.test.ts covers it)
+  test('every campaign of one window names the window\'s ledger, at the window\'s cap less what its commands may spend', () => {
+    const out = scratch('window-ledger');
+    const r = writePilotCampaigns(manifest, { out, window: 'weekly-line-pilot', windowCapUsd: 300, worldEnd: WORLD_END });
+    const commandsUsd = r.plan.ledgers.filter(l => l.kind !== 'campaign').reduce((s, l) => s + l.cap_usd, 0);
+    expect(commandsUsd).toBeGreaterThan(0);
+    for (const c of r.campaigns) {
+      const campaign = JSON.parse(readFileSync(c.file, 'utf8'));
+      expect(campaign.ledger).toBe('eval/reports/scoreboard/windows/weekly-line-pilot.sqlite');
+      expect(campaign.paid_window.unit).toBe('weekly-line-pilot');
+      expect(campaign.paid_window.cap_usd).toBeCloseTo(300 - commandsUsd, 6);
+    }
+  });
+
   // Value: protects=the report fails a row whose part under test didn't run, whose answers aren't all judged, or that passed its cap, and reads the ceiling and the projected week; fails_when=pilotReport passes a row on any one check, or projects the week from estimates; why_new=R111's per-arm verdict; seam=pilot.ts pilotReport on synthetic readings; no_claim=readRow over real cell output
   test('the report passes a row only when every R111 check holds', () => {
     const reading = (row: RowReading['row'], o: Partial<RowReading> = {}): RowReading => ({ row, cell: manifest.cells.find(c => c.block === 'BGW-pilot' && pilot.find(p => p.id === c.id) && c.system === ({ gbrain: 'gbrain-defaults', 'grep-agent': 'baseline-file-agent', 'extract-first': 'ext-extract-first', 'memory-bank': 'ext-memory-bank' } as const)[row])!.id,

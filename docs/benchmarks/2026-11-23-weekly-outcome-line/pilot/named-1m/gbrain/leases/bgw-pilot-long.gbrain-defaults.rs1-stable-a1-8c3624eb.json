@@ -1,0 +1,13 @@
+{
+  "run_id": "bgw-pilot-long.gbrain-defaults.rs1-stable-a1-8c3624eb",
+  "lease_usd": 13.6,
+  "committed_usd": 4.568978670000006,
+  "requests": 11497,
+  "max_output_tokens": 32768,
+  "cell_exit_code": 0,
+  "timeout_hours": 11,
+  "timed_out": false,
+  "checkpoint_rows": 64,
+  "realization_id": "real-bgw-pilot-long.gbrain-defaults.rs1-stable-d8d26247a5bea515",
+  "realization_status": "complete"
+}

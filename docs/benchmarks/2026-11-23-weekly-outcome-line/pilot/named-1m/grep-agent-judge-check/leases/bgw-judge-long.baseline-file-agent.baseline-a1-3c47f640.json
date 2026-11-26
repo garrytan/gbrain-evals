@@ -1,0 +1,11 @@
+{
+  "run_id": "bgw-judge-long.baseline-file-agent.baseline-a1-3c47f640",
+  "lease_usd": 99,
+  "committed_usd": 6.401421070000004,
+  "requests": 1403,
+  "max_output_tokens": 32768,
+  "cell_exit_code": 0,
+  "timeout_hours": 17,
+  "timed_out": false,
+  "checkpoint_rows": 128
+}

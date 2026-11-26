@@ -196,6 +196,11 @@ export const Q1_CAMPAIGN_ID = /^q1-scoreboard(?:-[a-z0-9][a-z0-9.-]{0,40})?$/;
 
 export interface CampaignManifest {
   kind: 'oss-shootout-campaign' | typeof Q1_KIND; schema_version: 1; campaign_id: string; cap_usd: number; ledger: string;
+  /**
+   * The granted paid window the campaign spends in. Every campaign of one window names the same ledger, whose program cap
+   * is the window's cap, so each reservation counts what every campaign in the window holds or has settled.
+   */
+  paid_window?: { unit: string; cap_usd: number };
   /** Decisions left open in the manifest, substituted into `{{param}}` and `when`. */
   parameters?: Record<string, ParamValue>;
   /** Cell files, relative to the manifest (one per system and configuration). */
@@ -333,6 +338,9 @@ export function loadCampaign(path: string): { manifest: CampaignManifest; sha256
   if (!/^[A-Za-z0-9._-]{1,64}$/.test(m.campaign_id ?? '')) problems.push('campaign_id must be 1-64 characters of [A-Za-z0-9._-]');
   if (!(m.cap_usd > 0)) problems.push('cap_usd must be positive');
   if (typeof m.ledger !== 'string' || !m.ledger) problems.push('ledger must name the campaign ledger file');
+  if (m.paid_window !== undefined && !(/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(m.paid_window?.unit ?? '') && m.paid_window.cap_usd > 0 && m.cap_usd <= m.paid_window.cap_usd + 1e-9)) {
+    problems.push('paid_window must name the granted unit and a positive cap_usd no smaller than the campaign\'s cap_usd');
+  }
   const ids = new Set<string>();
   for (const c of m.cells ?? []) {
     if (!/^[A-Za-z0-9._-]{1,80}$/.test(c.id ?? '')) problems.push(`cell id ${JSON.stringify(c.id)} must be 1-80 characters of [A-Za-z0-9._-]`);
@@ -629,7 +637,9 @@ export class Campaign {
     if (existsSync(recorded) || !recorded.endsWith(`/${this.manifest.ledger}`)) return recorded;
     return this.ledger;
   }
-  private run(): BudgetRun { const s = this.state(); return BudgetRun.join({ runId: s.run_id, ledgerPath: s.ledger, programCapMaxUsd: this.manifest.cap_usd }); }
+  /** The ledger's program cap: the paid window's, shared by every campaign in it, else the campaign's own. */
+  private get programCap() { return this.manifest.paid_window?.cap_usd ?? this.manifest.cap_usd; }
+  private run(): BudgetRun { const s = this.state(); return BudgetRun.join({ runId: s.run_id, ledgerPath: s.ledger, programCapMaxUsd: this.programCap }); }
   /** BG1: run fn holding leases.lock (O_EXCL, budget-ledger withFileLock), re-entered freely by the process holding it; a lock held past its bounded wait refuses. Other campaigns run fn as is. */
   private locked<T>(fn: () => T): T {
     if (!this.bg1 || this.lockDepth > 0) return fn();
@@ -759,8 +769,13 @@ export class Campaign {
         fix: { next: 'ask_user', user_message: this.bg1Ask(`it holds a lease log${named.length ? ` naming ${named.join('; ')}` : ''} but no campaign.json, so those leases may belong to a campaign that is still running`) } });
     }
     const label = this.q1 ? 'q1-scoreboard' : 'oss-shootout';
-    if (!existsSync(this.ledger)) initLedger({ ledgerPath: this.ledger, programCapUsd: this.manifest.cap_usd, reason: `${this.q1 ? 'Q1 scoreboard' : 'oss shootout'} campaign ${this.manifest.campaign_id}` });
-    const run = BudgetRun.open({ runner: `${label}:${this.manifest.campaign_id}`, budgetUsd: this.manifest.cap_usd, ledgerPath: this.ledger, programCapMaxUsd: this.manifest.cap_usd });
+    const window = this.manifest.paid_window;
+    const recorded = window && existsSync(this.ledger) ? ledgerStatus({ ledgerPath: this.ledger }).totals?.program_cap_usd ?? null : null;
+    if (window && recorded !== null && Math.abs(recorded - window.cap_usd) > 1e-9) {
+      throw new Error(`paid window ${window.unit}'s ledger ${relative(REPO_ROOT, this.ledger)} already holds a $${recorded.toFixed(2)} cap, and campaign ${this.manifest.campaign_id} names $${window.cap_usd.toFixed(2)}: a window name is used for one grant only, so give a new grant its own unit name`);
+    }
+    if (!existsSync(this.ledger)) initLedger({ ledgerPath: this.ledger, programCapUsd: this.programCap, reason: window ? `paid window ${window.unit}` : `${this.q1 ? 'Q1 scoreboard' : 'oss shootout'} campaign ${this.manifest.campaign_id}` });
+    const run = BudgetRun.open({ runner: `${label}:${this.manifest.campaign_id}`, budgetUsd: this.manifest.cap_usd, ledgerPath: this.ledger, programCapMaxUsd: this.programCap });
     const s: CampaignState = { campaign_id: this.manifest.campaign_id, run_id: run.runId, ledger: relative(REPO_ROOT, this.ledger), manifest_sha256: this.sha, created_at: new Date().toISOString(), ...(this.q1 ? { kind: Q1_KIND } : {}) };
     if (this.q1) {
       let commit: string | null = null, dirty: string[] = [];
@@ -860,7 +875,8 @@ export class Campaign {
       catch (e) {
         if (!this.q1 || (e as Error).name !== 'BudgetExceededError') throw e;
         const st = this.status();
-        throw refuse({ code: 'BUDGET_CAP', partial: true, message: `cell ${cellId}: the campaign cap stops this ${usd(c.lease_usd)} lease (${(e as Error).message})`,
+        const window = this.manifest.paid_window;
+        throw refuse({ code: 'BUDGET_CAP', partial: true, message: `cell ${cellId}: the campaign cap${window ? ` or paid window ${window.unit}'s ${usd(window.cap_usd)} cap, which counts every campaign in the window,` : ''} stops this ${usd(c.lease_usd)} lease (${(e as Error).message})`,
           why: 'the sum of leases can never pass the campaign cap; leases that never reported back stay charged at their full reservation until settled or abandoned',
           fix: { next: 'ask_user', user_message: `The ${usd(this.manifest.cap_usd)} campaign cap is reached: ${usd(st.committed_usd ?? 0)} is held, including ${usd(st.unsettled_usd)} in leases still charged at their full reservation. Settle or abandon those, apply the preregistered scope reduction, or ask for a cap decision.`,
             verify: ['bun', 'run', 'eval:scoreboard', 'status', '--campaign', this.manifestPath, '--state', this.stateDir] },
@@ -1214,13 +1230,13 @@ export class Campaign {
     return this.lease(leaseId);
   }
 
-  /** Move the ledger's program cap and the campaign run's budget up to the manifest's cap_usd (a cap the user raised). */
+  /** Move the ledger's program cap and the campaign run's budget up to the manifest's cap_usd (a cap the user raised); a paid window's shared ledger keeps the window's cap. */
   raiseCap(reason: string) {
     const s = this.state();
     if (!reason.trim()) throw new Error('raise-cap needs --reason');
     const cap = this.manifest.cap_usd;
     const before = ledgerStatus({ ledgerPath: s.ledger, runId: s.run_id });
-    const program = (before.totals?.program_cap_usd ?? 0) < cap ? setProgramCap({ ledgerPath: s.ledger, programCapUsd: cap, reason }) : null;
+    const program = !this.manifest.paid_window && (before.totals?.program_cap_usd ?? 0) < cap ? setProgramCap({ ledgerPath: s.ledger, programCapUsd: cap, reason }) : null;
     const run = setRunBudget({ ledgerPath: s.ledger, runId: s.run_id, budgetUsd: cap });
     return { cap_usd: cap, program, run };
   }

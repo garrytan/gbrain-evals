@@ -1,0 +1,95 @@
+{
+  "schema": "gbrain-evals/q1-run-config/v1",
+  "cell_id": "bgw-pilot-alias.baseline-file-agent.baseline.whole-agent",
+  "run_cell": "bgw-pilot-alias.baseline-file-agent.baseline",
+  "cell": {
+    "schema": "gbrain-evals/q1-cell/v1",
+    "id": "bgw-pilot-alias.baseline-file-agent.baseline",
+    "set": "BGW-pilot-alias",
+    "block": "BGW-pilot",
+    "benchmark": "bg1-dev",
+    "split": "dev",
+    "selection": {
+      "kind": "all"
+    },
+    "exclusions": [],
+    "system": "baseline-file-agent",
+    "configuration": "baseline",
+    "runner": "in-process",
+    "ingest_replicate": 1,
+    "effort": "medium",
+    "canonical_instrument": "bg1",
+    "descriptive_view": false,
+    "probes": {
+      "sample": 0,
+      "seed": "weekly-line-probes",
+      "conversations": 0
+    },
+    "only_conversations": [
+      "bg1-dev-alias-01"
+    ]
+  },
+  "arm": {
+    "id": "whole-agent",
+    "cell_id": "bgw-pilot-alias.baseline-file-agent.baseline.whole-agent",
+    "set": "BGW-pilot-alias",
+    "arm": "whole-system",
+    "mode": "agent",
+    "policy": null,
+    "budget": null,
+    "questions": null,
+    "readers": [
+      "anthropic:claude-opus-5-5",
+      "particle:particle-1"
+    ],
+    "reader_replicates": {},
+    "frontier": {
+      "judges": [
+        "anthropic:claude-opus-5-5",
+        "openai:gpt-6-astra"
+      ],
+      "readers": null,
+      "sample": null,
+      "per_reader": true,
+      "judge_by_reader": {
+        "anthropic:claude-opus-5-5": "openai:gpt-6-astra",
+        "particle:particle-1": "anthropic:claude-opus-5-5"
+      },
+      "settings": {
+        "effort": "medium",
+        "max_tokens": 8000
+      }
+    },
+    "judge_repeats": null,
+    "label": "grep agent, uncapped ripgrep, 40 turns"
+  },
+  "instrument": {
+    "id": "bg1",
+    "sha256": "9598aacb076ba7bc8e589546008d6db30fa57d078e4140194b1ea05e2564102a",
+    "judge": null
+  },
+  "reader": {
+    "effort": "medium",
+    "max_tokens": 2048,
+    "prompt_sha256": "2144502121e3f949d3b867439e4dd29af0ad8d8253718bae48d760607c713920"
+  },
+  "renderer": "memory-render-v2",
+  "counter": null,
+  "dataset": {
+    "name": "BG1 changing-facts dev worlds (world end 2026-11-22)",
+    "files": [
+      {
+        "path": "eval/data/changing-facts-v1/dev/worlds/bg1-dev-alias-01/world.json",
+        "sha256": "04d01519fcf6f76f236bfca332df6162cb1168365c5387d9e72c862da8eb4e18"
+      },
+      {
+        "path": "eval/data/changing-facts-v1/dev/worlds/bg1-dev-alias-01/questions.json",
+        "sha256": "17874d0c9b6fe0072039276f16ef2db9a2ade881d0fc3beb4cf6e01dac5f58d9"
+      }
+    ],
+    "revision": "repo",
+    "license": "MIT"
+  },
+  "scheduled_sha256": "073dfedbfdf053df0258703d7b87476b23428a108ffee7ee63ddb5a3af7b4d7f",
+  "limit": null
+}

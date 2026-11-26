@@ -25,14 +25,14 @@ import { join, resolve } from 'node:path';
 import { bg1LaunchProblems } from '../../eval/runner/bg1/launch.ts';
 import { BudgetRun } from '../../eval/runner/budget-ledger.ts';
 import { freePort } from '../../eval/runner/lifecycle/slice.ts';
-import { bgwBatchDataset } from '../../eval/runner/memory-qa/bg1-names.ts';
-import { BG1_FIXTURES_ROOT, bg1Conversation, type Bg1Manifest, type Corpus } from '../../eval/runner/memory-qa/corpus.ts';
+import { BG1_DEV_ALIAS_MISSPELLING_QUESTIONS, bgwBatchDataset } from '../../eval/runner/memory-qa/bg1-names.ts';
+import { BG1_FIXTURES_ROOT, bg1Conversation, loadBg1Dev, type Bg1Manifest, type Corpus } from '../../eval/runner/memory-qa/corpus.ts';
 import type { ChatLike, ChatResult } from '../../eval/runner/memory-qa/qa-v2.ts';
 import { DEFAULT_ROUTE_CAPS, keylessKeys, keylessUpstream, MeteringProxy } from '../../eval/runner/metering-proxy.ts';
 import { sha256, WEEKLY_CELLS_ENV, WEEKLY_CELLS_SHA256_ENV, WEEKLY_RUN_ENV } from '../../eval/runner/memory-qa/records.ts';
-import { findCell, runCell, scheduledQuestions, weeklyCampaignManifest, windowedRunGuard } from '../../eval/runner/q1/cell.ts';
+import { findCell, runCell, runUpstreamOptions, scheduledQuestions, weeklyCampaignManifest, windowedRunGuard } from '../../eval/runner/q1/cell.ts';
 import { CELL_VM_MAX_HOURS, cellVmHours, pinnedJudgeRouteCaps, weeklyUnitWorlds } from '../../eval/runner/q1/cells/definitions.ts';
-import { generateWeeklyLineCells, WEEKLY_LINE_MODELS, weeklyLineRereadPlans } from '../../eval/runner/q1/cells/weekly-line.ts';
+import { generateWeeklyLineCells, generateWeeklyLineMisspellingCells, generateWeeklyLinePilotCells, WEEKLY_LINE_MODELS, weeklyLineRereadPlans } from '../../eval/runner/q1/cells/weekly-line.ts';
 import { prepareReread, rereadArm, rereadCellId, rereadKeys, rereadRouteCaps, runReread } from '../../eval/runner/q1/reread-cell.ts';
 import { ScoreboardError } from '../../eval/runner/q1/scoreboard-errors.ts';
 import { Campaign, DEFAULT_ROUTE_CLASSES, runRemote, weeklyCustodyPush, type CampaignManifest } from '../../eval/runner/shootout-cell.ts';
@@ -473,6 +473,7 @@ describe('the fixture week, end to end and keyless', () => {
         try {
           const res = await runCell(def, { out, providerProxy: proxy.url, keyless: true, ...quiet }, { system: def.arms.some(a => a.mode === 'agent') ? new FakeAgent() : new FakeMemorySystem() });
           expect([unit, res.status, res.stopped, res.invalid_reasons]).toEqual([unit, 'complete', null, []]);
+          for (const a of def.arms) expect(JSON.parse(readFileSync(join(out, 'cells', a.cell_id, 'receipt.json'), 'utf8')).upstream).toEqual({ keyless: true, paid_window: null });
         } finally { proxy.stop(); }
         outs.set(unit, out);
         for (const a of def.arms) cpSync(join(out, 'cells', a.cell_id), join(dir, 'cells', a.cell_id), { recursive: true });
@@ -507,6 +508,110 @@ describe('the fixture week, end to end and keyless', () => {
 });
 
 
+describe('a paid run records its window', () => {
+  // Value: protects=a windowed cell run whose lease proxy reports paid lease mode records the granted --paid-window in its receipt, and one whose proxy reports keyless records none, so the alias stop rule can tell a paid cell from a rehearsal; fails_when=cell.ts drops the --paid-window it hands runCell, records it for a keyless proxy, or runCell leaves it out of the receipt, which would refuse every paid grep-agent cell (PILOT_NOT_PAID) only after the window had spent; why_new=GBEV-3's ruling C1 of 2026-11-25 (the reader's N5 on #652); seam=cell.ts runUpstreamOptions against a status-only fake proxy, then runCell's receipt through the lease proxy on a scripted loopback upstream; no_claim=a real provider or a real window
+  test('a proxy reporting paid lease mode makes the run record paid_window, and a keyless one records none', async () => {
+    const def = generateWeeklyLinePilotCells(GBRAIN, 'BGW', 'alias').find(c => c.system === 'baseline-file-agent')!;
+    const statusOf = (keyless: boolean) => Bun.serve({ hostname: '127.0.0.1', port: 0, fetch: req => (new URL(req.url).pathname === '/__proxy/status' ? Response.json({ keyless, paid: !keyless, mode: 'lease', lease_usd: 4 }) : Response.json({ error: 'status only' }, { status: 404 })) });
+    const env = { GBRAIN_EVALS_BG1_WORLD_END: '2026-11-22' };
+    const argv = (url: string) => ['run', '--cell', def.id, '--manifest', 'weekly-pilot', '--provider-proxy', url, '--paid-window', 'test-window-7', '--window-cap-usd', '45'];
+    const up = scriptedUpstream(), offline = globalThis.fetch;
+    globalThis.fetch = ((input: string | URL | Request, init?: RequestInit) => {
+      const url = new URL(typeof input === 'string' || input instanceof URL ? input : input.url);
+      if (url.hostname !== '127.0.0.1') throw new Error(`the test reached ${url.hostname}`);
+      return realFetch(input, init);
+    }) as typeof fetch;
+    const paid = statusOf(false), keyless = statusOf(true);
+    try {
+      const options = await runUpstreamOptions(argv(`http://127.0.0.1:${paid.port}`), def, { ...env });
+      expect(options).toEqual({ keyless: false, paidWindow: 'test-window-7' });
+      expect(await runUpstreamOptions(argv(`http://127.0.0.1:${keyless.port}`), def, { ...env })).toEqual({ keyless: true, paidWindow: null });
+      const out = join(scratch('paid-unit'), 'out'), proxy = leaseProxy('paid-unit', up.url, { ...DEFAULT_ROUTE_CAPS, ...pinnedJudgeRouteCaps(def.arms) });
+      const corpus = loadBg1Dev({ root: BG1_FIXTURES_ROOT, only: new Set(def.only_conversations), worldEnd: env.GBRAIN_EVALS_BG1_WORLD_END, keyless: true });
+      try { expect((await runCell(def, { out, providerProxy: proxy.url, ...options, ...quiet }, { corpus, system: new FakeAgent() })).status).toBe('complete'); } finally { proxy.stop(); }
+      for (const a of def.arms) expect(JSON.parse(readFileSync(join(out, 'cells', a.cell_id, 'receipt.json'), 'utf8')).upstream).toEqual({ keyless: false, paid_window: 'test-window-7' });
+    } finally { globalThis.fetch = offline; paid.stop(true); keyless.stop(true); up.stop(); }
+  }, 120_000);
+});
+
+describe('a resumed stage-2 cell re-asks nothing', () => {
+  const def = generateWeeklyLineMisspellingCells(GBRAIN).find(c => c.system === 'gbrain-defaults')!;
+  const arm = def.arms[0];
+  const corpus = loadBg1Dev({ root: BG1_FIXTURES_ROOT, only: new Set(def.only_conversations), worldEnd: '2026-11-22', keyless: true });
+  const idOf = new Map(corpus.questions.map(q => [q.question, q.id]));
+  const answered = (out: string) => readFileSync(join(out, 'cells', arm.cell_id, 'answers.ndjson'), 'utf8').trim().split('\n').map(l => JSON.parse(l) as { question_id: string; answer_id: string; text: string });
+  /** The scripted reader, recording the question id of every prompt it is asked. */
+  const reading = () => {
+    const s = scripted(), asked: string[] = [];
+    const reader: ChatLike = { async chat(model, prompt, o) { asked.push(idOf.get(/Question: (.*)\n/.exec(prompt)![1])!); return s.reader.chat(model, prompt, o); } };
+    return { reader, judge: s.judge, asked };
+  };
+  const counted = () => {
+    const fake = new FakeMemorySystem(), ingest = fake.ingestSession.bind(fake);
+    const n = { ingests: 0 };
+    fake.ingestSession = async (ns, s, t) => { n.ingests++; return ingest(ns, s, t); };
+    return { fake, n };
+  };
+  const paid = { keyless: false, paidWindow: 'test-window-7' };
+
+  // Value: protects=a resume of a stage-2 cell from its earlier campaign's checkpoint and store snapshot (shootout-cell.ts resume, mode snapshot) re-asks no question the checkpoint already answered, ingests nothing again and adds exactly the missing ids, so the 34-question table counts each question once; fails_when=runCell's read loop stops skipping recorded answer ids (cell.ts readPacked), or a restored realization is ingested again; why_new=GBEV-3's ruling of 2026-11-26: the stage-2 table rests on the -r2 resumed campaigns of gbrain and memory-bank; seam=runCell over the stage-2 gbrain cell on the alias template fixtures, an in-memory store, and SHOOTOUT_RESTORED_REALIZATION as the VM sets it after a restore; no_claim=the VM's restore_command or a real store snapshot
+  test('a resume into a cell that already has answers asks none of them again and adds only the missing ids', async () => {
+    const out = join(scratch('stage2-resume'), 'out'), { fake, n } = counted();
+    const first = reading();
+    await runCell(def, { out, stopAfterQuestions: 20, ...paid, ...quiet }, { corpus, system: fake, reader: first.reader, judge: first.judge });
+    const before = answered(out), had = new Set(before.map(a => a.question_id)), ingested = n.ingests;
+    expect(had.size).toBeGreaterThan(0);
+    expect(had.size).toBeLessThan(34);
+    const second = reading();
+    const res = await runCell(def, { out, ...paid, ...quiet, env: { ...process.env, SHOOTOUT_RESTORED_REALIZATION: 'real-test-stage2' } }, { corpus, system: fake, reader: second.reader, judge: second.judge });
+    expect(res.status).toBe('complete');
+    expect(n.ingests).toBe(ingested);
+    expect(second.asked.filter(id => had.has(id))).toEqual([]);
+    expect(new Set(second.asked).size).toBe(second.asked.length);
+    const after = answered(out);
+    expect(after.map(a => a.question_id).sort()).toEqual([...BG1_DEV_ALIAS_MISSPELLING_QUESTIONS].sort());
+    expect(new Set(after.map(a => a.question_id)).size).toBe(after.length);
+    expect(after).toHaveLength(34);
+    expect([...second.asked].sort()).toEqual(after.map(a => a.question_id).filter(id => !had.has(id)).sort());
+    expect(after.filter(a => had.has(a.question_id))).toEqual(before);
+  }, 120_000);
+
+  // Value: protects=runCell refuses an --out whose receipts were written under the other upstream: a paid run into a keyless rehearsal's directory, or a rehearsal into a paid cell's, before it writes anything; fails_when=the receipt check is removed, so a paid receipt carries a rehearsal's answers forward as paid ones (the stop rule's PILOT_NOT_PAID check reads only the receipt); why_new=reader note N2 on #652 (runCell had no guard against reusing an out dir), which is the same carry-forward this resume relies on; seam=runCell's receipt upstream check over the stage-2 gbrain cell; no_claim=forged receipts, outside the crew's threat model
+  test('a paid run refuses a keyless rehearsal\'s directory, and a rehearsal refuses a paid one', async () => {
+    const run = (out: string, upstream: { keyless: boolean; paidWindow: string | null }, extra = {}) => { const s = reading(); return runCell(def, { out, ...upstream, ...quiet, ...extra }, { corpus, system: counted().fake, reader: s.reader, judge: s.judge }); };
+    const rehearsal = join(scratch('stage2-rehearsal'), 'out');
+    await run(rehearsal, { keyless: true, paidWindow: null }, { stopAfterQuestions: 3 });
+    const kept = answered(rehearsal);
+    expect((await refused(run(rehearsal, paid)))?.code).toBe('RESUME_REFUSED');
+    expect(answered(rehearsal)).toEqual(kept);
+    const counted2 = join(scratch('stage2-paid'), 'out');
+    await run(counted2, paid, { stopAfterQuestions: 3 });
+    expect((await refused(run(counted2, { keyless: true, paidWindow: null })))?.code).toBe('RESUME_REFUSED');
+    expect((await run(counted2, paid)).status).toBe('complete');
+  }, 120_000);
+
+  test('a paid resume refuses staged rehearsal answers even when there is no receipt', async () => {
+    const out = join(scratch('stage2-interrupted-rehearsal'), 'out');
+    const first = reading();
+    await runCell(def, { out, keyless: true, stopAfterQuestions: 3, ...quiet }, { corpus, system: counted().fake, reader: first.reader, judge: first.judge });
+    const stage = join(out, 'runs', def.id);
+    const staged = [...new Bun.Glob('r/*/answers.ndjson').scanSync(stage)].sort().map(path => join(stage, path));
+    const before = staged.map(path => readFileSync(path, 'utf8'));
+    expect(before.join('').trim()).not.toBe('');
+    const receipt = join(out, 'cells', arm.cell_id, 'receipt.json');
+    rmSync(receipt);
+    const second = reading();
+    const { fake, n } = counted();
+    const resume = () => runCell(def, { out, ...paid, ...quiet, env: { ...process.env, SHOOTOUT_RESTORED_REALIZATION: 'real-test-stage2' } }, { corpus, system: fake, reader: second.reader, judge: second.judge });
+    expect((await refused(resume()))?.code).toBe('RESUME_REFUSED');
+    rmSync(join(stage, 'upstream-mode'));
+    expect((await refused(resume()))?.code).toBe('RESUME_REFUSED');
+    expect(second.asked).toEqual([]);
+    expect(n.ingests).toBe(0);
+    expect(existsSync(receipt)).toBe(false);
+    expect(staged.map(path => readFileSync(path, 'utf8'))).toEqual(before);
+  }, 120_000);
+});
 
 // ─── Split cells ─────────────────────────────────────────────────────
 

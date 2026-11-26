@@ -41,7 +41,8 @@
  * token's sha256 as `control_sha256`, so the process that spawned this proxy can
  * tell it from another one answering on the same port, and `keyless`, true only
  * when the upstreams are keylessUpstream's shape on a loopback host and every
- * provider key it holds is keylessKeys()'s placeholder.
+ * provider key it holds is keylessKeys()'s placeholder, and `paid`, true only
+ * when every provider goes to its real host with no stand-in.
  *
  * Standalone (lease mode):
  *   bun eval/runner/metering-proxy.ts --listen 0.0.0.0:8787 --budget-ledger <file> --lease-usd <n> --run-id <id>
@@ -159,6 +160,10 @@ function servesKeyless(upstream: Partial<Record<ProviderName, string>> | undefin
     const key = keys[KEY_ENV[prov]];
     return upstream?.[prov] === shape[prov] && LOOPBACK.has(host) && (!key || key === placeholder[KEY_ENV[prov]]);
   });
+}
+/** Whether a proxy routes paid: every provider goes to its real host (UPSTREAM) with no stand-in, the one routing that can spend. Positive proof only; a configuration that is neither this nor servesKeyless's is unknown. */
+function servesPaid(upstream: Partial<Record<ProviderName, string>> | undefined): boolean {
+  return (Object.keys(KEY_ENV) as ProviderName[]).every(prov => (upstream?.[prov] ?? UPSTREAM[prov]) === UPSTREAM[prov]);
 }
 const CREDENTIAL_HEADERS = ['authorization', 'x-api-key', 'api-key', 'openai-organization', 'openai-project', 'cookie', 'proxy-authorization'];
 export const DEFAULT_MAX_OUTPUT_TOKENS = 32_768;
@@ -551,7 +556,7 @@ export class MeteringProxy {
     const p = this.options.policy;
     const run = p ? ledgerStatus({ ledgerPath: p.lease.ledgerPath, runId: p.lease.runId }).run : null;
     const unattributed = Object.fromEntries(this.unattributed);
-    return { mode: p ? 'lease' : 'in-process', keyless: servesKeyless(this.options.upstream, p?.env ?? process.env), run_id: p?.lease.runId ?? null, control_sha256: this.options.controlToken ? createHash('sha256').update(this.options.controlToken).digest('hex') : null, lease_usd: run?.budget_usd ?? p?.lease.budgetUsd ?? null, committed_usd: run?.committed_usd ?? null,
+    return { mode: p ? 'lease' : 'in-process', keyless: servesKeyless(this.options.upstream, p?.env ?? process.env), paid: servesPaid(this.options.upstream), run_id: p?.lease.runId ?? null, control_sha256: this.options.controlToken ? createHash('sha256').update(this.options.controlToken).digest('hex') : null, lease_usd: run?.budget_usd ?? p?.lease.budgetUsd ?? null, committed_usd: run?.committed_usd ?? null,
       max_output_tokens: p ? p.maxOutputTokens ?? DEFAULT_MAX_OUTPUT_TOKENS : null, ...this.counts, unpriced_usage: this.unpriced,
       ...(p ? { billed_usd: this.totals.billed_usd, reserved_unsettled_usd: this.totals.reserved_unsettled_usd, unattributed_background: unattributed,
         route_caps: p.routeCaps ?? null, admission: p.admission ? { limits: p.admission.limits, ...p.admission.stats } : null, cell_token: !!this.options.cellToken, trust_local: !!this.options.trustLocal } : {}) };

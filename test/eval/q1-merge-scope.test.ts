@@ -5,10 +5,11 @@
  * receipt. Keyless: synthetic conversations under real cell definitions (no mint slot or sealed id), no corpus load, no client.
  */
 import { afterAll, describe, expect, test } from 'bun:test';
-import { cpSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { findCell, mergeCell, needsCustody } from '../../eval/runner/q1/cell.ts';
+import { ScoreboardError } from '../../eval/runner/q1/scoreboard-errors.ts';
 import { MERGE_SCOPE_CELLS, mergeScopeCorpus } from './fixtures/q1-merge-scope/cells.ts';
 
 const FIX = resolve(import.meta.dir, 'fixtures/q1-merge-scope');
@@ -48,5 +49,45 @@ describe('a non-weekly merge is unchanged by the weekly line', () => {
     const res = mergeCell(def, [stale, ...shards(c.set)], join(tmp, 'merged', c.set), { env: {}, corpus: mergeScopeCorpus() });
     const want = def.arms.map(a => JSON.parse(readFileSync(join(FIX, 'expected', c.set, 'cells', a.cell_id, 'receipt.json'), 'utf8')).run_status);
     expect([res.map(r => r.status), want.includes('invalid')]).toEqual([want, false]);
+  });
+});
+
+describe('a merge reads every unit receipt and upstream mode before it writes', () => {
+  const c = MERGE_SCOPE_CELLS.find(x => x.set === 'locomo')!;
+  const def = findCell(c.id, undefined, c.manifest);
+  const paid = { keyless: false, paid_window: 'test-window' }, keyless = { keyless: true, paid_window: null };
+  /** The committed shards with each unit's receipt recording the given upstream, or removed for null. */
+  const units = (name: string, ups: Array<typeof paid | typeof keyless | null | 'unrecorded'>) => shards(c.set).map((src, i) => {
+    const dir = join(tmp, 'modes', name, `shard${i}`);
+    cpSync(src, dir, { recursive: true });
+    for (const a of def.arms) {
+      const path = join(dir, 'cells', a.cell_id, 'receipt.json');
+      if (ups[i] === 'unrecorded') continue;
+      if (ups[i] === null) rmSync(path);
+      else writeFileSync(path, JSON.stringify({ ...JSON.parse(readFileSync(path, 'utf8')), upstream: ups[i] }, null, 2) + '\n');
+    }
+    return dir;
+  });
+  const merge = (from: string[], out: string) => mergeCell(def, from, out, { env: {}, corpus: mergeScopeCorpus() });
+  const refusal = (fn: () => unknown) => { try { fn(); return null; } catch (e) { if (e instanceof ScoreboardError) return e.op; throw e; } };
+
+  // Value: protects=a merge with a unit that never wrote its receipt stops with a defined refusal before any destination file exists; fails_when=the merge writes run configs, then crashes reading a later unit's receipt; why_new=#652 round-1 note on cell.ts:1548; seam=cell.ts mergeCell; no_claim=units whose receipts are present but stale
+  test('a missing unit receipt refuses before anything is written', () => {
+    const out = join(tmp, 'modes', 'missing-out');
+    expect(refusal(() => merge(units('missing', [paid, null]), out))).toMatchObject({ code: 'NOT_YET_AVAILABLE', message: expect.stringContaining('receipt.json is missing') });
+    expect(existsSync(out)).toBe(false);
+  });
+
+  // Value: protects=a published cell is one score under one upstream mode; fails_when=keyless and paid units merge and publish as complete; why_new=#652 round-1 note on cell.ts:1549; seam=cell.ts mergeCell; no_claim=paid units from different windows, which publish with no window
+  test('keyless and paid units never merge into one score, and units of one mode still merge complete', () => {
+    const out = join(tmp, 'modes', 'mixed-out');
+    expect(refusal(() => merge(units('mixed', [keyless, paid]), out))).toMatchObject({ code: 'PREFLIGHT_FAILED', message: expect.stringContaining('different upstream modes') });
+    expect(refusal(() => merge(units('legacy-beside-paid', ['unrecorded', paid]), out))).toMatchObject({ code: 'PREFLIGHT_FAILED', message: expect.stringContaining('no upstream record') });
+    expect(existsSync(out)).toBe(false);
+    for (const [name, up] of [['paid', paid], ['keyless', keyless]] as const) {
+      const res = merge(units(`same-${name}`, [up, up]), join(tmp, 'modes', `same-${name}-out`));
+      expect(res.map(r => r.status)).toEqual(['complete']);
+      expect(JSON.parse(readFileSync(join(res[0].dir, 'receipt.json'), 'utf8')).upstream).toEqual(up);
+    }
   });
 });

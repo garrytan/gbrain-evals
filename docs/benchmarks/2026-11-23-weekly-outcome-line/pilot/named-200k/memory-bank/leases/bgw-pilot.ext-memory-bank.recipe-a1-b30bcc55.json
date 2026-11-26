@@ -1,0 +1,13 @@
+{
+  "run_id": "bgw-pilot.ext-memory-bank.recipe-a1-b30bcc55",
+  "lease_usd": 9.89,
+  "committed_usd": 3.2175290499999982,
+  "requests": 600,
+  "max_output_tokens": 32768,
+  "cell_exit_code": 0,
+  "timeout_hours": 5,
+  "timed_out": false,
+  "checkpoint_rows": 64,
+  "realization_id": "real-bgw-pilot.ext-memory-bank.recipe-34e1a55c3620a5f5",
+  "realization_status": "complete"
+}

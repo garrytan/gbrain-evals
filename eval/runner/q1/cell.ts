@@ -403,8 +403,10 @@ export interface CellOptions {
   frontier?: boolean;
   systemUrl?: string | null;
   providerProxy?: string | null;
-  /** BG1: the run's lease proxy reports a keyless upstream (bg1CellWindow), so a bg1-dev load may read the template fixtures. */
+  /** The mode verified by a window or ledger guard, if the caller already checked it. */
   keyless?: boolean;
+  /** The granted paid window a windowed cell's run spends under (--paid-window, which bg1CellWindow checked), else null. */
+  paidWindow?: string | null;
   finishTimeoutS?: number;
   probeTimeoutMs?: number;
   probeIntervalMs?: number;
@@ -608,7 +610,7 @@ export function systemFor(def: CellDefinition, opts: CellOptions, sanitizer: San
     case 'baseline-recency': return new FullContextSystem('recency');
     case 'baseline-none': return new NoMemorySystem();
     case 'baseline-hybrid': return new PlainHybridSystem(opts.embed === 'hash' ? async texts => texts.map(t => hashEmbed(t, PG_EMBED_DIMS))
-      : cachedOpenAIEmbedder(join(process.env.GBRAIN_EVALS_EMBED_CACHE ?? join(homedir(), '.cache', 'gbrain-evals', 'embed-cache'), 'plain-hybrid-te3l-1536.json'), fetch, opts.providerProxy ? `${opts.providerProxy}/${def.system}/openai/v1` : undefined), opts.embed === 'hash' ? `hash@${PG_EMBED_DIMS} (keyless control)` : undefined);
+      : cachedOpenAIEmbedder(join(process.env.GBRAIN_EVALS_EMBED_CACHE ?? join(homedir(), '.cache', 'gbrain-evals', 'embed-cache'), opts.keyless === true ? 'keyless' : 'paid', 'plain-hybrid-te3l-1536.json'), fetch, opts.providerProxy ? `${opts.providerProxy}/${def.system}/openai/v1` : undefined), opts.embed === 'hash' ? `hash@${PG_EMBED_DIMS} (keyless control)` : undefined);
     case 'baseline-file-agent': return new FileAgentSystem({ workDir: join(opts.out, 'runs', def.id, 'file-agent'), effort: def.effort });
     case 'gbrain-defaults':
       if (opts.providerProxy) throw refuse({ code: 'NOT_YET_AVAILABLE', message: `cell ${def.id} runs the gbrain agent in process, and a metering proxy was given`,
@@ -762,7 +764,25 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
   const week = weekScope(def, env, shard);
   const custody = !deps.corpus && needsCustody(def);
   if (custody) custodyGate(def, out, env, `q1 cell ${def.id}`);
-  mkdirSync(out, { recursive: true });
+  const keyless = opts.keyless ?? (opts.providerProxy ? verifiedProxyMode(await cellProxyStatus(opts.providerProxy))
+    : deps.corpus || (deps.reader && deps.judge) ? true : verifiedProxyMode(null));
+  const upstream: CellUpstream = { keyless, paid_window: keyless ? null : opts.paidWindow ?? null };
+  for (const a of arms) {
+    const path = join(out, 'cells', a.cell_id, 'receipt.json');
+    const prior = existsSync(path) ? (JSON.parse(readFileSync(path, 'utf8')) as { upstream?: CellUpstream }).upstream : undefined;
+    if (prior && prior.keyless !== upstream.keyless) throw refuse({ code: 'RESUME_REFUSED', message: `${rel(path)} was written by ${prior.keyless ? 'a keyless rehearsal' : 'a paid run'}, and this run is ${upstream.keyless ? 'a keyless rehearsal' : 'paid'} (${a.cell_id})`,
+      why: 'a run carries forward every answer and judgment already in --out, so a paid receipt would count a rehearsal\'s answers, or a rehearsal would write into a paid cell', fix: { next: 'run', argv: [...FRONT, 'run', '--cell', def.id, '--out', '<a fresh directory>'] } });
+  }
+  const staging = new Staging(out, def.id);
+  const modePath = join(staging.root, 'upstream-mode');
+  const mode = upstream.keyless ? 'keyless\n' : 'paid\n';
+  const priorMode = existsSync(modePath) ? readFileSync(modePath, 'utf8') : null;
+  if (priorMode !== null ? priorMode !== mode : readdirSync(staging.root).length > 0 || !!env.SHOOTOUT_RESTORED_REALIZATION) {
+    throw refuse({ code: 'RESUME_REFUSED', message: `${rel(staging.root)} has staged or restored work with a different or unknown upstream mode (${def.id})`,
+      why: 'answers and judgments may have been staged before the first receipt; a run can only reuse work recorded under its own upstream mode',
+      fix: { next: 'run', argv: [...FRONT, 'run', '--cell', def.id, '--out', '<a fresh directory>'] } });
+  }
+  if (priorMode === null) writeFileSync(modePath, mode, { flag: 'wx' });
   const unitConvs = week ? weeklyShardWorlds(def, shard) : !def.kept_units ? null : def.benchmark === 'bg1' || def.benchmark === 'bg1c' ? bg1KeptUnit(def, shard, deps.bg1Manifest) : keptUnit(def, shard, deps.rs1Manifest);
   const corpus = deps.corpus ?? loadCorpus(def.benchmark, undefined, unitConvs ? new Set(unitConvs) : devOnly(def) ?? undefined, { keyless: opts.keyless });
   const offWeek = weekCorpusProblems(def, corpus, week ? unitConvs! : undefined);
@@ -786,10 +806,9 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
     configs.set(a.id, { text, sha: sha256(text) });
   }
 
-  const staging = new Staging(out, def.id);
   const meter = metering(opts.providerProxy ?? null, staging, env);
   const sanitizer = new Sanitizer(corpus, `${def.id}|${def.ingest_replicate}`);
-  const system = deps.system ?? systemFor(def, opts, sanitizer);
+  const system = deps.system ?? systemFor(def, { ...opts, keyless: upstream.keyless }, sanitizer);
   const capabilities = await system.capabilities();
   const slot = def.runner === 'shim' ? capabilities.system : def.system;
   /** The sessions a conversation writes, in order; an ingest probe with `ingest_sessions` writes only that prefix. */
@@ -819,7 +838,7 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
         : runnable.length ? { next: 'run', argv: [...FRONT, 'run', '--cell', def.id, '--arms', runnable.join(',')], user_message: 'run the other arms now; the blocked arms wait for the system\'s answer route' } : { next: 'report', user_message: 'the cell waits for an answer route in the system\'s shim' } });
   }
   const readersOf = new Map(arms.map(a => [a.id, armReaders(a, capabilities)]));
-  const chat = deps.reader ?? deps.judge ?? new ChatClient(custody ? join(out, 'cache', 'qa') : env.GBRAIN_EVALS_QA_CACHE ?? join(homedir(), '.cache', 'gbrain-evals', 'qa-cache'));
+  const chat = deps.reader ?? deps.judge ?? new ChatClient(custody ? join(out, 'cache', 'qa') : join(env.GBRAIN_EVALS_QA_CACHE ?? join(homedir(), '.cache', 'gbrain-evals', 'qa-cache'), upstream.keyless ? 'keyless' : 'paid'));
   const reader = onSlot(deps.reader ?? chat, meter, 'harness');
   const judge = onSlot(deps.judge ?? chat, meter, 'judge');
   const fitTokenizer = deps.fitTokenizer ?? readerFitTokenizer;
@@ -933,7 +952,7 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
     try { await system.close?.(); } catch { /* closing is best effort */ }
   }
 
-  const armResults = publishCell(def, arms, [out], out, { instrument, selected, invalidReasons, configs, capabilities, stopped, maxAttempts });
+  const armResults = publishCell(def, arms, [out], out, { instrument, selected, invalidReasons, configs, capabilities, stopped, maxAttempts, upstream });
   let share: ShareResult | undefined;
   if (shard.count > 1) {
     const mineQs = new Set(selected.filter(q => convIds.includes(q.conversation)).map(q => q.id));
@@ -1057,7 +1076,7 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
     const rowBuffer: Q1Row[] = [];
     const flush = () => {
       if (rowBuffer.length) appendFileSync(join(dir, 'attempts.ndjson'), rowBuffer.splice(0).map(r => JSON.stringify(r) + '\n').join(''));
-      publishCell(def, arms, [out], out, { instrument, selected, invalidReasons, configs, capabilities, stopped, maxAttempts });
+      publishCell(def, arms, [out], out, { instrument, selected, invalidReasons, configs, capabilities, stopped, maxAttempts, upstream });
     };
 
     const retrieve = async (q: MemoryQuestion, mode: string): Promise<StagedRetrieval | null> => {
@@ -1385,9 +1404,15 @@ export function withDerived(a: AnswerRecord, pack: PackedContext | null): Answer
 
 // ─── Publish ─────────────────────────────────────────────────────────
 
+/**
+ * Where a cell's provider calls went, as its receipt records it: a keyless upstream (a rehearsal), or real providers under
+ * the granted paid window named. Receipts written before 2026-11-25 carry neither, so a reader that needs paid answers
+ * refuses them.
+ */
+export interface CellUpstream { keyless: boolean; paid_window: string | null }
 interface PublishCtx {
   instrument: Instrument; selected: MemoryQuestion[]; invalidReasons: string[]; configs: Map<string, { text: string; sha: string }>;
-  capabilities: CapabilityRecord; stopped: string | null; maxAttempts: number;
+  capabilities: CapabilityRecord; stopped: string | null; maxAttempts: number; upstream?: CellUpstream;
 }
 
 /** The valid realization of each conversation across staging roots (shards), and its records. */
@@ -1455,6 +1480,7 @@ export function publishCell(def: CellDefinition, arms: ArmDefinition[], roots: s
     };
     const receipt = {
       schema: CELL_RECEIPT_SCHEMA, cell_id: arm.cell_id, run_cell: def.id, config_sha256: config?.sha ?? null, run_status: status, invalid_reasons: ctx.invalidReasons, stopped: ctx.stopped,
+      ...(ctx.upstream ? { upstream: ctx.upstream } : {}),
       set: arm.set, benchmark: def.benchmark, split: def.split, block: def.block,
       system: { kind: def.system, configuration: def.configuration, runner: def.runner, capability_system: ctx.capabilities.system, versions: ctx.capabilities.versions, capabilities: ctx.capabilities },
       arm: { id: arm.id, arm: arm.arm, mode: arm.mode, policy: arm.policy, budget: arm.budget, variant: arm.variant ?? null, label: arm.label },
@@ -1501,9 +1527,17 @@ export function mergeCell(def: CellDefinition, from: string[], out: string, o: {
   const offWeek = weekCorpusProblems(def, corpus);
   if (offWeek) throw refuse({ code: 'PREFLIGHT_FAILED', message: offWeek, why: "a weekly cell's shards merge only its own week's worlds", fix: { next: 'report' } });
   const selected = selectCellQuestions(corpus.questions.filter(q => splitConversations(def.benchmark, def.split, corpus).has(q.conversation)), def.selection);
-  const receipt = (f: string, cellId: string) => JSON.parse(readFileSync(join(f, 'cells', cellId, 'receipt.json'), 'utf8')) as { invalid_reasons?: string[]; system: { capabilities: CapabilityRecord } };
-  const capabilities = receipt(from[0], def.arms[0].cell_id).system.capabilities;
-  const invalidReasons = def.week ? [...new Set(def.arms.flatMap(a => from.flatMap(f => receipt(f, a.cell_id).invalid_reasons ?? [])))] : [];
+  const receiptPath = (f: string, cellId: string) => join(f, 'cells', cellId, 'receipt.json');
+  const missing = def.arms.flatMap(a => from.map(f => receiptPath(f, a.cell_id))).filter(p => !existsSync(p));
+  if (missing.length) throw refuse({ code: 'NOT_YET_AVAILABLE', message: `${def.id} can't merge: ${missing.map(rel).join(', ')} ${missing.length === 1 ? 'is' : 'are'} missing`,
+    why: "a merge publishes every unit's upstream mode and system from its receipt, so it reads them all before it writes anything", fix: { next: 'report', user_message: 'finish or resume the units that have no receipt, then merge again' } });
+  const receipts = new Map(def.arms.map(a => [a.cell_id, from.map(f => JSON.parse(readFileSync(receiptPath(f, a.cell_id), 'utf8')) as { invalid_reasons?: string[]; system: { capabilities: CapabilityRecord }; upstream?: CellUpstream })]));
+  const capabilities = receipts.get(def.arms[0].cell_id)![0].system.capabilities;
+  const invalidReasons = def.week ? [...new Set(def.arms.flatMap(a => receipts.get(a.cell_id)!.flatMap(r => r.invalid_reasons ?? [])))] : [];
+  const ups = def.arms.flatMap(a => receipts.get(a.cell_id)!.map(r => r.upstream));
+  const modes = new Set(ups.map(u => (u ? String(u.keyless) : 'unrecorded')));
+  if (modes.size > 1) throw refuse({ code: 'PREFLIGHT_FAILED', message: `${def.id} can't merge units that ran under different upstream modes: ${[...modes].map(k => ({ true: 'keyless rehearsal', false: 'paid', unrecorded: 'no upstream record' })[k]).join(', ')}`,
+    why: 'a merged cell is one score, so it never counts a rehearsal\'s answers beside paid ones', fix: { next: 'report', user_message: 'merge only units that ran under the same upstream mode' } });
   // A weekly cell split across VMs publishes the week's run config: its units' configs, each with its own worlds' part of
   // the week's schedule and dataset, agree in everything else and cover the week exactly, and the merged one freezes all of it.
   const split = !!def.week && def.shards > 1;
@@ -1516,10 +1550,12 @@ export function mergeCell(def: CellDefinition, from: string[], out: string, o: {
       if (problems.length) throw refuse({ code: 'PREFLIGHT_FAILED', message: `${def.id}'s units can't merge: ${problems.join('; ')}`, why: "a split weekly cell merges only its launch units, which together run the week's schedule exactly", fix: { next: 'report' } });
       t = JSON.stringify({ ...JSON.parse(t), dataset: corpus.source, scheduled_sha256: sha256(selected.map(q => q.id).join('\n')) }, null, 2) + '\n';
     }
-    writeAtomic(join(out, 'cells', a.cell_id, 'run-config.json'), t);
     return [a.id, { text: t, sha: sha256(t) }];
   }));
-  return publishCell(def, def.arms, from, out, { instrument: instrumentFor(def.canonical_instrument), selected, invalidReasons, configs, capabilities, stopped: null, maxAttempts: DEFAULT_MAX_ATTEMPTS });
+  for (const a of def.arms) writeAtomic(join(out, 'cells', a.cell_id, 'run-config.json'), configs.get(a.id)!.text);
+  const keyless = modes.has('true'), windows = new Set(ups.map(u => u?.paid_window));
+  const upstream = ups.every(u => u) ? { keyless, paid_window: !keyless && windows.size === 1 ? ups[0]!.paid_window : null } : undefined;
+  return publishCell(def, def.arms, from, out, { instrument: instrumentFor(def.canonical_instrument), selected, invalidReasons, configs, capabilities, stopped: null, maxAttempts: DEFAULT_MAX_ATTEMPTS, upstream });
 }
 
 // ─── Aggregates (the only output a sealed cell may write inside the repository) ───
@@ -1766,16 +1802,21 @@ export function weeklyCampaignManifest(w: WeeklyCellsFile, o: { cellsPath: strin
  * paid window at the campaign's cap, as BG1's campaigns do. Every unit's command exports the world end its bg1-dev load
  * resolves dates from, the gbrain build the manifest was generated at (WEEKLY_PILOT_GBRAIN_ENV) and its world length
  * (WEEKLY_PILOT_LENGTH_ENV), so the VM's run regenerates exactly these cells. The units read public dev worlds only, so none is sealed or pushed from custody, and
- * none is given Gemini. Refused without a granted window before any file is written.
+ * none is given Gemini. Every campaign of one window reserves from that window's ledger, whose program cap is the part of
+ * the window's cap left after the caps of the window's mint, re-read and labelling commands (windowCapUsd), so a fresh
+ * campaign counts what the window's other campaigns hold or have settled. The ledger sits under eval/reports/ in the
+ * checkout, so every campaign of a window starts from one checkout. Refused without a granted window before any file is
+ * written.
  */
-export function weeklyPilotCampaignManifest(m: WeeklyPilotManifest, o: { units: string[]; campaign_id: string; cap_usd: number; window: string; worldEnd: string }): Q1Campaign {
-  if (!/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(o.window ?? '') || !(o.cap_usd > 0)) throw refuse({ code: 'PAID_FLAGS_MISSING', message: 'a weekly pilot campaign needs the granted paid window and its cap',
+export function weeklyPilotCampaignManifest(m: WeeklyPilotManifest, o: { units: string[]; campaign_id: string; cap_usd: number; window: string; windowCapUsd: number; worldEnd: string }): Q1Campaign {
+  if (!/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(o.window ?? '') || !(o.cap_usd > 0) || !(o.windowCapUsd >= o.cap_usd)) throw refuse({ code: 'PAID_FLAGS_MISSING', message: 'a weekly pilot campaign needs the granted paid window and its cap',
     why: 'every pilot unit spends real keys, so its command carries the granted window and the unit refuses outside it', fix: { next: 'run', argv: ['bun', 'eval/runner/weekly-line/pilot.ts', 'campaigns', '--out', '<dir>', '--window-granted', '<unit>', '--world-end', '<Sunday>'] } });
   const worldEnd = bg1WorldEnd({ worldEnd: o.worldEnd });
   const campaign = campaignManifest(m, { units: { campaign_id: o.campaign_id, cap_usd: o.cap_usd, units: o.units, cell_manifest: 'weekly-pilot' } });
   const out = ' --out "$SHOOTOUT_OUT"';
   const exports = `export GBRAIN_EVALS_BG1_WORLD_END=${worldEnd}; export ${WEEKLY_PILOT_GBRAIN_ENV}=${m.gbrain_build.release}@${m.gbrain_build.commit}; export ${WEEKLY_PILOT_LENGTH_ENV}=${m.length}; `;
-  return { ...campaign, executes: [...(campaign.executes ?? []), ...BG1_DATA_PATHS], cells: campaign.cells.map(cell => {
+  return { ...campaign, ledger: `eval/reports/scoreboard/windows/${o.window}.sqlite`, paid_window: { unit: o.window, cap_usd: o.windowCapUsd },
+    executes: [...(campaign.executes ?? []), ...BG1_DATA_PATHS], cells: campaign.cells.map(cell => {
     if (cell.command.split(out).length !== 2) throw new Error(`weekly pilot unit ${cell.id} has no single${out} in its command to put the paid window before`);
     return { ...cell, command: `${exports}${cell.command.replace(out, () => ` --paid-window ${o.window} --window-cap-usd ${o.cap_usd}${out}`)}` };
   }) };
@@ -1895,6 +1936,19 @@ function reanswerOutcomes(raw: string | undefined): Outcome[] | null {
 
 const usage = (message: string): ScoreboardMessage => ({ code: 'USAGE', message, why: 'the cell runner has four subcommands: plan, show, run, merge', fix: { next: 'run', argv: [...FRONT, 'plan'] } });
 
+type CellProxyStatus = { keyless?: unknown; paid?: unknown; mode?: unknown; lease_usd?: unknown };
+const cellProxyStatus = (proxy: string): Promise<CellProxyStatus | null> =>
+  fetch(`${proxy.replace(/\/$/, '')}/__proxy/status`, { signal: AbortSignal.timeout(5000) })
+    .then(r => r.ok ? r.json() as Promise<CellProxyStatus | null> : null).catch(() => null);
+
+function verifiedProxyMode(status: CellProxyStatus | null): boolean {
+  if (status?.keyless === true) return true;
+  if (status?.keyless === false && status.paid === true) return false;
+  throw refuse({ code: 'PREFLIGHT_FAILED', message: `the upstream mode is unknown (the lease proxy reports keyless ${String(status?.keyless ?? 'nothing')}, paid ${String(status?.paid ?? 'nothing')})`,
+    why: 'a cell labels staged work or its receipt keyless only when the lease proxy reports a keyless upstream, and paid only when it reports that every provider goes to its real host; any other proxy, such as a stand-in with dummy keys, is neither',
+    fix: { next: 'report', user_message: 'start the lease proxy with keylessUpstream and placeholder keys for a rehearsal, or with no --upstream for a paid run, or run through the required paid ledger guard' } });
+}
+
 /**
  * BG1's paid-window guard for `run` on a BG1 cell (eval/runner/paid-arm.ts, the shared window guard): a run needs the
  * granted window (--paid-window <unit> --window-cap-usd <n>) unless its lease proxy itself reports a keyless upstream
@@ -1907,7 +1961,7 @@ const usage = (message: string): ScoreboardMessage => ({ code: 'USAGE', message,
 export async function bg1CellWindow(argv: string[], def: CellDefinition, env: Record<string, string | undefined> = process.env): Promise<boolean> {
   const one = (n: string) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : undefined; };
   const proxy = (one('--provider-proxy') ?? env.SHOOTOUT_PROXY ?? '').replace(/\/$/, '') || null;
-  const status = proxy ? await fetch(`${proxy}/__proxy/status`, { signal: AbortSignal.timeout(5000) }).then(r => r.json() as Promise<{ keyless?: unknown; mode?: unknown; lease_usd?: unknown } | null>).catch(() => null) : null;
+  const status = proxy ? await cellProxyStatus(proxy) : null;
   const held = status?.mode === 'lease' && typeof status.lease_usd === 'number' && status.lease_usd > 0 ? status.lease_usd : null;
   const named = env.SHOOTOUT_LEASE_USD;
   const differs = !!named && held !== null && !(Math.abs(Number(named) - held) <= 1e-9);
@@ -1919,7 +1973,7 @@ export async function bg1CellWindow(argv: string[], def: CellDefinition, env: Re
     throw refuse({ code: 'PAID_FLAGS_MISSING', message: e.message, why: `every ${windowedLabel(def)} cell that can spend real keys runs inside a granted paid window, and no cap it spends under exceeds the window cap`,
       fix: { next: 'run', argv: [...FRONT, 'run', '--cell', def.id, '--manifest', bg1CellManifest(def), '--paid-window', '<granted unit>', '--window-cap-usd', '<granted cap>'] } });
   }
-  return status?.keyless === true;
+  return proxy ? verifiedProxyMode(status) : false;
 }
 
 /**
@@ -1935,6 +1989,20 @@ export async function windowedRunGuard(argv: string[], def: CellDefinition, env:
   bg1RunClock({ env });
   if (!(one('--provider-proxy') ?? env.SHOOTOUT_PROXY)) { if (def.descriptive_view === false) delete env.GEMINI_API_KEY; else env.GEMINI_API_KEY = bg1GeminiKey(env); }
   return keyless;
+}
+
+type UpstreamOptions = Required<Pick<CellOptions, 'keyless' | 'paidWindow'>>;
+/**
+ * The run's verified upstream and any accepted window. A non-windowed run without a proxy gets its mode only after
+ * the caller runs the paid ledger guard.
+ */
+export async function runUpstreamOptions(argv: string[], def: CellDefinition, env: Record<string, string | undefined> = process.env): Promise<UpstreamOptions | null> {
+  const one = (n: string) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : undefined; };
+  const proxy = (one('--provider-proxy') ?? env.SHOOTOUT_PROXY ?? '').replace(/\/$/, '') || null;
+  if (one('--manifest') === 'rs1') return rs1CellWindow(argv, def, proxy, env);
+  const guarded = await windowedRunGuard(argv, def, env);
+  if (guarded !== null) return { keyless: guarded, paidWindow: guarded ? null : one('--paid-window') ?? null };
+  return proxy ? { keyless: verifiedProxyMode(await cellProxyStatus(proxy)), paidWindow: null } : null;
 }
 
 /** The paid-run guard for `run` without a lease proxy: --paid and an open ledger run with room for the estimate. */
@@ -1961,15 +2029,16 @@ export function paidGuard(argv: string[], def: CellDefinition, limit: number | n
  * the lease that status reports in lease mode, and a SHOOTOUT_LEASE_USD that differs from it (or is not a number) refuses;
  * without one it is the ledger's program cap and the run's budget. Refuses with exit 2 before any provider client exists.
  */
-export async function rs1CellWindow(argv: string[], def: CellDefinition, proxy: string | null, env: Record<string, string | undefined> = process.env): Promise<void> {
+export async function rs1CellWindow(argv: string[], def: CellDefinition, proxy: string | null, env: Record<string, string | undefined> = process.env): Promise<UpstreamOptions> {
   const one = (n: string) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : undefined; };
-  const status = proxy ? await fetch(`${proxy}/__proxy/status`, { signal: AbortSignal.timeout(5000) }).then(r => r.json() as Promise<{ keyless?: unknown; mode?: unknown; lease_usd?: unknown } | null>).catch(() => null) : null;
+  const status = proxy ? await cellProxyStatus(proxy) : null;
   const held = status?.mode === 'lease' && typeof status.lease_usd === 'number' && status.lease_usd > 0 ? status.lease_usd : null;
   const named = env.SHOOTOUT_LEASE_USD;
   const differs = !!named && held !== null && !(Math.abs(Number(named) - held) <= 1e-9);
   try {
-    requireRs1Window(argv, { what: `RS1 cell ${def.id}`, keyless: status?.keyless === true,
+    const window = requireRs1Window(argv, { what: `RS1 cell ${def.id}`, keyless: status?.keyless === true,
       caps: () => proxy ? [{ label: differs ? `the lease proxy's lease (its status reports ${held}, SHOOTOUT_LEASE_USD names ${named})` : "the lease proxy's lease (GET /__proxy/status in lease mode)", usd: differs ? null : held }] : ledgerCaps(budgetOptionsFrom(argv).ledgerPath, one('--budget-run-id')) });
+    return { keyless: proxy ? verifiedProxyMode(status) : false, paidWindow: window?.unit ?? null };
   } catch (e) {
     if (!(e instanceof WindowRefusal)) throw e;
     throw refuse({ code: 'PAID_FLAGS_MISSING', message: e.message, why: 'every RS1 cell that can spend real keys runs inside a granted paid window, and no cap it spends under exceeds the window cap',
@@ -2018,7 +2087,6 @@ export async function main(argv: string[]): Promise<number> {
     const id = one('--cell');
     if (!id) throw refuse(usage(`${sub} needs --cell <id>`));
     const def = findCell(id, undefined, one('--manifest'));
-    const keyless = sub === 'run' ? (await windowedRunGuard(argv, def)) ?? false : false;
     const out = resolve(one('--out') ?? process.env.SHOOTOUT_OUT ?? join(REPO_ROOT, 'eval/reports/q1', def.id));
     if (sub === 'merge') {
       const from = many('--from').map(f => resolve(f));
@@ -2029,15 +2097,16 @@ export async function main(argv: string[]): Promise<number> {
     }
     const limit = one('--limit') ? Number(one('--limit')) : null;
     const proxy = (one('--provider-proxy') ?? process.env.SHOOTOUT_PROXY ?? '').replace(/\/$/, '') || null;
-    if (one('--manifest') === 'rs1') await rs1CellWindow(argv, def, proxy);
+    let upstream = await runUpstreamOptions(argv, def);
     if (!proxy) {
       const estimate = paidGuard(argv, def, limit, one('--arms')?.split(',') ?? null);
       startPaidRun(`q1-cell:${def.id}`, { ...budgetOptionsFrom(argv), estimateUsd: estimate });
+      upstream ??= { keyless: false, paidWindow: null };
     }
     const shardRaw = one('--shard') ?? '0/1';
     const [si, sn] = shardRaw.split('/').map(Number);
     if (!Number.isInteger(si) || !Number.isInteger(sn) || sn < 1 || si < 0 || si >= sn) throw refuse(usage('--shard must look like i/n with 0 <= i < n'));
-    const result = await runCell(def, { out, limit, shard: { index: si, count: sn }, arms: one('--arms')?.split(',') ?? null, systemUrl: one('--system-url') ?? null, providerProxy: proxy, keyless,
+    const result = await runCell(def, { out, limit, shard: { index: si, count: sn }, arms: one('--arms')?.split(',') ?? null, systemUrl: one('--system-url') ?? null, providerProxy: proxy, ...upstream,
       maxAttempts: one('--max-attempts') ? Number(one('--max-attempts')) : undefined, frontier: !argv.includes('--no-frontier'),
       finishTimeoutS: one('--finish-timeout-s') ? Number(one('--finish-timeout-s')) : undefined, probeTimeoutMs: one('--probe-timeout-s') ? Number(one('--probe-timeout-s')) * 1000 : undefined,
       reanswerInvalidBefore: one('--reanswer-invalid-before') ?? null, reanswerOutcomes: reanswerOutcomes(one('--reanswer-outcomes')), freshBefore: one('--fresh-before') ?? null });
