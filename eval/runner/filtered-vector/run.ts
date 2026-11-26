@@ -11,6 +11,10 @@
  * search. Raw rows go to JSONL under --out, held per cell until the cell finishes; recount.ts computes every number from
  * them. A cell already in cells-done.jsonl is skipped, so a stopped run resumes.
  *
+ * --engine pglite runs the same grid on gbrain's PGLite engine in --data-dir: one database, with each arm's searchVector
+ * (from its own gbrain tree) called on the same engine instance, and cold searches close and reopen the engine after
+ * dropping the page cache.
+ *
  * Corpus L (--corpus latent) is gbrain's latent generator and calls no provider. Corpus W (--corpus wiki --corpus-dir D)
  * reads D/pages.tsv, D/chunks.txt and D/vectors.f32 (embed-wiki.ts); query vectors it lacks are embedded with voyage-4
  * through the budget ledger (--budget-usd), and cached in D.
@@ -23,7 +27,8 @@ delete process.env.GBRAIN_SOURCE_BOOST;
 delete process.env.GBRAIN_SEARCH_EXCLUDE;
 
 import { execFileSync } from 'node:child_process';
-import { appendFileSync, closeSync, existsSync, mkdirSync, openSync, readFileSync, readSync, statSync, writeFileSync } from 'node:fs';
+import { appendFileSync, closeSync, existsSync, mkdirSync, openSync, readFileSync, readSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { cpus, totalmem } from 'node:os';
 import { join, resolve } from 'node:path';
 import { randomBytes } from 'node:crypto';
@@ -47,7 +52,9 @@ const has = (name: string) => process.argv.includes('--' + name);
 
 const CONTROL = resolve(flag('control'));
 const TREATMENT = resolve(flag('treatment'));
-const ADMIN_URL = flag('pg-url');
+const ENGINE = flag('engine', 'postgres') as 'postgres' | 'pglite';
+const DATA_DIR = ENGINE === 'pglite' ? resolve(flag('data-dir')) : '';
+const ADMIN_URL = ENGINE === 'postgres' ? flag('pg-url') : '';
 const CONTAINER = flag('pg-container', 'fv-pg');
 const LABEL = flag('label');
 const CORPUS = flag('corpus', 'latent') as 'latent' | 'wiki';
@@ -105,10 +112,10 @@ type Arm = (typeof ARMS)[number];
 const trees: Record<Arm, string> = { C: CONTROL, T: TREATMENT };
 const mods: Record<Arm, { Engine: Any }> = {} as Any;
 for (const arm of ARMS) {
-  const engineMod = await import(join(trees[arm], 'src/core/postgres-engine.ts'));
+  const engineMod = await import(join(trees[arm], ENGINE === 'pglite' ? 'src/core/pglite-engine.ts' : 'src/core/postgres-engine.ts'));
   const gateway = await import(join(trees[arm], 'src/core/ai/gateway.ts'));
   gateway.configureGateway({ embedding_model: 'openai:text-embedding-3-large', embedding_dimensions: DIMS, env: { OPENAI_API_KEY: 'bench-stub-no-network' } });
-  mods[arm] = { Engine: engineMod.PostgresEngine };
+  mods[arm] = { Engine: ENGINE === 'pglite' ? engineMod.PGLiteEngine : engineMod.PostgresEngine };
 }
 const latent: Any = await import(join(CONTROL, 'scripts/bench/hnsw-latent-corpus.ts'));
 const vectorStatement: Any = await import(join(CONTROL, 'src/core/search/vector-statement.ts'));
@@ -162,13 +169,43 @@ if (boosted) throw new Error('slug ' + boosted + ' matches a source boost or har
 const manifestPath = join(OUT, 'manifest.json');
 const prior = existsSync(manifestPath) ? JSON.parse(readFileSync(manifestPath, 'utf8')) : null;
 const dbName: string = prior?.db ?? 'fv_' + CORPUS + '_' + CHUNKS + '_' + randomBytes(4).toString('hex');
-const url = new URL(ADMIN_URL);
+const url = new URL(ADMIN_URL || 'postgresql://unused/');
 url.pathname = '/' + dbName;
-const admin = postgres(ADMIN_URL, { max: 1, prepare: false, onnotice: () => {} });
+const admin = ENGINE === 'postgres' ? postgres(ADMIN_URL, { max: 1, prepare: false, onnotice: () => {} }) : null;
 
 /** Per-attempt records: kinds always, and, while capture is set, the attempt's enable_material and its EXPLAIN ANALYZE. */
 let capture: null | { cell: string; arm: Arm; q: number; attempts: Any[] } = null;
 const attemptLog: Record<Arm, AttemptKind[]> = { C: [], T: [] };
+/** The vector attempt hook shared by both engines: classify, and under capture read the setting and EXPLAIN ANALYZE first. */
+async function seeAttempt(arm: Arm, sql: string, bound: unknown, run: (sql: string, bound?: unknown) => Promise<Any[]>): Promise<void> {
+  if (!sql.includes('candidate_pool') || sql.trimStart().startsWith('EXPLAIN')) return;
+  const kind = attemptKind(sql);
+  attemptLog[arm].push(kind);
+  if (!capture) return;
+  const [setting] = await run("SELECT current_setting('enable_material') AS enable_material");
+  const [row] = await run('EXPLAIN (ANALYZE, BUFFERS, SETTINGS, FORMAT JSON) ' + sql, bound);
+  const plan = row?.['QUERY PLAN'];
+  capture.attempts.push({ attempt: capture.attempts.length, kind, sql_sha256: sha256(sql), enable_material: setting?.enable_material, plan: Array.isArray(plan) ? plan[0] : typeof plan === 'string' ? JSON.parse(plan)[0] : plan });
+}
+
+/** PGLite runs every vector attempt in this.db.transaction(tx => tx.query(...)); one engine serves both arms. */
+let pgliteArm: Arm = 'C';
+function instrumentPglite(engine: Any): Any {
+  const db = engine.db;
+  const original = db.transaction.bind(db);
+  db.transaction = (fn: Any, ...rest: unknown[]) => original((tx: Any) => fn(new Proxy(tx, {
+    get(target, key) {
+      const value = Reflect.get(target, key);
+      if (key !== 'query') return typeof value === 'function' ? value.bind(target) : value;
+      return async (sql: string, bound?: unknown[], ...more: unknown[]) => {
+        await seeAttempt(pgliteArm, sql, bound, async (q, b) => (await target.query(q, b ?? [])).rows);
+        return target.query(sql, bound, ...more);
+      };
+    },
+  })), ...rest);
+  return engine;
+}
+
 function instrument(engine: Any, arm: Arm): Any {
   const scoped = engine.withScopedReadTransaction;
   if (typeof scoped !== 'function') throw new Error('gbrain at the pin has no withScopedReadTransaction; the harness cannot see vector attempts');
@@ -177,16 +214,7 @@ function instrument(engine: Any, arm: Arm): Any {
       get(target, key) {
         if (key !== 'unsafe') return Reflect.get(target, key);
         return async (sql: string, bound: unknown[], ...rest: unknown[]) => {
-          if (sql.includes('candidate_pool') && !sql.trimStart().startsWith('EXPLAIN')) {
-            const kind = attemptKind(sql);
-            attemptLog[arm].push(kind);
-            if (capture) {
-              const [setting] = await target.unsafe("SELECT current_setting('enable_material') AS enable_material");
-              const [row] = await target.unsafe('EXPLAIN (ANALYZE, BUFFERS, SETTINGS, FORMAT JSON) ' + sql, bound);
-              const plan = row?.['QUERY PLAN'];
-              capture.attempts.push({ attempt: capture.attempts.length, kind, sql_sha256: sha256(sql), enable_material: setting?.enable_material, plan: Array.isArray(plan) ? plan[0] : plan });
-            }
-          }
+          await seeAttempt(arm, sql, bound, async (q, b) => Array.from(await target.unsafe(q, b as Any)));
           return target.unsafe(sql, bound, ...rest);
         };
       },
@@ -197,83 +225,55 @@ function instrument(engine: Any, arm: Arm): Any {
 
 async function connect(arm: Arm): Promise<Any> {
   const engine = new mods[arm].Engine();
+  if (ENGINE === 'pglite') {
+    await engine.connect({ engine: 'pglite', database_path: DATA_DIR });
+    return instrumentPglite(engine);
+  }
   await engine.connect({ database_url: url.toString(), poolSize: 2 });
   return instrument(engine, arm);
 }
-
-const created = !prior;
-if (created) await admin.unsafe('CREATE DATABASE ' + dbName);
-let engines: Record<Arm, Any> = { C: await connect('C'), T: await connect('T') };
-const control = () => engines.C;
-
-async function copyPages(): Promise<void> {
-  const sql = postgres(url.toString(), { max: 1, prepare: false, onnotice: () => {} });
-  try {
-    const copy = await sql.unsafe('COPY pages (id, slug, source_id, type, title, compiled_truth, frontmatter, knowledge_revision, text_projection_revision, chunker_version) FROM STDIN').writable();
-    const finished = new Promise<void>((res, rej) => { copy.on('finish', res); copy.on('error', rej); });
-    let buf = '';
-    for (let p = 0; p < N; p++) {
-      buf += (p + 1) + '\t' + slugs[p] + '\tfv-s50\tnote\tPage ' + p + '\tSynthetic page ' + p + '.\t{}\t00000000-0000-4000-8000-000000000001\t00000000-0000-4000-8000-000000000001\t4\n';
-      if (buf.length > 1 << 20) { if (!copy.write(buf)) await new Promise(r => copy.once('drain', r)); buf = ''; }
-    }
-    copy.write(buf);
-    copy.end();
-    await finished;
-    await sql.unsafe("SELECT setval(pg_get_serial_sequence('pages', 'id'), " + N + ')');
-  } finally { await sql.end(); }
+async function connectAll(): Promise<Record<Arm, Any>> {
+  if (ENGINE === 'pglite') { const one = await connect('C'); return { C: one, T: one }; }
+  return { C: await connect('C'), T: await connect('T') };
+}
+async function disconnectAll(): Promise<void> {
+  await engines.C.disconnect();
+  if (engines.T !== engines.C) await engines.T.disconnect();
 }
 
-const LOAD_SETTINGS = { synchronous_commit: 'off', max_wal_size: "'32GB'", checkpoint_timeout: "'30min'" };
-if (created) {
-  const t0 = performance.now();
-  for (const [k, v] of Object.entries(LOAD_SETTINGS)) await admin.unsafe('ALTER SYSTEM SET ' + k + ' = ' + v);
-  await admin.unsafe('SELECT pg_reload_conf()');
-  await control().initSchema();
-  await control().executeRaw('DROP INDEX IF EXISTS idx_chunks_embedding');
-  await control().executeRaw('INSERT INTO sources (id, name) VALUES ' + SOURCES.map(s => "('" + s + "', '" + s + "')").join(', ') + ' ON CONFLICT DO NOTHING');
-  for (const t of ['content_chunks', 'pages', 'sources']) await control().executeRaw('ALTER TABLE ' + t + ' SET (autovacuum_enabled = off, toast.autovacuum_enabled = off)');
-  await copyPages();
-  log('pages: ' + N + '; streaming ' + CHUNKS + ' chunks with ' + WORKERS + ' workers');
-  await latent.loadLatentCorpus({ params, plan, basis, queries: [], url: url.toString(), model: MODEL, workers: WORKERS, log,
-    ...(wikiOffsets ? { file: { dir: CORPUS_DIR, offsets: wikiOffsets.buffer as SharedArrayBuffer } } : {}) });
-  const loadSeconds = (performance.now() - t0) / 1000;
-  const t1 = performance.now();
-  const buildSql = vectorIndex.chunkEmbeddingIndexSql(DIMS);
-  const mwm = Math.max(1, Math.floor(totalmem() / 4 / 2 ** 30)) + 'GB';
-  const sql2 = postgres(url.toString(), { max: 1, prepare: false, onnotice: () => {} });
+const created = !prior;
+if (created && admin) await admin.unsafe('CREATE DATABASE ' + dbName);
+if (created && ENGINE === 'pglite') rmSync(DATA_DIR, { recursive: true, force: true });
+let engines: Record<Arm, Any> = await connectAll();
+const control = () => engines.C;
+
+/** Raw SQL outside any engine helper: Postgres through a short-lived connection, PGLite through the engine's db. */
+async function withRaw<T>(fn: (q: (sql: string, params?: unknown[]) => Promise<Any[]>, copy: (sql: string, text: string) => Promise<void>, tx: <R>(body: (q: (sql: string) => Promise<Any[]>) => Promise<R>) => Promise<R>) => Promise<T>): Promise<T> {
+  if (ENGINE === 'pglite') {
+    const db = control().db;
+    return fn(async (q, p) => (await db.query(q, p ?? [])).rows, async (q, text) => { await db.query(q.replace('FROM STDIN', "FROM '/dev/blob'"), [], { blob: new Blob([text]) }); },
+      body => db.transaction((t: Any) => body(async (q: string) => (await t.query(q)).rows)));
+  }
+  const sql = postgres(url.toString(), { max: 1, prepare: false, onnotice: () => {} });
   try {
-    await sql2.unsafe("SET maintenance_work_mem = '" + mwm + "'");
-    await sql2.unsafe('SET max_parallel_maintenance_workers = ' + Math.max(0, cpus().length - 1));
-    await sql2.unsafe('SET statement_timeout = 0');
-    await sql2.unsafe(buildSql);
-  } finally { await sql2.end(); }
-  const buildSeconds = (performance.now() - t1) / 1000;
-  for (const t of ['content_chunks', 'pages', 'sources']) await control().executeRaw('VACUUM ANALYZE ' + t);
-  await projectionStats.refreshProjectionStatistics(control());
-  for (const k of Object.keys(LOAD_SETTINGS)) await admin.unsafe('ALTER SYSTEM RESET ' + k);
-  await admin.unsafe('SELECT pg_reload_conf()');
-  await admin.unsafe('CHECKPOINT');
-  const [boostConfig] = await control().executeRaw("SELECT value FROM config WHERE key = 'search.source_boosts'");
-  if (boostConfig) throw new Error('the brain sets search.source_boosts, so the oracle would not rank by pure cosine');
-  const [env] = await control().executeRaw("SELECT version() AS server, current_setting('server_version_num') AS server_num," +
-    " (SELECT extversion FROM pg_extension WHERE extname = 'vector') AS pgvector," +
-    " current_setting('shared_buffers') AS shared_buffers, current_setting('effective_cache_size') AS effective_cache_size," +
-    " current_setting('work_mem') AS work_mem, current_setting('random_page_cost') AS random_page_cost," +
-    " current_setting('effective_io_concurrency') AS effective_io_concurrency, current_setting('synchronous_commit') AS synchronous_commit," +
-    " current_setting('max_parallel_workers_per_gather') AS max_parallel_workers_per_gather, current_setting('jit') AS jit," +
-    " pg_relation_size('idx_chunks_embedding')::float8 AS index_bytes, (SELECT count(*) FROM content_chunks)::int AS chunks, (SELECT count(*) FROM pages)::int AS pages");
-  if (Number(env.chunks) !== CHUNKS || Number(env.pages) !== N) throw new Error('loaded ' + env.chunks + ' chunks and ' + env.pages + ' pages, expected ' + CHUNKS + ' and ' + N);
-  const gbrainCommit = execFileSync('git', ['-C', CONTROL, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
-  let harnessCommit = '';
-  try { harnessCommit = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(); } catch {}
-  const corpusFiles = CORPUS === 'wiki' ? Object.fromEntries(['pages.tsv', 'chunks.txt', 'vectors.f32'].map(f => [f, execFileSync('sha256sum', [join(CORPUS_DIR, f)], { encoding: 'utf8' }).split(' ')[0]])) : null;
-  writeFileSync(manifestPath, JSON.stringify({
-    db: dbName, label: LABEL, engine: 'postgres', image: IMAGE, corpus: CORPUS, corpus_files: corpusFiles, chunks: CHUNKS, dims: DIMS, seed: SEED, attr_seed: ATTR_SEED, query_seed: QUERY_SEED,
-    latent: CORPUS === 'latent' ? params : null, pages: N, gbrain_commit: gbrainCommit, harness_commit: harnessCommit, arm_files: armFiles, index_sql: buildSql,
-    load_seconds: loadSeconds, index_build_seconds: buildSeconds, maintenance_work_mem: mwm, env, machine: { cpus: cpus().length, mem_gb: Math.round(totalmem() / 2 ** 30) },
-    boost_map: boostMap, hard_excludes: hardExcludes, queries: QUERIES, repeats: REPEATS, capture: CAPTURE, started: new Date().toISOString(),
-  }, null, 2));
-  log('loaded in ' + loadSeconds.toFixed(0) + ' s, index built in ' + buildSeconds.toFixed(0) + ' s');
+    return await fn(async (q, p) => Array.from(await sql.unsafe(q, p as Any)), async (q, text) => {
+      const copy = await sql.unsafe(q).writable();
+      const finished = new Promise<void>((res, rej) => { copy.on('finish', res); copy.on('error', rej); });
+      for (let i = 0; i < text.length; i += 1 << 20) if (!copy.write(text.slice(i, i + (1 << 20)))) await new Promise(r => copy.once('drain', r));
+      copy.end();
+      await finished;
+    }, body => sql.begin((t: Any) => body(async (q: string) => Array.from(await t.unsafe(q)))));
+  } finally { await sql.end(); }
+}
+const copyEscape = (text: string) => text.replace(/\\/g, '\\\\').replace(/[\t\r\n]/g, ' ');
+
+async function copyPages(): Promise<void> {
+  const rows: string[] = [];
+  for (let p = 0; p < N; p++) rows.push((p + 1) + '\t' + slugs[p] + '\tfv-s50\tnote\tPage ' + p + '\tSynthetic page ' + p + '.\t{}\t00000000-0000-4000-8000-000000000001\t00000000-0000-4000-8000-000000000001\t4\n');
+  await withRaw(async (q, copy) => {
+    await copy('COPY pages (id, slug, source_id, type, title, compiled_truth, frontmatter, knowledge_revision, text_projection_revision, chunker_version) FROM STDIN', rows.join(''));
+    await q("SELECT setval(pg_get_serial_sequence('pages', 'id'), " + N + ')');
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -292,6 +292,88 @@ function chunkVector(page: number, chunk: number): Float32Array {
   readSync(vectorFd!, buf, 0, buf.length, (plan.chunkStart[page]! + chunk) * DIMS * 4);
   return new Float32Array(buf.buffer, buf.byteOffset, DIMS).slice();
 }
+function pageVectors(page: number): Float32Array[] {
+  const count = plan.chunkCount[page]!;
+  if (!gen) return Array.from({ length: count }, (_, c) => chunkVector(page, c));
+  const out: Float32Array[] = [];
+  gen.page(page, count, (_ci: number, v: Float32Array) => { out.push(Float32Array.from(v)); });
+  return out;
+}
+
+/** PGLite has no worker COPY loader: chunks go in through text COPY in batches, vectors from the generator or vectors.f32. */
+async function copyChunksPglite(): Promise<void> {
+  const text = CORPUS === 'wiki' ? readFileSync(join(CORPUS_DIR, 'chunks.txt')) : null;
+  let batch: string[] = [];
+  const flush = async () => { if (!batch.length) return; const body = batch.join(''); batch = []; await withRaw((_q, copy) => copy('COPY content_chunks (page_id, chunk_index, chunk_text, chunk_source, model, embedded_text_hash, embedding) FROM STDIN', body)); };
+  for (let p = 0; p < N; p++) {
+    const vectors = pageVectors(p);
+    for (let c = 0; c < plan.chunkCount[p]!; c++) {
+      const value = text ? text.toString('utf8', wikiOffsets![plan.chunkStart[p]! + c]!, wikiOffsets![plan.chunkStart[p]! + c + 1]! - 1) : latent.chunkText(params.seed, p, c, plan.topic[p]!) as string;
+      batch.push((p + 1) + '\t' + c + '\t' + copyEscape(value) + '\tcompiled_truth\t' + MODEL + '\t' + createHash('md5').update(value).digest('hex') + '\t[' + Array.from(vectors[c]!).join(',') + ']\n');
+    }
+    if (batch.length >= 2000) await flush();
+    if (p % 5000 === 0) log('pglite chunks: page ' + p + ' of ' + N);
+  }
+  await flush();
+}
+
+const LOAD_SETTINGS = { synchronous_commit: 'off', max_wal_size: "'32GB'", checkpoint_timeout: "'30min'" };
+if (created) {
+  const t0 = performance.now();
+  if (admin) {
+    for (const [k, v] of Object.entries(LOAD_SETTINGS)) await admin.unsafe('ALTER SYSTEM SET ' + k + ' = ' + v);
+    await admin.unsafe('SELECT pg_reload_conf()');
+  }
+  await control().initSchema();
+  await control().executeRaw('DROP INDEX IF EXISTS idx_chunks_embedding');
+  await control().executeRaw('INSERT INTO sources (id, name) VALUES ' + SOURCES.map(s => "('" + s + "', '" + s + "')").join(', ') + ' ON CONFLICT DO NOTHING');
+  for (const t of ['content_chunks', 'pages', 'sources']) await control().executeRaw('ALTER TABLE ' + t + ' SET (autovacuum_enabled = off, toast.autovacuum_enabled = off)');
+  await copyPages();
+  log('pages: ' + N + '; streaming ' + CHUNKS + ' chunks with ' + WORKERS + ' workers');
+  if (ENGINE === 'pglite') await copyChunksPglite();
+  else await latent.loadLatentCorpus({ params, plan, basis, queries: [], url: url.toString(), model: MODEL, workers: WORKERS, log,
+    ...(wikiOffsets ? { file: { dir: CORPUS_DIR, offsets: wikiOffsets.buffer as SharedArrayBuffer } } : {}) });
+  const loadSeconds = (performance.now() - t0) / 1000;
+  const t1 = performance.now();
+  const buildSql = vectorIndex.chunkEmbeddingIndexSql(DIMS);
+  const mwm = ENGINE === 'pglite' ? flag('pglite-maintenance-work-mem', '1GB') : Math.max(1, Math.floor(totalmem() / 4 / 2 ** 30)) + 'GB';
+  await withRaw(async q => {
+    await q("SET maintenance_work_mem = '" + mwm + "'");
+    if (ENGINE === 'postgres') await q('SET max_parallel_maintenance_workers = ' + Math.max(0, cpus().length - 1));
+    await q('SET statement_timeout = 0');
+    await q(buildSql);
+  });
+  const buildSeconds = (performance.now() - t1) / 1000;
+  for (const t of ['content_chunks', 'pages', 'sources']) await control().executeRaw('VACUUM ANALYZE ' + t);
+  await projectionStats.refreshProjectionStatistics(control());
+  if (admin) {
+    for (const k of Object.keys(LOAD_SETTINGS)) await admin.unsafe('ALTER SYSTEM RESET ' + k);
+    await admin.unsafe('SELECT pg_reload_conf()');
+    await admin.unsafe('CHECKPOINT');
+  } else await control().executeRaw('CHECKPOINT');
+  const [boostConfig] = await control().executeRaw("SELECT value FROM config WHERE key = 'search.source_boosts'");
+  if (boostConfig) throw new Error('the brain sets search.source_boosts, so the oracle would not rank by pure cosine');
+  const [env] = await control().executeRaw("SELECT version() AS server, current_setting('server_version_num') AS server_num," +
+    " (SELECT extversion FROM pg_extension WHERE extname = 'vector') AS pgvector," +
+    " current_setting('shared_buffers') AS shared_buffers, current_setting('effective_cache_size') AS effective_cache_size," +
+    " current_setting('work_mem') AS work_mem, current_setting('random_page_cost') AS random_page_cost," +
+    " current_setting('effective_io_concurrency') AS effective_io_concurrency, current_setting('synchronous_commit') AS synchronous_commit," +
+    " current_setting('max_parallel_workers_per_gather') AS max_parallel_workers_per_gather, current_setting('jit') AS jit," +
+    " pg_relation_size('idx_chunks_embedding')::float8 AS index_bytes, (SELECT count(*) FROM content_chunks)::int AS chunks, (SELECT count(*) FROM pages)::int AS pages");
+  if (Number(env.chunks) !== CHUNKS || Number(env.pages) !== N) throw new Error('loaded ' + env.chunks + ' chunks and ' + env.pages + ' pages, expected ' + CHUNKS + ' and ' + N);
+  const gbrainCommit = execFileSync('git', ['-C', CONTROL, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
+  let harnessCommit = '';
+  try { harnessCommit = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(); } catch {}
+  const corpusFiles = CORPUS === 'wiki' ? Object.fromEntries(['pages.tsv', 'chunks.txt', 'vectors.f32'].map(f => [f, execFileSync('sha256sum', [join(CORPUS_DIR, f)], { encoding: 'utf8' }).split(' ')[0]])) : null;
+  writeFileSync(manifestPath, JSON.stringify({
+    db: ENGINE === 'pglite' ? DATA_DIR : dbName, label: LABEL, engine: ENGINE, image: IMAGE, corpus: CORPUS, corpus_files: corpusFiles, chunks: CHUNKS, dims: DIMS, seed: SEED, attr_seed: ATTR_SEED, query_seed: QUERY_SEED,
+    latent: CORPUS === 'latent' ? params : null, pages: N, gbrain_commit: gbrainCommit, harness_commit: harnessCommit, arm_files: armFiles, index_sql: buildSql,
+    load_seconds: loadSeconds, index_build_seconds: buildSeconds, maintenance_work_mem: mwm, env, machine: { cpus: cpus().length, mem_gb: Math.round(totalmem() / 2 ** 30) },
+    boost_map: boostMap, hard_excludes: hardExcludes, queries: QUERIES, repeats: REPEATS, capture: CAPTURE, started: new Date().toISOString(),
+  }, null, 2));
+  log('loaded in ' + loadSeconds.toFixed(0) + ' s, index built in ' + buildSeconds.toFixed(0) + ' s');
+}
+
 
 /** Each page's locality-sensitive bucket: signs of the first chunk's inner products with seeded projections. */
 async function pageBuckets(): Promise<Int32Array> {
@@ -320,27 +402,19 @@ function attributesFor(mode: Mode): PageAttributes[] {
 
 async function applyAttributes(mode: Mode): Promise<void> {
   const attrs = attributesFor(mode);
-  const sql = postgres(url.toString(), { max: 1, prepare: false, onnotice: () => {} });
-  try {
-    await sql.unsafe('CREATE TEMP TABLE fv_attr (id int, type text, tag text, date timestamptz, source text, private boolean)');
-    const copy = await sql.unsafe('COPY fv_attr FROM STDIN').writable();
-    const finished = new Promise<void>((res, rej) => { copy.on('finish', res); copy.on('error', rej); });
-    let buf = '';
-    for (let p = 0; p < attrs.length; p++) {
-      const a = attrs[p]!;
-      buf += (p + 1) + '\t' + a.type + '\t' + a.tag + '\t' + a.date + '\t' + a.source + '\t' + (a.private ? 't' : 'f') + '\n';
-      if (buf.length > 1 << 20) { if (!copy.write(buf)) await new Promise(r => copy.once('drain', r)); buf = ''; }
-    }
-    copy.write(buf);
-    copy.end();
-    await finished;
-    await sql.begin(async (tx: Any) => {
-      await tx.unsafe('SET LOCAL session_replication_role = replica');
-      await tx.unsafe("UPDATE pages p SET type = a.type, source_id = a.source, effective_date = a.date, effective_date_source = 'frontmatter'," +
+  const rows = attrs.map((a, p) => (p + 1) + '\t' + a.type + '\t' + a.tag + '\t' + a.date + '\t' + a.source + '\t' + (a.private ? 't' : 'f') + '\n');
+  await withRaw(async (q, copy, tx) => {
+    await q('DROP TABLE IF EXISTS fv_attr');
+    await q('CREATE TEMP TABLE fv_attr (id int, type text, tag text, date timestamptz, source text, private boolean)');
+    await copy('COPY fv_attr FROM STDIN', rows.join(''));
+    await tx(async t => {
+      await t('SET LOCAL session_replication_role = replica');
+      await t("UPDATE pages p SET type = a.type, source_id = a.source, effective_date = a.date, effective_date_source = 'frontmatter'," +
         " frontmatter = jsonb_build_object('fv_tag', a.tag, 'fv_mode', '" + mode + "') || CASE WHEN a.private THEN '{\"visibility\":\"private\"}'::jsonb ELSE '{}'::jsonb END" +
         ' FROM fv_attr a WHERE p.id = a.id');
     });
-  } finally { await sql.end(); }
+    await q('DROP TABLE fv_attr');
+  });
   await control().executeRaw('VACUUM ANALYZE pages');
   await projectionStats.refreshProjectionStatistics(control());
   const [check] = await control().executeRaw("SELECT count(*) FILTER (WHERE frontmatter->>'fv_mode' = '" + mode + "')::int AS n," +
@@ -447,7 +521,7 @@ function searchOpts(f: FilterSpec, caller: Caller, limit: number): Any {
 
 /** gbrain's exactSql for the same statement, its candidate window unbounded (null bound), JIT off, own transaction. */
 async function exact(q: Query, opts: Any, k: number): Promise<{ pages: number[]; scores: number[]; ms: number }> {
-  const stmt = vectorStatement.buildVectorSearchStatement({ dialect: 'postgres', embedding: q.vector, limit: k, offset: 0, opts });
+  const stmt = vectorStatement.buildVectorSearchStatement({ dialect: ENGINE, embedding: q.vector, limit: k, offset: 0, opts });
   const t0 = performance.now();
   const rows: Any[] = await control().transaction(async (tx: Any) => {
     await tx.executeRaw("SET LOCAL statement_timeout = '1800s'");
@@ -476,7 +550,9 @@ async function search(arm: Arm, q: Query, opts: Any): Promise<SearchRow> {
   const before = attemptLog[arm].length;
   const t0 = performance.now();
   try {
-    const hits: Any[] = await engines[arm].searchVector(q.vector, { ...opts, onVectorPoolMeta: (m: Any) => { if (m.incomplete) incomplete = true; } });
+    const callOpts = { ...opts, onVectorPoolMeta: (m: Any) => { if (m.incomplete) incomplete = true; } };
+    pgliteArm = arm;
+    const hits: Any[] = ENGINE === 'pglite' ? await mods[arm].Engine.prototype.searchVector.call(engines.C, q.vector, callOpts) : await engines[arm].searchVector(q.vector, callOpts);
     const ms = performance.now() - t0;
     const attempts = attemptLog[arm].splice(before);
     return { ms, pages: hits.map(h => Number(h.page_id)), attempts, joined: attempts.includes('joined'), incomplete };
@@ -551,7 +627,7 @@ function oracleRows(cell: string, mode: Mode, caller: Caller, f: FilterSpec, que
 function describeCell(id: string, mode: Mode, caller: Caller, f: FilterSpec, limit: number, cache: 'warm' | 'cold', queries: Query[]) {
   const attrs = attributesFor(mode);
   return {
-    cell: id, label: LABEL, engine: 'postgres', corpus: CORPUS, chunks: CHUNKS, pages: N, mode, caller, filter: f.id, kind: f.kind,
+    cell: id, label: LABEL, engine: ENGINE, corpus: CORPUS, chunks: CHUNKS, pages: N, mode, caller, filter: f.id, kind: f.kind,
     affected: f.affected, share_nominal: f.share, share_measured: attrs.filter(a => f.matches(a)).length / N,
     eligible_pages: attrs.filter(a => f.matches(a) && callerSees(caller, a)).length, limit, cache, queries: queries.length,
     query_set: queries[0]?.set ?? 'none', inside: queries.filter(q => q.inside === true).length, query_seed: QUERY_SEED,
@@ -586,7 +662,7 @@ async function runCell(id: string, mode: Mode, caller: Caller, f: FilterSpec, li
     for (const q of queries) {
       for (const arm of order(q.q, 0)) {
         await restartCold();
-        engines = { C: await connect('C'), T: await connect('T') };
+        engines = await connectAll();
         stage('searches.jsonl', { cell: id, arm, q: q.q, rep: 0, ...(await search(arm, q, opts)) });
       }
     }
@@ -597,10 +673,11 @@ async function runCell(id: string, mode: Mode, caller: Caller, f: FilterSpec, li
 
 function sh(cmd: string, args: string[]) { execFileSync(cmd, args, { stdio: ['ignore', 'ignore', 'inherit'] }); }
 async function restartCold(): Promise<void> {
-  for (const arm of ARMS) await engines[arm].disconnect();
+  await disconnectAll();
+  if (ENGINE === 'pglite') { sh('sudo', ['sh', '-c', 'sync; echo 3 > /proc/sys/vm/drop_caches']); return; }
   sh('docker', ['restart', CONTAINER]);
   for (let i = 0; ; i++) {
-    try { execFileSync('docker', ['exec', CONTAINER, 'pg_isready', '-q', '-U', 'postgres'], { stdio: 'ignore' }); await admin.unsafe('SELECT 1'); break; }
+    try { execFileSync('docker', ['exec', CONTAINER, 'pg_isready', '-q', '-U', 'postgres'], { stdio: 'ignore' }); await admin!.unsafe('SELECT 1'); break; }
     catch { if (i > 240) throw new Error('Postgres did not come back'); await new Promise(r => setTimeout(r, 500)); }
   }
   sh('sudo', ['sh', '-c', 'sync; echo 3 > /proc/sys/vm/drop_caches']);
@@ -629,14 +706,16 @@ for (const mode of RUN_MODES) {
       const queries = independent.slice(0, COLD_QUERIES);
       await runCell(id, mode, 'untrusted', f, 20, 'cold', queries, await exactAll(queries, f, 'untrusted', 20));
     }
-    engines = { C: await connect('C'), T: await connect('T') };
+    await disconnectAll();
+    engines = await connectAll();
   }
 }
 
-for (const arm of ARMS) await engines[arm].disconnect();
+await disconnectAll();
 const paidRun = paid as null | { run: Any; guard: Any };
 if (paidRun) { paidRun.guard.uninstall(); append('paid-queries.jsonl', { at: new Date().toISOString(), summary: paidRun.run.close() }); }
 if (vectorFd !== null) closeSync(vectorFd);
-if (!KEEP) await admin.unsafe('DROP DATABASE IF EXISTS ' + dbName + ' WITH (FORCE)');
-await admin.end();
+if (!KEEP && admin) await admin.unsafe('DROP DATABASE IF EXISTS ' + dbName + ' WITH (FORCE)');
+if (!KEEP && ENGINE === 'pglite') rmSync(DATA_DIR, { recursive: true, force: true });
+await admin?.end();
 log('finished');
