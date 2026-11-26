@@ -362,6 +362,13 @@ Recorded after setup and the U1 pilots, before any counted cell.
 - **Step budgets.** Each step's `--budget-usd` is an operator setting inside its world's ledger cap, re-split after
   the pilots so a step can hold its in-flight reservations. The world caps are unchanged (tracking issue).
 
+### Interim look (2026-11-26)
+
+Taken once, as preregistered, when half A had finished on all six worlds for both gbrain arms and both frontier readers
+(`h4fix_analysis.py --look interim`, 10,000 resamples, seed 1, 60 tasks, none missing): z = 2.699 against the stop
+bound of 2.80, and conditional power is 0.9998 toward gain and 0.0283 toward harm, so neither futility condition holds.
+**Decision: continue.** Half B runs on every world. No other look is taken.
+
 ## Amendments
 
 ### 2026-11-25: launch gate met; section delivery counted where the setting fired; gap wording precedence
@@ -431,46 +438,3 @@ Made after the S3 pilots and before any counted cell, on the results branch.
 - **New worlds U1 to U6.** Six fresh, unseen seeds of the public generator `model-ladder-hard-v2` at `--scale large`
   with the frozen knobs. They are unseen but not sealed: anyone can regenerate a world from its seed, so the results
   page says so in its takeaways. Seeds are drawn on the seed owner's machine as for S3 to S8, never printed, and none
-  may equal N1 (20261141), N2 (20263151), any other fixed seed of this or earlier plans, or a test seed (101, 202, 303).
-  Each world's digest is recorded below before the world is generated. U1 and U2 carry every family; U3 to U6 carry H4
-  only, as S3/S4 and S5 to S8 did.
-- **Precondition (checked before any digest is recorded and again by `check-world` before any slot is built).** At
-  least 14 of a world's 20 H4 tasks (N1's count) must have a governing document whose body reaches 20,000 characters.
-  A seed that falls short is replaced by a fresh draw before its digest is recorded, and the replacements are reported
-  below as a count.
-- **Unchanged.** Arms, readers, judges, the judge check (already passed on N1), the one interim look at H4 half A, the
-  margins, the decision rows, the gap wording and the paid window. The money stays inside the window already granted,
-  re-split per world in the tracking issue, with no world's cap above its earlier one.
-- **Build.** No counted cell has run, so the run takes gbrain's newest release at launch, provided it carries GST-3786.
-  It is re-read right before the first slot build and recorded under "Recorded before cells", and freezes from the first
-  counted cell. At this amendment that is v0.60.775.0 (`f832b4928844f149fb08657797eaa6fd9daebd5a`), which carries
-  `9df317b1` and leaves section delivery unchanged.
-- **Spent with no counted result.** The sealed attempt's slot builds (including about a sixth of them rebuilt after
-  gbrain's one-hour embed timeout), oracle gates and S3 pilots. The tracking issue carries the amount. One `fs` pilot
-  cell (Opus 5.5) ended in a context overflow after an unbounded `grep` returned about 2.2 million characters; that is
-  a harness outcome of the `hard` tool limits and is reported as such.
-- **U1 to U6 minted (2026-11-26).** Drawn with `od` on the seed owner's machine into owner custody (mode 600, never
-  printed, never committed), from a temporary gbrain-evals checkout at harness commit
-  `08eaf81ce63197e080b8aa63847791d0d27ba698`, removed afterwards. Each world was built in memory only to record its
-  digest and check the precondition; no document was written. No seed matched a fixed, test or sibling seed. Five draws
-  failed the generator's own invariants and were replaced by the next seed in steps of 1,000; seven draws fell short of
-  the precondition (10 to 13 long H4 tasks) and were replaced by fresh draws. Knob digest
-  `37a16085e0fbf2e92072b2e7cf00468d43451dd4fb35bb1232ebbf79d3027434` (the freeze).
-
-  | World | 50k world digest | Documents | Tasks | H4 tasks with a long governing page | H4 tasks with `+long` | H4 items (`+long`) |
-  |---|---|---|---|---|---|---|
-  | U1 | `7d4d8e5332a943386c52412fddb53d4adebd94f9cc82a549ae6cad9b5b55ea56` | 56,248 | 100 | 17 | 18 | 76 (28) |
-  | U2 | `38de2aa3ff9d73de2eecb2ada8f32e90f77ebb672f3fb505b06e1a4e09b60fa6` | 55,778 | 100 | 14 | 14 | 71 (26) |
-  | U3 | `f8a0f3eedbe5643fd4abcc0b2cf2ff1862d328158d714db7aecf5479b5c58b9f` | 55,489 | 100 | 18 | 18 | 68 (37) |
-  | U4 | `68cde0d248bd46d6f279e5ee457043ac49319381ed3da781d4d6f34e8dd3ab9b` | 54,992 | 100 | 18 | 20 | 71 (37) |
-  | U5 | `2d36f25c5861852f342f079e0a0537f4dd7ac96cb65670706e434f7508518554` | 55,680 | 100 | 17 | 18 | 72 (30) |
-  | U6 | `70384a6e3c0369234bac99eb3e650ac50a8704e5a6962af5a3c3581624d79704` | 55,230 | 100 | 15 | 18 | 67 (29) |
-
-  The precondition selects worlds by how many long pages they hold, which the setting needs in order to fire; it
-  reads nothing about any arm's answers. The results page says the worlds were selected this way.
-
-## Disclosures
-
-gbrain is Garry Tan's own project. Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, which
-makes particle-1. Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of
-Y Combinator. Garry Tan runs Y Combinator.
