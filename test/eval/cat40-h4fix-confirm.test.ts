@@ -283,10 +283,16 @@ describe('particle-1 on this plan\'s worlds (the U digests recorded before gener
   });
   test('the ladder still refuses particle-1 on a Hard world no plan lists', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'h4fix-particle-'));
+    const keys = ['ANTHROPIC_API_KEY', 'OPENAI_API_KEY', 'PARTICLE_API_KEY', 'VOYAGE_API_KEY'] as const;
+    const saved = keys.map(k => process.env[k]);
+    for (const k of keys) delete process.env[k];
     try {
       const file = join(dir, 'world.json');
       writeFileSync(file, JSON.stringify(small));
       await expect(main(['--world', file, '--models', 'particle-1', '--judge', 'claude-opus-5-5', '--arms', 'fs', '--out', join(dir, 'out'), '--preflight'])).rejects.toThrow('particle-1 does not run on Hard worlds');
-    } finally { rmSync(dir, { recursive: true, force: true }); }
+    } finally {
+      keys.forEach((k, i) => { if (saved[i] !== undefined) process.env[k] = saved[i]; });
+      rmSync(dir, { recursive: true, force: true });
+    }
   }, 60_000);
 });
