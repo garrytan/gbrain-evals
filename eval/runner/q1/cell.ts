@@ -771,7 +771,16 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
   const week = weekScope(def, env, shard);
   const custody = !deps.corpus && needsCustody(def);
   if (custody) custodyGate(def, out, env, `q1 cell ${def.id}`);
-  mkdirSync(out, { recursive: true });
+  const staging = new Staging(out, def.id);
+  const modePath = join(staging.root, 'upstream-mode');
+  const mode = upstream.keyless ? 'keyless\n' : 'paid\n';
+  const priorMode = existsSync(modePath) ? readFileSync(modePath, 'utf8') : null;
+  if (priorMode !== null ? priorMode !== mode : readdirSync(staging.root).length > 0 || !!env.SHOOTOUT_RESTORED_REALIZATION) {
+    throw refuse({ code: 'RESUME_REFUSED', message: `${rel(staging.root)} has staged or restored work with a different or unknown upstream mode (${def.id})`,
+      why: 'answers and judgments may have been staged before the first receipt; a run can only reuse work recorded under its own upstream mode',
+      fix: { next: 'run', argv: [...FRONT, 'run', '--cell', def.id, '--out', '<a fresh directory>'] } });
+  }
+  if (priorMode === null) writeFileSync(modePath, mode, { flag: 'wx' });
   const unitConvs = week ? weeklyShardWorlds(def, shard) : !def.kept_units ? null : def.benchmark === 'bg1' || def.benchmark === 'bg1c' ? bg1KeptUnit(def, shard, deps.bg1Manifest) : keptUnit(def, shard, deps.rs1Manifest);
   const corpus = deps.corpus ?? loadCorpus(def.benchmark, undefined, unitConvs ? new Set(unitConvs) : devOnly(def) ?? undefined, { keyless: opts.keyless });
   const offWeek = weekCorpusProblems(def, corpus, week ? unitConvs! : undefined);
@@ -795,7 +804,6 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
     configs.set(a.id, { text, sha: sha256(text) });
   }
 
-  const staging = new Staging(out, def.id);
   const meter = metering(opts.providerProxy ?? null, staging, env);
   const sanitizer = new Sanitizer(corpus, `${def.id}|${def.ingest_replicate}`);
   const system = deps.system ?? systemFor(def, opts, sanitizer);

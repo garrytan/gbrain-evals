@@ -28,8 +28,8 @@ in aggregate.
 
 | Worlds (3 each, 64 questions per world) | claude-opus-5-5 right | claude-opus-5-5 $ per right answer | particle-1 right | particle-1 $ per right answer |
 |---|---:|---:|---:|---:|
-| Named subjects, about 200,000 tokens | 190/192 (0.990) | $0.024 | 180/192 (0.9375) | $0.004 |
-| Named subjects, about 1,000,000 tokens | 192/192 (1.000) | $0.034 | 180/192 (0.9375) | $0.006 |
+| Named subjects, 200,000-token target | 190/192 (0.990) | $0.024 | 180/192 (0.9375) | $0.004 |
+| Named subjects, 1,000,000-token target | 192/192 (1.000) | $0.034 | 180/192 (0.9375) | $0.006 |
 | Described subjects (alias worlds), about 185,000 tokens | 173/192 (0.901) | $0.076 | 171/192 (0.891) | $0.019 |
 
 Here each reader is the agent: it searches, reads and answers. Dollars are the agent's own model calls; judging is not
@@ -38,8 +38,12 @@ the alias worlds ran out of turns and counts as wrong.
 
 ## What the questions look like
 
-Each world is a made-up chat history between a person and an assistant, about 150 sessions, in which
-facts change: a job title is updated, a head office is corrected, a plan is called off, two people give conflicting
+Each world is a made-up chat history between a person and an assistant. The short and alias worlds have about 150
+sessions each; the 1,000,000-token worlds have about 750. The named-subject cohorts are labeled by their design targets
+of 200,000 and 1,000,000 tokens. Counting only the rendered turns with `cl100k_base`, the short worlds have about
+178,000–182,000 tokens, the long worlds 886,000–907,000, and the alias worlds 183,000–185,000.
+
+Facts change: a job title is updated, a head office is corrected, a plan is called off, two people give conflicting
 figures. Each world has 64 questions in eight kinds (the current value, a corrected value, a value repeated after it
 went stale, conflicting values, a withdrawn plan, the value on a date, what was known on a date, and the history of a
 value). A generator writes each world from a plan, so every answer is known before any system reads the chats.
@@ -186,8 +190,10 @@ its reading is not reported.
   (`shootout-cell.ts resume --from-campaign`, snapshot mode). Both resumes ran on committed code at `910f39156`.
   Commit `f9b0ead10` adds a regression test that a resume into a cell with answers asks none of them again, ingests
   nothing again and adds only the missing ids, and makes `runCell` refuse an output folder whose receipts were
-  written under the other upstream (a keyless rehearsal into a paid cell, or the reverse). Each committed answer file
-  holds one answer per question.
+  written under the other upstream (a keyless rehearsal into a paid cell, or the reverse). The runner also records
+  the upstream mode before staging and refuses staged or restored work with an unknown or incompatible mode, so an
+  interruption before the first receipt can't mix rehearsal and paid answers. Each committed answer file holds one
+  answer per question.
 - **System-internal models.** The extract-first server extracted with gpt-4.1-mini, as the changing-facts confirmation
   configured it, and the memory-bank server with its shipped gpt-4o-mini; gbrain's own extraction resolved to
   claude-haiku-5-5. None of them reads or judges.

@@ -589,6 +589,28 @@ describe('a resumed stage-2 cell re-asks nothing', () => {
     expect((await refused(run(counted2, { keyless: true, paidWindow: null })))?.code).toBe('RESUME_REFUSED');
     expect((await run(counted2, paid)).status).toBe('complete');
   }, 120_000);
+
+  test('a paid resume refuses staged rehearsal answers even when there is no receipt', async () => {
+    const out = join(scratch('stage2-interrupted-rehearsal'), 'out');
+    const first = reading();
+    await runCell(def, { out, keyless: true, stopAfterQuestions: 3, ...quiet }, { corpus, system: counted().fake, reader: first.reader, judge: first.judge });
+    const stage = join(out, 'runs', def.id);
+    const staged = [...new Bun.Glob('r/*/answers.ndjson').scanSync(stage)].sort().map(path => join(stage, path));
+    const before = staged.map(path => readFileSync(path, 'utf8'));
+    expect(before.join('').trim()).not.toBe('');
+    const receipt = join(out, 'cells', arm.cell_id, 'receipt.json');
+    rmSync(receipt);
+    const second = reading();
+    const { fake, n } = counted();
+    const resume = () => runCell(def, { out, ...paid, ...quiet, env: { ...process.env, SHOOTOUT_RESTORED_REALIZATION: 'real-test-stage2' } }, { corpus, system: fake, reader: second.reader, judge: second.judge });
+    expect((await refused(resume()))?.code).toBe('RESUME_REFUSED');
+    rmSync(join(stage, 'upstream-mode'));
+    expect((await refused(resume()))?.code).toBe('RESUME_REFUSED');
+    expect(second.asked).toEqual([]);
+    expect(n.ingests).toBe(0);
+    expect(existsSync(receipt)).toBe(false);
+    expect(staged.map(path => readFileSync(path, 'utf8'))).toEqual(before);
+  }, 120_000);
 });
 
 // ─── Split cells ─────────────────────────────────────────────────────
