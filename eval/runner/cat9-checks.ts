@@ -94,7 +94,12 @@ export type Cat9JsonOp = typeof JSON_OPS[number];
 /** Ops that compare against `value`; the rest take none. */
 const OPS_WITH_VALUE = new Set<string>(['eq', 'ne', 'gt', 'gte', 'lt', 'includes', 'excludes', 'all_match', 'some_match', 'length']);
 export const EXPECT_KEYS = ['exit', 'json', 'stdout_includes', 'stdout_excludes', 'stderr_excludes', 'output_includes', 'output_excludes', 'lines', 'datastore_absent'] as const;
-export interface Cat9JsonAssertion { path: string; op: Cat9JsonOp; value?: unknown }
+/**
+ * One assertion on stdout's JSON. `path` may list alternatives, for output whose shape differs by mode (gbrain's
+ * `sources add --json` puts `federated` at the top level in classic mode and under `config` in managed mode): the
+ * first path that holds a value is checked, and when none does the first path is reported as missing.
+ */
+export interface Cat9JsonAssertion { path: string | string[]; op: Cat9JsonOp; value?: unknown }
 
 export interface Cat9Expect {
   exit?: 'zero' | 'nonzero';
@@ -181,9 +186,11 @@ function same(a: unknown, b: unknown): boolean {
 
 /** One JSON assertion; returns a failure reason or null. */
 export function checkJsonAssertion(doc: unknown, a: Cat9JsonAssertion): string | null {
-  const got = jsonPath(doc, a.path);
+  const paths = Array.isArray(a.path) ? a.path : [a.path];
+  const path = paths.find(p => jsonPath(doc, p) !== undefined) ?? paths[0];
+  const got = jsonPath(doc, path);
   const show = (v: unknown) => { const s = JSON.stringify(v); return s === undefined ? 'undefined' : s.length > 160 ? `${s.slice(0, 160)}...` : s; };
-  const fail = (why: string) => `json ${a.path} ${a.op}${a.value === undefined ? '' : ` ${show(a.value)}`}: ${why} (got ${show(got)})`;
+  const fail = (why: string) => `json ${path} ${a.op}${a.value === undefined ? '' : ` ${show(a.value)}`}: ${why} (got ${show(got)})`;
   switch (a.op) {
     case 'eq': return same(got, a.value) ? null : fail('not equal');
     case 'ne': return got !== undefined && !same(got, a.value) ? null : fail('equal or missing');
@@ -231,7 +238,8 @@ export function validateExpect(e: unknown, where: string): string[] {
   if (x.json !== undefined) {
     if (!Array.isArray(x.json) || x.json.length === 0) out.push(`${where}: json must be a non-empty list`);
     else for (const a of x.json as Record<string, unknown>[]) {
-      if (typeof a?.path !== 'string') out.push(`${where}: json assertion needs a path`);
+      const pathOk = typeof a?.path === 'string' || (Array.isArray(a?.path) && a.path.length > 0 && a.path.every(p => typeof p === 'string'));
+      if (!pathOk) out.push(`${where}: json assertion needs a path (a string, or a non-empty list of alternative paths)`);
       if (!(JSON_OPS as readonly string[]).includes(String(a?.op))) out.push(`${where}: unknown json op ${JSON.stringify(a?.op)}`);
       else if (OPS_WITH_VALUE.has(String(a.op)) !== ('value' in a)) out.push(`${where}: json op ${a.op} ${OPS_WITH_VALUE.has(String(a.op)) ? 'needs' : 'takes no'} value`);
     }
