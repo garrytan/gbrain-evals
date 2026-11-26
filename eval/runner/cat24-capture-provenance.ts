@@ -193,6 +193,11 @@ export interface Cat24Options {
   simulateBrokenTrustGate?: boolean;
   /** Test hook: re-import with forceRechunk, bypassing the hash short-circuit. The dedup probe must then FAIL. */
   bypassDedupShortCircuit?: boolean;
+  /**
+   * Test seam: the content-import save throws gbrain's typed engine_capability_missing refusal, as the Rust engine at
+   * v0.60.774.0 does. The probes that re-import that page must then report engine_not_supported_by_runner, not fail.
+   */
+  simulateRefusedContentImport?: boolean;
   /** Write the receipt to <output>/receipt.json instead of eval/reports/<category>/receipt.json. */
   output?: string;
   /** The gbrain build under test; default the pinned dependency. */
@@ -313,6 +318,9 @@ export async function runCat24(options: Cat24Options = {}): Promise<Cat24RunResu
         'content-import', 'importFromContent (trusted library caller)', contentSlug,
         { source_kind: 'capture-cli', source_uri: 'file:///tmp/probe.md', ingested_via: 'capture-cli', ingested_at_null: false },
         async () => {
+          if (options.simulateRefusedContentImport) {
+            throw Object.assign(new Error("This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."), { code: 'engine_capability_missing' });
+          }
           await importFromContent(engine, contentSlug, contentBody, {
             noEmbed: true,
             source_kind: 'capture-cli',
@@ -388,8 +396,17 @@ export async function runCat24(options: Cat24Options = {}): Promise<Cat24RunResu
         },
       );
 
+      // Probes 5 and 6 re-import the page the content-import probe saved. When the engine refused that save, their
+      // precondition is a setup step the engine did not run: they are not supported on it, never a failure of gbrain.
+      const contentImportRefused = ledger.steps.find(u => u.step === 'content-import');
+      const needsRefusedSetup = (probeId: string): boolean => {
+        if (!contentImportRefused) return false;
+        ledger.skip(probeId, `This probe re-imports the page the content-import probe saves, and the ${kind} engine refused that save, so there is nothing to re-import. ${contentImportRefused.reason}`);
+        return true;
+      };
+
       // ── Probe 5: dedup — identical re-import creates no second row ──
-      try {
+      if (!needsRefusedSetup('dedup-hash-short-circuit')) try {
         const pageState = async () => {
           if (!rawSql) {
             // Typed reads of the same row and chunk ids on an engine without raw SQL (unsealed chunks included, as the
@@ -443,7 +460,7 @@ export async function runCat24(options: Cat24Options = {}): Promise<Cat24RunResu
       }
 
       // ── Probe 6: CV12 — NULL-provenance rewrite preserves first-write stamps ──
-      try {
+      if (!needsRefusedSetup('provenance-preserved-on-reimport')) try {
         const beforeRow = await readProvenance(engine, contentSlug, kind);
         preservation.before = beforeRow;
         preservation.at_before = beforeRow?.ingested_at instanceof Date ? beforeRow.ingested_at.toISOString() : beforeRow ? String(beforeRow.ingested_at) : null;
@@ -495,7 +512,7 @@ export async function runCat24(options: Cat24Options = {}): Promise<Cat24RunResu
     n_scored: summary.n_scored,
     completion_rate: summary.completion_rate,
     errors: summary.errors,
-    publishable: summary.publishable && verdict === 'pass' && !options.simulateBrokenTrustGate && !options.bypassDedupShortCircuit,
+    publishable: summary.publishable && verdict === 'pass' && !options.simulateBrokenTrustGate && !options.bypassDedupShortCircuit && !options.simulateRefusedContentImport,
     gbrain_version: gut.version,
     gbrain_pin: gbrainPin(),
     ...(gut.overlay ? { execution: { source_tree: sourceTreeIdentity(), product: productIdentityFor(gut) } } : {}),
@@ -512,6 +529,7 @@ export async function runCat24(options: Cat24Options = {}): Promise<Cat24RunResu
       ],
       out_of_scope: 'ingestion daemon sources (webhook/inbox/fs-watcher — not exported), thin-client transport',
       simulate_broken_trust_gate: options.simulateBrokenTrustGate === true,
+      ...(options.simulateRefusedContentImport ? { simulate_refused_content_import: true } : {}),
     },
     started_at: startedAt,
     finished_at: new Date().toISOString(),

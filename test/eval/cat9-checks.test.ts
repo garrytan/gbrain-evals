@@ -21,6 +21,7 @@ import {
   substitute,
   substituteDeep,
   validateChecks,
+  validateExpect,
   type Cat9CheckedScenario,
   type ExecResult,
   type GbrainExec,
@@ -53,6 +54,18 @@ describe('Cat 9 checks: jsonPath and assertions', () => {
     expect(jsonPath(doc, 'list.1.slug')).toBe('y');
     expect(jsonPath(doc, '')).toBe(doc);
     expect(jsonPath(doc, 'a.missing.deeper')).toBeUndefined();
+  });
+
+  test('a list of paths checks the first one present, and names the first when none is', () => {
+    const classic = { id: 'work', federated: true };
+    const managed = { id: 'work', config: { federated: true } };
+    const either = { path: ['federated', 'config.federated'], op: 'eq' as const, value: true };
+    expect(checkJsonAssertion(classic, either)).toBeNull();
+    expect(checkJsonAssertion(managed, either)).toBeNull();
+    expect(checkJsonAssertion({ id: 'work', config: { federated: false } }, either)).toContain('not equal');
+    expect(checkJsonAssertion({ id: 'work' }, either)).toContain('json federated eq');
+    expect(validateExpect({ json: [either] }, 'x')).toEqual([]);
+    expect(validateExpect({ json: [{ path: [], op: 'exists' }] }, 'x').join(' ')).toContain('needs a path');
   });
 
   test('each op passes and fails where it should', () => {
@@ -436,7 +449,10 @@ describe('Cat 9 catalog (eval/data/cat9-workflows-v1)', () => {
 
   test('the audit findings the draft maps to scenarios stay labelled on their checks', () => {
     const findings = new Set(catalog.scenarios.flatMap(s => (s.checks ?? []).map(c => c.known_failure?.finding).filter(Boolean)));
-    for (const f of ['N1', 'N2', 'N3', 'N4', 'N5', 'N6', 'RET-05', 'graph-05', 'pages-01 (C1)']) expect(findings.has(f)).toBe(true);
+    for (const f of ['N1', 'N2', 'N3', 'N4', 'N5', 'N6', 'RET-05', 'graph-05']) expect(findings.has(f)).toBe(true);
+    // health-1 (gbrain 9900, v0.60.765.0) and pages-01 (gbrain 9944, v0.60.767.0) are fixed in every build the catalog
+    // runs on, so their guards carry no label: a later break shows as a plain fail.
+    for (const f of ['health-1', 'pages-01 (C1)']) expect(findings.has(f)).toBe(false);
   });
 });
 

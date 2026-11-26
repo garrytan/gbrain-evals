@@ -131,4 +131,18 @@ describe('runCat24 end to end (hermetic)', () => {
     expect(data.dedup_test.reimport_status).toBe('imported');
     expect(result.receipt.publishable).toBe(false);
   }, RUN_TIMEOUT);
+
+  test('a refused content-import save makes the two re-import probes not supported, never failed', async () => {
+    const reportsDir = tmpReports();
+    const result = await runCat24({ reportsDir, quiet: true, simulateRefusedContentImport: true });
+    const steps = result.unsupported.map(u => u.step);
+    expect(steps).toEqual(expect.arrayContaining(['content-import', 'dedup-hash-short-circuit', 'provenance-preserved-on-reimport']));
+    for (const id of ['dedup-hash-short-circuit', 'provenance-preserved-on-reimport']) {
+      expect(result.receipt.errors.some(e => e.probe_id === id)).toBe(false);
+      expect(result.unsupported.find(u => u.step === id)?.reason).toContain('refused that save');
+    }
+    // The other probes still ran and passed, so the run is partial, not a fail.
+    expect(result.receipt.verdict).toBe('partial');
+    expect(result.receipt.publishable).toBe(false);
+  }, RUN_TIMEOUT);
 });
