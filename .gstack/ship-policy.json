@@ -60,6 +60,8 @@
     "docs/benchmarks/2026-11-18-entity-dedupe-h2h/dev/**/*.jsonl",
     "docs/comparison-systems/*/entity-h2h-smoke-run.json",
     "docs/benchmarks/2026-11-24-person-isolation/**/*.json",
-    "docs/benchmarks/2026-11-23-weekly-outcome-line/pilot/**"
+    "docs/benchmarks/2026-11-23-weekly-outcome-line/pilot/**/answers.ndjson",
+    "docs/benchmarks/2026-11-23-weekly-outcome-line/pilot/**/judgments.ndjson",
+    "docs/benchmarks/2026-11-23-weekly-outcome-line/pilot/**/rows.ndjson"
   ]
 }
