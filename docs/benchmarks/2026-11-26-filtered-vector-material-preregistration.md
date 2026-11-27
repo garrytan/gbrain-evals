@@ -381,3 +381,26 @@ All four machines were destroyed at 20:00 UTC. PGLite's results cover 15,000 and
 375,000 chunks are reported as not run, with this reason. The results report this as a finding about gbrain in its
 own right: at the top of the size range gbrain's README gives for PGLite, its default index couldn't be built within a
 working day.
+
+### 2026-11-27: the rule stage 1b confirms
+
+Committed on the results branch before any stage 1b result was read. It names the rule, as "Limited flip" under
+"Decision rule" asks, from stage 1's cells after their re-runs. The only re-runs still out are PGLite's at 15,000 and
+75,000 chunks, and those cells are on the keep side under any threshold that separates the rest. It changes no arm,
+cell, metric, margin or outcome rule.
+
+**The rule.** Turn materialization off for a filtered joined attempt when the search has a date bound (`afterDate` or
+`beforeDate`), alone or with a `type` filter, and the brain holds at least 375,000 chunks (about 50,000 pages on L).
+Every other search keeps today's plan.
+
+It is the threshold that keeps every realistic *loss*, *unresolved* and *regresses* cell on the keep side, and puts the
+most *improves* cells on the flip side. That is a search over filter kind (`type`, date, `where`, the combination,
+small scopes), nominal share (0.1% to 50%) and size (15,000, 75,000 and 375,000 chunks). On stage 1 it covers 180
+realistic affected cells: none blocks, and 69 improve. No share bound is needed. Every date and combination cell at
+375,000 chunks is *safe* on recall and none *regresses*, across PostgreSQL 15 to 18 and pgvector 0.7.4 and 0.8.7. At
+1,500,000 chunks the same filters are all *safe*, and none *regresses*, so the rule carries no upper size limit.
+
+**Stage 1b's pass condition** (from "Decision rule"): on the fresh corpus (seeds 19817 to 19819, primary engine), every
+cell the rule flips, meaning date and combination filters at 375,000 chunks, both modes, both callers, limits 20 and
+50, warm and cold, is *safe* on recall, and none *regresses*. An *unresolved* flip-side cell fails it. The 75,000-chunk
+cells are the keep side and are reported, not tested.
