@@ -7,14 +7,15 @@
  * model shows up as an unlabelled route.
  */
 import { afterAll, beforeEach, describe, expect, test } from 'bun:test';
-import { appendFileSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { realizationId, runCell, type WriteProbe } from '../../eval/runner/q1/cell.ts';
 import { estimateCell, type CellDefinition } from '../../eval/runner/q1/cells/definitions.ts';
 import { BudgetRun, closeLedgers } from '../../eval/runner/budget-ledger.ts';
 import { MeteringProxy, type UsageLine } from '../../eval/runner/metering-proxy.ts';
-import { dockerCli, dockerReading, parseBytes } from '../../eval/runner/memory-qa/hosting-samples.ts';
+import { dockerCli, dockerReading, parseBytes, spawnText } from '../../eval/runner/memory-qa/hosting-samples.ts';
 import { cs1Bucket, cs1Load, hostingOf } from '../../eval/runner/cs1-load.ts';
 import { FakeMemorySystem } from '../../eval/runner/systems/fake.ts';
 import { FileAgentSystem } from '../../eval/runner/systems/file-agent.ts';
@@ -284,6 +285,16 @@ describe('loader keys and hosting', () => {
     expect(hybrid).toContain('names no namespace');
     expect(hybrid).toContain('no content_tokens');
   });
+  // Value: protects=every published cost, which needs every unit's proxy log; fails_when=the loader reads a missing usage file as empty and
+  // reconciles without that unit's spend, so a typo in one path lowers a system's month with no error (review of #636, 2026-11-27).
+  test('the loader refuses a unit whose usage file is missing and writes nothing', () => {
+    const dir = join(tmp, 'missing-usage'), out = join(dir, 'load.json');
+    mkdirSync(dir, { recursive: true });
+    const run = spawnSync('bun', ['eval/runner/cs1-load.ts', '--unit', `${dir}:${join(dir, 'no-such-usage.ndjson')}`, '--out', out], { cwd: resolve(import.meta.dir, '../..'), encoding: 'utf8' });
+    expect(run.status).toBe(2);
+    expect(run.stderr).toContain('no usage file');
+    expect(existsSync(out)).toBe(false);
+  });
   // Value: protects=the preregistration's "system cost is zero by construction" for the no-memory floor; fails_when=the loader prices the
   // floor's harness process as a hosted memory system, so its row carries a server bill for a system that holds nothing (CS1-COUNTED 2026-11-27).
   test('a system that writes nothing gets no hosting, and a writing system in process still does', () => {
@@ -328,6 +339,13 @@ describe('hosting readings', () => {
     expect(calls).toEqual([['docker', 'stats', '--no-stream'], ['sudo', '-n', 'docker', 'stats', '--no-stream']]);
     const down = async () => ({ out: '', err: 'Cannot connect to the Docker daemon', code: 1 });
     await expect(dockerCli(['stats'], down)).rejects.toThrow('docker stats exited 1: Cannot connect to the Docker daemon');
+  });
+
+  test('a CLI call that hangs past its deadline is killed and throws', async () => {
+    const t0 = performance.now();
+    await expect(spawnText(['sleep', '30'], 200)).rejects.toThrow('sleep 30 timed out after 200 ms');
+    expect(performance.now() - t0).toBeLessThan(5_000);
+    expect(await spawnText(['echo', 'ok'], 5_000)).toEqual({ out: 'ok\n', err: '', code: 0 });
   });
 });
 

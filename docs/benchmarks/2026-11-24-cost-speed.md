@@ -115,6 +115,12 @@ carries the session's id, and a keyword match can find a session before any back
   idle and are left out, as the plan says.
 - Memory-bank returned 40,814 results with no session id during its probes: its consolidated observations carry none, so
   they can't count as finding a session, though their cost is counted.
+- "Idle" before each probe means the system's metered provider traffic was quiet for 60 seconds. The harness asked no
+  system for its own count of pending work, so work that makes no provider call (local indexing, for example) could
+  still be running when a probe started. This can only slow a probe down or make it miss, never speed it up. The same
+  quiet check runs before a missed probe's last search and gives up after 20 minutes, and the records don't say which
+  of the two ended it, so a miss counted as never found (extract-first's 6, memory-bank's 4) could be one whose
+  background work was still going.
 - The file agent's write is a Markdown file and its poll is a grep with no model call, so its times are file-system
   times.
 - The no-memory floor saves nothing and full context has no write, so neither is probed.
@@ -128,8 +134,10 @@ which ask for the dated history before the answer, so a reader that is given the
 on the way. That is why most answers from systems that find the history are unclear, and why the floor, which finds
 nothing and so names nothing earlier, has the lowest cost per correct answer.
 
-The last two columns are not preregistered: they divide the total by answers that were correct or unclear, which is an
-upper bound on what a judge would count, because an unclear answer can still end on the wrong value.
+The last two columns are not preregistered and are a looser count, not a bound on what a judge would accept: they
+divide the total by answers that were correct or unclear. An unclear answer can still end on the wrong value, and the
+changing-facts confirmation's judges accepted many answers this matcher calls stale, which neither count includes. No
+judge ran here.
 
 | System | Key-matched correct, claude-opus-5-5 | Unclear, claude-opus-5-5 | Key-matched correct, particle-1 | Unclear, particle-1 | Cost per correct-or-unclear answer, claude-opus-5-5 | Same, particle-1 |
 |---|---|---|---|---|---|---|

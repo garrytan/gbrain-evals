@@ -277,7 +277,11 @@ if (import.meta.main) {
   const { readerFitTokenizer, readerMaxTokens } = await import('./q1/cell.ts');
   const { loadCorpus } = await import('./memory-qa/corpus.ts');
   const { cs1Aggregate, renderCs1Table } = await import('./cost-speed.ts');
-  const units = specs.map(s => { const i = s.lastIndexOf(':'); return { dir: s.slice(0, i), usage: lines<UsageLine>(s.slice(i + 1)) }; });
+  const units = specs.map(s => {
+    const i = s.lastIndexOf(':'), usage = s.slice(i + 1);
+    if (!existsSync(usage)) { console.error(`cs1-load: no usage file at ${usage}; a unit without its proxy log would leave its spend out of every cost`); process.exit(2); }
+    return { dir: s.slice(0, i), usage: lines<UsageLine>(usage) };
+  });
   const m = loadCS1Manifest();
   const defs = [...m.cells, ...(m.smoke_cells ?? []), ...(m.addon_cells ?? [])];
   const cells = new Map(defs.map(c => [c.id, c.system]));

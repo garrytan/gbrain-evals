@@ -39,10 +39,16 @@ export async function dockerReading(run: (args: string[]) => Promise<string> = d
   return { containers, volumes: (df.Volumes ?? []).map(v => ({ name: v.Name, bytes: parseBytes(v.Size) ?? 0 })) };
 }
 
-async function spawnText(cmd: string[]): Promise<{ out: string; err: string; code: number }> {
+/** Runs `cmd` and collects its output; past `timeoutMs` it kills the process and throws, so a hung CLI becomes an errored sample. */
+export async function spawnText(cmd: string[], timeoutMs = 60_000): Promise<{ out: string; err: string; code: number }> {
   const p = Bun.spawn(cmd, { stdout: 'pipe', stderr: 'pipe' });
-  const [out, err, code] = await Promise.all([new Response(p.stdout).text(), new Response(p.stderr).text(), p.exited]);
-  return { out, err, code };
+  let timedOut = false;
+  const timer = setTimeout(() => { timedOut = true; p.kill('SIGKILL'); }, timeoutMs);
+  try {
+    const [out, err, code] = await Promise.all([new Response(p.stdout).text(), new Response(p.stderr).text(), p.exited]);
+    if (timedOut) throw new Error(`${cmd.join(' ').slice(0, 80)} timed out after ${timeoutMs} ms`);
+    return { out, err, code };
+  } finally { clearTimeout(timer); }
 }
 
 /**
