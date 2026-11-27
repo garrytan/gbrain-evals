@@ -1295,8 +1295,8 @@ class GbrainDefaultsAdapter(Adapter):
     def query_on_surface(self, args: dict[str, Any]) -> tuple[Any, dict[str, Any], list[Any], float, dict[str, Any], list[str]]:
         """A query on the starter surface, without each knob gbrain refuses there (since v0.60.740.0 `limit` and `autocut`
         are full-surface only, refused with param_not_on_surface before anything is read), so a fixed-evidence read
-        still runs, at gbrain's defaults for those knobs; the dropped knobs are returned and recorded. A full-surface
-        stack sends every knob."""
+        still runs, at gbrain's defaults for those knobs; the dropped knobs are returned and recorded, and retrieve
+        classifies such a read as not scored, so it can't count as fixed evidence. A full-surface stack sends every knob."""
         dropped: list[str] = []
         while True:
             try:
@@ -1319,6 +1319,8 @@ class GbrainDefaultsAdapter(Adapter):
             rows, meta, notices, ms, args, dropped = self.query_on_surface(args)
             retrieval = meta.get("retrieval") or {}
             verdict = classify_query_meta(retrieval, self.require_reference()["resolved"]["search"])
+            if dropped:
+                verdict = {**verdict, "outcome": "harness_invalid", "reasons": [*verdict["reasons"], f"settings_not_on_surface:{','.join(sorted(dropped))}"]}
             for r in verdict["recorded"]:
                 if r.startswith("delivery_fallback:"):
                     self.shipped_counts[r] = self.shipped_counts.get(r, 0) + 1
