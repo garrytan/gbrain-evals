@@ -333,6 +333,21 @@ describe('memory-qa with a MemorySystem', () => {
     expect(sent).toEqual([f6, { limit: 40 }]);
   });
 
+  test('readiness probe: on a starter-surface gbrain stack, a read that only dropped fixed-evidence settings still finds the session; any other degraded read is a miss', async () => {
+    const last = { source_id: 'ns-last', time: null, turns: [{ role: 'user', content: 'x'.repeat(200), time: null }] } as unknown as SessionInput;
+    const caps = { ...(await new FakeMemorySystem().capabilities()), retrieval_policies: { 'fixed-evidence': { settings: { limit: 50, autocut: false } }, on_degraded: 'error' } };
+    const starter = (reasons: string[]) => {
+      const s = new FakeMemorySystem();
+      s.retrieve = async (_ns, _q, p) => {
+        if (p.settings.on_degraded !== 'report') throw new SystemError('invalid_request', `degraded read: ${reasons.join(', ')}`);
+        return { items: [{ text: 'x', source_ids: ['ns-last'] } as unknown as Item], applied_settings: {}, truncated: false, raw: { classification: { outcome: 'harness_invalid', reasons } } };
+      };
+      return s;
+    };
+    expect(await readinessProbe(starter(['settings_not_on_surface:autocut,limit']), 'ns', last, { mode: 'vendor-default', settings: {} } as never, caps as never)).toBe('found');
+    expect(await readinessProbe(starter(['settings_not_on_surface:autocut,limit', 'projection_not_ready']), 'ns', last, { mode: 'vendor-default', settings: {} } as never, caps as never)).toBe('missed');
+  });
+
   test('readiness probe: a shim whose quiescence signal lies (indexes late) marks its conversations ingest-degraded; an honest one passes', async () => {
     const late = new FakeMemorySystem();
     const original = late.retrieve.bind(late);
