@@ -1,0 +1,54 @@
+{
+  "gbrain-defaults": {
+    "build": "gbrain v0.60.776.0 (3a360389f), shipped defaults",
+    "date": "2026-11-26"
+  },
+  "ext-extract-first": {
+    "build": "bundle lock 9777b7a8, recipe",
+    "date": "2026-11-26 to 2026-11-27"
+  },
+  "ext-memory-bank": {
+    "build": "bundle lock f54d89df, recipe, observations on",
+    "date": "2026-11-26 to 2026-11-27"
+  },
+  "ext-verbatim-session": {
+    "build": "bundle lock e2e066bf, recipe",
+    "date": "2026-11-26"
+  },
+  "baseline-hybrid": {
+    "build": "gbrain-evals 46a975b4",
+    "date": "2026-11-26"
+  },
+  "baseline-file-agent": {
+    "build": "gbrain-evals 46a975b4, uncapped grep, 40 turns",
+    "date": "2026-11-26"
+  },
+  "baseline-none": {
+    "build": "gbrain-evals 46a975b4",
+    "date": "2026-11-26"
+  },
+  "baseline-full-context": {
+    "build": "gbrain-evals 46a975b4, prompt caching",
+    "date": "2026-11-26"
+  },
+  "ext-temporal-graph": {
+    "build": "bundle lock 4ce9b216",
+    "date": "",
+    "not_run": "its pinned configuration calls a reranker and an ingest model its provider retired, and a compared system's settings are never changed"
+  },
+  "ext-graph-pipeline": {
+    "build": "bundle lock 59af44d5",
+    "date": "",
+    "not_run": "left out of this experiment's scope; its published limit was measured at BEAM-10M scale, so a run at this size is follow-up work"
+  },
+  "ext-markdown-kb": {
+    "build": "bundle lock e1a14a19",
+    "date": "",
+    "not_run": "left out of this experiment's scope; its published limit was measured at BEAM-10M scale, so a run at this size is follow-up work"
+  },
+  "ext-agent-runtime": {
+    "build": "bundle capabilities d55c28c9",
+    "date": "",
+    "not_run": "it has no passive write and search interface: its agent edits its own memory, so a per-write cost and a write-to-queryable time aren't defined the same way"
+  }
+}

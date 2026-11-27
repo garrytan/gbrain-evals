@@ -609,6 +609,25 @@ wins.
     gbrain v0.60.776.0 names an installed Rust addon by its SHA-256, so the harness test that plants a stray addon
     now writes it where gbrain looks. That is the only harness change.
 
+### 2026-11-27: deviations recorded after the counted run
+
+Recorded on the results branch after the counted run ended and before any result was published. None changes a rule,
+a measure or a system's configuration; the [results page](2026-11-24-cost-speed.md#deviations-from-the-plan) gives each
+in full.
+
+21. **File-agent cells count.** Both file-agent cells ended with exit code 0, 100 of 100 answers per reader and a settled
+    lease, and the launcher marked them failed because its checkpoint watcher stopped on a file the running cell had
+    just deleted (a race in `attemptRows`, `eval/runner/shootout-cell.ts`). Completion here is the cell's, not the
+    launcher's, so both count and neither is rerun. The watcher now skips such files, with a test.
+22. **Memory-bank's first attempt on its first world** stopped during setup when its container image couldn't be found by
+    digest, before any provider call, and was closed with no spend. The second attempt is the counted one.
+23. **The smallest-detectable-difference simulation** that "Statistics" asks for before the freeze wasn't run. The
+    counted intervals resolve both stated differences, and the results report them as measured.
+24. **The no-memory floor has no server.** The loader had priced the floor's harness process as hosting, against
+    "system cost is zero by construction" in "Systems". It now gives the floor none, with a test; no other row changed.
+25. **One hosting sample failed.** 1 of memory-bank's 283 hosting samples recorded a Docker error and no reading; the
+    other 282 set its server size.
+
 ## Disclosures
 
 gbrain is Garry Tan's own project.
