@@ -1,7 +1,7 @@
 # gbrain's Rust engine at v0.60.777.0: the counted engine-bench wave
 
-- **We learned that PGLite and Postgres give the same answers at gbrain v0.60.777.0.** On LongMemEval-S, both engines returned the same top 5 on all 470 scored questions in every arm, with recall_all@5 of 0.811 (keyword), 0.917 (vector) and 0.906 (hybrid). They passed the same correctness checks, matched on 301 of 302 CLI, MCP and markdown outputs (the one difference is the known `stale` field), and scored the same on all 15 of the gate suites gbrain's design plan names. If you run gbrain on either engine today, this release behaves the same on both.
-- **We learned that the Rust engine at this release is not ready to hold a brain yet.** gbrain's own page write refuses on a Rust brain (`engine_capability_missing`), so every stage that writes failed at its first write. Rust passed 3 of the 15 gate suites (Cat 10, Cat 4 and the reported Cat 7). The eval-gates file reads **E1 FAIL, E2 FAIL and E3 FAIL**, and swap readiness criterion 8 was not run, because Rust stored no pages to time. gbrain's maintainers describe this as the gap between gbrain's master branch and its `rust-engine` branch, where the engine is further along. It is not a regression we diagnosed.
+- **We learned that PGLite and Postgres give the same answers at gbrain v0.60.777.0.** On LongMemEval-S, both engines returned the same top 5 on all 470 scored questions in every arm, with recall_all@5 of 0.811 (keyword), 0.917 (vector) and 0.906 (hybrid). They passed the same correctness checks, matched on 301 of 302 CLI, MCP and markdown outputs (the one difference is the known `stale` field), and scored the same on the 14 scored gate suites gbrain's design plan names. The 15th, Cat 7, records only latency and throughput, where the two engines differ as expected. If you run gbrain on either engine today, this release behaves the same on both.
+- **We learned that the Rust engine at this release is not ready to hold a brain yet.** gbrain's own page write refuses on a Rust brain (`engine_capability_missing`), so every stage that writes through gbrain's import or write path failed at that first write. Cat 7, which writes through the engine directly, completed its timing runs on Rust. Rust passed 3 of the 15 gate suites (Cat 10, Cat 4 and the reported Cat 7). The eval-gates file reads **E1 FAIL, E2 FAIL and E3 FAIL**, and swap readiness criterion 8 was not run, because Rust stored no pages to time. gbrain's maintainers describe this as the gap between gbrain's master branch and its `rust-engine` branch, where the engine is further along. It is not a regression we diagnosed.
 - **You should keep Rust off for real brains on this release and wait for the second wave.** It runs on the first master release that carries the Rust engine trunk, under a later amendment to the [preregistration](2026-11-17-engine-bench-preregistration.md).
 
 ## The build and why it was counted
@@ -12,11 +12,11 @@ This build misses the preregistered trigger, which asks for a build that serves 
 
 ## Results
 
-**The eval-gates file.** [`eval/results/engine-bench/eval-gates/v0.60.777.0/8e36959c52cf4f327d1a20f634cde2e20b9069ae.json`](../../eval/results/engine-bench/eval-gates/v0.60.777.0/8e36959c52cf4f327d1a20f634cde2e20b9069ae.json) is FINAL. It names gbrain_tag v0.60.777.0, gbrain_commit d8eb3576, the addon digest above, target linux-x64-glibc and evals_commit 8e36959c, and it links its 19 input receipts by SHA-256. It sets `engine_format_version` to 7. The counted receipts do not record that number, so it was read from the `FORMAT` file of a Rust store that `gbrain init --migrate-only` created at d8eb3576 with the same addon bytes, in a keyless run.
+**The eval-gates file.** [`eval/results/engine-bench/eval-gates/v0.60.777.0/8e36959c52cf4f327d1a20f634cde2e20b9069ae.json`](../../eval/results/engine-bench/eval-gates/v0.60.777.0/8e36959c52cf4f327d1a20f634cde2e20b9069ae.json) is FINAL. It names gbrain_tag v0.60.777.0, gbrain_commit d8eb3576, the addon digest above, target linux-x64-glibc and evals_commit 8e36959c, and it links its 19 input receipts by SHA-256. It sets `engine_format_version` to 7. Each row's `threshold` quotes RUST_ENGINE.md's wording (Cat 12 "50/50", Cat 24 "5/5"). The rule actually applied is the preregistered reading beside it: 24 of 24 for Cat 12 and 7 of 7 for Cat 24. The counted receipts do not record that number, so it was read from the `FORMAT` file of a Rust store that `gbrain init --migrate-only` created at d8eb3576 with the same addon bytes, in a keyless run.
 
 | Gate | Verdict | What decided it |
 |---|---|---|
-| E1 | FAIL | LongMemEval-S: Rust errored on all 470 questions in every arm, against both TypeScript engines. Cat 13b and Cat 12 (18 of 24) failed, and Cat 13 also failed (reported only). Cat 10 passed 133 of 133. Cat 7 ran on all three engines (reported). |
+| E1 | FAIL | LongMemEval-S: Rust errored on all 470 questions in every arm, against both TypeScript engines. Cat 13b and Cat 12 (18 of 24) failed, and Cat 13 also failed (reported only). Cat 10 passed 133 of 133. Cat 7 ran on all three engines (reported; Rust was slower on 22 latency rows). |
 | E2 | FAIL | BrainBench Cats 1+2, Cat 3 and type accuracy: Rust left no receipt. Cat 24 scored 1 of 7 and memory-verb conformance 0 of 24. Cat 4 passed 114 of 114. |
 | E3 | FAIL | Cats 22, 19, 27 and 23: Rust did not run, or scored no gates. |
 | Criterion 8 (speed, reported) | not run | Rust refused at import, so no operation class has a Rust pair. |
@@ -33,7 +33,7 @@ This build misses the preregistered trigger, which asks for a build that serves 
 | vector | 0.917 | 0.917 | errored on 470 of 470 |
 | hybrid | 0.906 | 0.906 | errored on 470 of 470 |
 
-**Gate suites.** One VM ran each suite once per engine at the same commit and addon digest. Rust's failures name their refused calls in each suite file under [gate-suites/](2026-11-27-engine-bench/gate-suites/). The most common is `readManagedModeRows` at `core/maintenance.ts:59`, reached from gbrain's import path. Cat 12 records 54 refusals on Rust across the `graph`, `pages`, `keyword_search`, `chunks` and `raw_sql` capabilities.
+**Gate suites.** One VM ran each suite once per engine at the same commit and addon digest. Rust's failures name their refused calls in each suite file under [gate-suites/](2026-11-27-engine-bench/gate-suites/). The most common is `readManagedModeRows` at `core/persistence/maintenance.ts:59`, reached from gbrain's import path (`core/import-file.ts:347`). Cat 12 records 54 refusals on Rust across the `graph`, `pages`, `keyword_search`, `chunks` and `raw_sql` capabilities.
 
 **Remote callers.** Registering an OAuth client on a Rust brain (`gbrain auth register-client`) refuses with `engine_capability_missing` (raw_sql) at `oauth-provider.ts:1114`, so a Rust brain cannot serve remote MCP callers on this build. That is a named gap under item 7 of the 2026-11-20 amendment.
 
@@ -41,18 +41,23 @@ This build misses the preregistered trigger, which asks for a build that serves 
 
 ## Reproduce
 
-From the repository root at 8e36959c, with Bun and Docker, a gbrain checkout with tags, and the Rust addon at `GBRAIN_RUST_ENGINE_ADDON`:
+From the repository root at 8e36959c, with Bun and Docker and a gbrain checkout with tags. Set `GBRAIN_RUST_ENGINE_ADDON` to the addon file and `GBRAIN_RUST_ENGINE_ADDON_SHA256` to its digest, `PG` to a pgvector Postgres admin URL (`LIFECYCLE_PG_URL` for the gate suites), and `GB` to `<gbrain checkout>`. The LongMemEval-S workers also need the dataset and the embedding cache whose digests the amendment names:
 
 ```sh
 P=docs/benchmarks/2026-11-17-engine-bench-preregistration.md
-bun eval/runner/engine-bench/correctness.ts --prereg $P --engines pglite,postgres,rust --gbrain '<gbrain checkout>@v0.60.777.0' --pg-url '<Postgres admin URL>'
-bun eval/runner/engine-bench/surface-parity.ts --prereg $P --engines pglite,postgres,rust --gbrain '<gbrain checkout>@v0.60.777.0' --pg-url '<Postgres admin URL>'
-bun eval/runner/engine-bench/lme-recall.ts run --prereg $P --engines pglite,postgres,rust --arms keyword,vector,hybrid --gbrain '<gbrain checkout>@v0.60.777.0' --pg-url '<Postgres admin URL>' --worker-id <0-3> --total-workers 4
-bun eval/runner/engine-bench/lme-recall.ts aggregate --ndjson lme-w0.ndjson,lme-w1.ndjson,lme-w2.ndjson,lme-w3.ndjson
-bun eval/runner/engine-bench/perf.ts --scale 10000 --engines pglite,postgres,rust --prereg $P --gbrain '<gbrain checkout>@v0.60.777.0'
-bun eval/runner/engine-bench/gate-suites.ts run --gbrain '<gbrain checkout>@d8eb35769120cf0b60704478aaef96a412ee0009' --engines pglite,postgres,rust --paid --budget-run-id <opened run id> --budget-usd 1 --embed-cache-dir <dir>
-bun eval/runner/engine-bench/gate-suites.ts emit --out <dir> --counted
-bun eval/runner/engine-bench/eval-gates.ts --engine-format-version 7 --answers <aggregate> --speed <speed receipt> --correctness <receipt> --surface-parity <receipt> --suite <gate-suite file>...
+bun eval/runner/engine-bench/correctness.ts --prereg $P --engines pglite,postgres,rust --gbrain "$GB@v0.60.777.0" --pg-url "$PG"
+bun eval/runner/engine-bench/surface-parity.ts --prereg $P --engines pglite,postgres,rust --gbrain "$GB@v0.60.777.0" --pg-url "$PG"
+for W in 0 1 2 3; do  # one worker per VM in the counted run
+  bun eval/runner/engine-bench/lme-recall.ts run --prereg $P --engines pglite,postgres,rust --arms keyword,vector,hybrid --gbrain "$GB@v0.60.777.0" --pg-url "$PG" \
+    --dataset "$DATASET" --cache "$CACHE" --worker-id $W --total-workers 4 --out lme-w$W.json --ndjson lme-w$W.ndjson
+done
+bun eval/runner/engine-bench/lme-recall.ts aggregate --ndjson lme-w0.ndjson,lme-w1.ndjson,lme-w2.ndjson,lme-w3.ndjson --out aggregate.json
+bun eval/runner/engine-bench/perf.ts --scale 10000 --engines pglite,postgres,rust --prereg $P --gbrain "$GB@v0.60.777.0"
+RUN_ID=$(bun eval/runner/budget-ledger.ts open --runner engine-bench-gate-suites-v0.60.777.0 --budget-usd 1 | tail -1)
+bun eval/runner/engine-bench/gate-suites.ts run --gbrain "$GB@d8eb35769120cf0b60704478aaef96a412ee0009" --engines pglite,postgres,rust --paid --budget-run-id "$RUN_ID" --budget-usd 1 --embed-cache-dir "$EMBED_CACHE_DIR"
+bun eval/runner/budget-ledger.ts close --budget-run-id "$RUN_ID"
+bun eval/runner/engine-bench/gate-suites.ts emit --out "$SUITES_DIR" --counted
+bun eval/runner/engine-bench/eval-gates.ts --engine-format-version 7 --answers aggregate.json --speed <speed receipt> --correctness <correctness receipt> --surface-parity <surface-parity receipt> --suite "$SUITES_DIR"/<suite>.json ...
 ```
 
 The gate-suite stage's only paid calls are Cat 13 and Cat 13b's OpenAI embeddings, made once by PGLite under the budget ledger. Every other stage is keyless. The raw receipts, per-question rows and logs are in [2026-11-27-engine-bench/](2026-11-27-engine-bench/). Paths on the run machines appear in the logs as they were printed.
