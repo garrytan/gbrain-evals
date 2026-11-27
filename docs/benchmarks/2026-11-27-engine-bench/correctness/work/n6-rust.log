@@ -1,0 +1,39 @@
+199 |  */
+200 | export function markNotAdmitted(error: OperationError): OperationError { notAdmittedWrites.add(error); return error; }
+201 | export function provesNotAdmitted(error: unknown): boolean { return error instanceof OperationError && notAdmittedWrites.has(error); }
+202 | 
+203 | export function opError(code: RegistryCode, message: string, suggestion: string, opts: OpErrorOpts = {}): OperationError {
+204 |   const e = new OperationError(opts.legacy_error ?? code, message, suggestion, opts.docs);
+                  ^
+OperationError: This brain's engine does not support transaction yet (it needs the transactions capability), so nothing ran.
+ suggestion: "Run it on a pglite or postgres brain, or wait for a gbrain release whose Rust engine supports it.",
+       docs: undefined,
+     detail: "member=transaction capability=transactions outcome=none written=nothing",
+ protocolVersion: undefined,
+ writeRequest: undefined,
+ writeError: undefined,
+  requestId: undefined,
+     reason: "transactions",
+        why: undefined,
+        fix: undefined,
+  retryable: undefined,
+    notices: undefined,
+      fence: undefined,
+ fenceIssues: undefined,
+  withdrawn: undefined,
+ writableSourceIds: undefined,
+ syncRefusal: undefined,
+ contractVersion: 1,
+  canonical: undefined,
+ receiptFields: undefined,
+       code: "engine_capability_missing"
+
+      at opError (./.gbrain-overlays/v0.60.777.0/src/core/ops/contract.ts:204:13)
+      at refuse (./.gbrain-overlays/v0.60.777.0/src/core/rust-engine.ts:340:29)
+      at <anonymous> (./eval/runner/eval-engine.ts:258:58)
+      at appendCoverage (./.gbrain-overlays/v0.60.777.0/src/core/belief/coverage.ts:40:28)
+      at enableBeliefLedger (./.gbrain-overlays/v0.60.777.0/src/core/belief/coverage.ts:115:23)
+      at seed (./eval/runner/n6-visibility-fuzz.ts:579:52)
+      at async runN6Hermetic (./eval/runner/n6-visibility-fuzz.ts:790:28)
+      at async withHermeticEnv (./eval/runner/hermetic-env.ts:120:26)
+

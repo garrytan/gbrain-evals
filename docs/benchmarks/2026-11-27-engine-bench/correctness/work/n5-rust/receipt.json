@@ -1,0 +1,583 @@
+{
+  "cost": {
+    "usd": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "basis": "hermetic: provider keys stripped, no embedding model, System One off; no model and no paid request"
+  },
+  "delivered_tokens": {
+    "tokens": 0,
+    "basis": "hermetic: provider keys stripped, no embedding model, System One off; no model and no paid request"
+  },
+  "schema_version": 2,
+  "benchmark_version": "0.5.0",
+  "category": "n5-forget-residue",
+  "run_status": "error",
+  "n_total": 0,
+  "n_scored": 0,
+  "completion_rate": 0,
+  "errors": [
+    {
+      "probe_id": "n5-rust-cli",
+      "origin": "harness",
+      "message": "Error: sources add vault failed: Error [engine_capability_missing]: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.\nFix: Run it on a pglite or postgres brain, or wait for a gbrain release whose Rust engine supports it.\n    at setup (eval/runner/lifecycle/slice.ts:243:37)\n    at async runCell (eval/runner/n5-forget-residue.ts:245:16)\n    at processTicksAndRejections "
+    },
+    {
+      "probe_id": "n5-rust-mcp-stdio",
+      "origin": "harness",
+      "message": "Error: sources add vault failed: Error [engine_capability_missing]: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.\nFix: Run it on a pglite or postgres brain, or wait for a gbrain release whose Rust engine supports it.\n    at setup (eval/runner/lifecycle/slice.ts:243:37)\n    at async runCell (eval/runner/n5-forget-residue.ts:245:16)\n    at processTicksAndRejections "
+    },
+    {
+      "probe_id": "n5-rust-mcp-http",
+      "origin": "harness",
+      "message": "Error: sources add vault failed: Error [engine_capability_missing]: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.\nFix: Run it on a pglite or postgres brain, or wait for a gbrain release whose Rust engine supports it.\n    at setup (eval/runner/lifecycle/slice.ts:243:37)\n    at async runCell (eval/runner/n5-forget-residue.ts:245:16)\n    at processTicksAndRejections "
+    }
+  ],
+  "publishable": false,
+  "gbrain_version": "0.60.777.0",
+  "gbrain_pin": "github:garrytan/gbrain#97ef356f574a66709ef1bf4ae1cad604727852d8",
+  "execution": {
+    "source_tree": {
+      "sha256": "a9e61d745a624a2fc54944f8634290cf8749188b3f7da983afaa76a9b13b8be9",
+      "scheme": "git-index-blob-v1",
+      "files": 17738,
+      "git_head": "8e36959c52cf4f327d1a20f634cde2e20b9069ae",
+      "dirty": true
+    },
+    "product": {
+      "package": "gbrain",
+      "declared_pin": "github:garrytan/gbrain#97ef356f574a66709ef1bf4ae1cad604727852d8",
+      "declared_sha": "97ef356f574a66709ef1bf4ae1cad604727852d8",
+      "version": "0.60.777.0",
+      "package_sha256": "ffa7a2a551ce24ffd8f71415aa1d196d2f68c46d22013727242a584c49884480",
+      "loaded_git_head": "d8eb35769120cf0b60704478aaef96a412ee0009"
+    }
+  },
+  "latency_ms": null,
+  "resolved_config": {
+    "decide": "off (no key, fresh GBRAIN_HOME)",
+    "decide_status_per_cell": {
+      "n5-rust-cli": {
+        "ok": false,
+        "slots": []
+      },
+      "n5-rust-mcp-stdio": {
+        "ok": false,
+        "slots": []
+      },
+      "n5-rust-mcp-http": {
+        "ok": false,
+        "slots": []
+      }
+    },
+    "engines": {
+      "requested": [
+        "rust"
+      ],
+      "run": [
+        "rust"
+      ],
+      "postgres_unreachable": null
+    },
+    "interfaces": [
+      "cli",
+      "mcp-stdio",
+      "mcp-http"
+    ],
+    "harness": "eval/runner/lifecycle/slice.ts (lifecycle drivers: trusted local CLI `gbrain call`, stdio `gbrain serve`, HTTP `gbrain serve --http` with OAuth client_credentials clients: main read+write on vault, reader read-only on vault, foreign read+write on another source)",
+    "init": "a CLI config written with cliEngineConfig(rust) plus embedding_disabled and schema_pack gbrain-base-v2, then `gbrain init --migrate-only --non-interactive` (gbrain init has no Rust flag); git vaults as sources",
+    "seed": 5,
+    "generator_version": "n5-forget-residue-gen@1",
+    "ledger_sha256": "65323fb7605d5d8ec0d87252124993a74828335976606fa8e2997574f02c9da5",
+    "slice": null,
+    "checkpoints": [
+      "witness",
+      "immediate",
+      "settled",
+      "stale_reimport",
+      "restart",
+      "concurrent"
+    ],
+    "active_tiers": [
+      "recall_facts",
+      "recall_query",
+      "search",
+      "query",
+      "context_pack",
+      "fence_active",
+      "entity_card"
+    ],
+    "contract": "src/core/facts/forget.ts header and docs/guides/memory-boundaries.md at the tested commit",
+    "gating_scope": "data.metrics aggregates the rust cells (GBRAIN_EVAL_ENGINE=rust)",
+    "gbrain_overlay": {
+      "requested": "gbrain@v0.60.777.0",
+      "ref": "v0.60.777.0",
+      "commit": "d8eb35769120cf0b60704478aaef96a412ee0009",
+      "tree": "8656a204b93a149ff392c05b4b6713a76400e596",
+      "version": "0.60.777.0",
+      "checkout_dirty": false,
+      "verified": {
+        "copy_tree": "8656a204b93a149ff392c05b4b6713a76400e596",
+        "tree_matches": true,
+        "symlinks_under_src": 0,
+        "dir_is_realpath": true,
+        "cli_version": "0.60.777.0",
+        "cli_version_matches": true
+      },
+      "copied_not_symlinked": true
+    }
+  },
+  "hashes": {
+    "ledger_sha256": "65323fb7605d5d8ec0d87252124993a74828335976606fa8e2997574f02c9da5"
+  },
+  "started_at": "2026-11-27T03:16:54.244Z",
+  "finished_at": "2026-11-27T03:16:58.780Z",
+  "data": {
+    "metrics": {
+      "prohibited_active_outputs": 0,
+      "reactivations": 0,
+      "collateral_expirations": 0,
+      "unauthorized_forgets_applied": 0,
+      "private_canary_leaks": 0,
+      "retained_pairs": 0,
+      "retained_present": 0,
+      "retained_recall": null,
+      "capped_pairs": 0,
+      "capped_present": 0,
+      "retained_recall_including_capped": null,
+      "reinstatement_attempts": 0,
+      "reinstated": 0,
+      "reinstatement_rate": null,
+      "forgotten_pairs_with_signal": 0,
+      "forgotten_pairs_without_witness": 0,
+      "sut_errors": 0,
+      "cells": 3,
+      "void_cells": 3
+    },
+    "metrics_postgres": null,
+    "safety": {
+      "prohibited_active_outputs": true,
+      "reactivations": true,
+      "collateral_expirations": true,
+      "unauthorized_forgets_applied": true,
+      "private_canary_leaks": true
+    },
+    "quality": {
+      "retained_recall": {
+        "value": null,
+        "threshold": 1,
+        "pass": false
+      },
+      "reinstatement_rate": {
+        "value": null,
+        "threshold": 1,
+        "pass": false
+      }
+    },
+    "promotion_rules": {
+      "preregistered": "2026-10-01",
+      "basis": "amendments 1, 2 and 5, frozen before the runner existed or ran: the documented withdrawal contract (src/core/facts/forget.ts header, docs/guides/memory-boundaries.md) promises that a forgotten claim leaves active recall, survives reimport and restart, and stays subject- and source-scoped; zero prohibited active output across every witnessed tier is the safety contract, retained-neighbor recall and reinstatement of a corrected claim are utility floors so a refuse-everything system fails; paraphrase retraction and physical erasure are documented non-guarantees and never gate",
+      "safety_contracts": [
+        {
+          "id": "no-prohibited-active-output",
+          "path": "data.metrics.prohibited_active_outputs",
+          "op": "==",
+          "value": 0,
+          "description": "no forgotten claim appears in any witnessed active tier (facts recall, recall query arm, search, query, entity card, context_pack, unstruck fence row) at any checkpoint"
+        },
+        {
+          "id": "no-reactivation",
+          "path": "data.metrics.reactivations",
+          "op": "==",
+          "value": 0,
+          "description": "a forgotten claim never becomes active again after a stale reimport, a full sync, a restart or concurrent writes"
+        },
+        {
+          "id": "no-collateral-expiration",
+          "path": "data.metrics.collateral_expirations",
+          "op": "==",
+          "value": 0,
+          "description": "no retained neighbor (another fact on the same entity, or the same claim text on another entity) is expired by a forget"
+        },
+        {
+          "id": "no-unauthorized-forget",
+          "path": "data.metrics.unauthorized_forgets_applied",
+          "op": "==",
+          "value": 0,
+          "description": "a read-only or foreign-source caller cannot withdraw a fact"
+        },
+        {
+          "id": "no-private-canary-exposed",
+          "path": "data.metrics.private_canary_leaks",
+          "op": "==",
+          "value": 0,
+          "description": "no remote response carries a private canary before or after forget"
+        }
+      ],
+      "quality_thresholds": [
+        {
+          "id": "retained-recall-floor",
+          "path": "data.metrics.retained_recall",
+          "op": ">=",
+          "value": 1,
+          "description": "every retained canary witnessed in a tier before the forget is still readable there at every checkpoint (utility floor)"
+        },
+        {
+          "id": "reinstatement-floor",
+          "path": "data.metrics.reinstatement_rate",
+          "op": ">=",
+          "value": 1,
+          "description": "a corrected claim remembered after a forget is accepted and active (the documented way back)"
+        }
+      ],
+      "exploratory": [
+        "data.by_tier and data.by_checkpoint",
+        "data.metrics_postgres (report-only outside CI)",
+        "data.gaps.paraphrase_residue (lexical matching is documented; a paraphrase stays active)",
+        "data.retained_by_design (page history, vault Git history, prose outside the fence, struck fence rows)",
+        "data.unmeasured_tiers (dream-derived tiers without a chat model)"
+      ]
+    },
+    "private_control": {
+      "canaries": 2,
+      "witnessed_by_trusted": 0
+    },
+    "by_tier": {},
+    "by_checkpoint": {},
+    "by_tier_postgres": {},
+    "by_cell": [
+      {
+        "id": "n5-rust-cli",
+        "duration_ms": 1259,
+        "fatal": "Error: sources add vault failed: Error [engine_capability_missing]: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.",
+        "server_version": "",
+        "metrics": null,
+        "calls": {
+          "primary": 0,
+          "trusted": 0,
+          "extra": 0
+        },
+        "authority": [],
+        "forgets_failed": [],
+        "concurrent_writes": [],
+        "concurrent_visible": 0,
+        "entity_counts": {}
+      },
+      {
+        "id": "n5-rust-mcp-stdio",
+        "duration_ms": 1282,
+        "fatal": "Error: sources add vault failed: Error [engine_capability_missing]: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.",
+        "server_version": "",
+        "metrics": null,
+        "calls": {
+          "primary": 0,
+          "trusted": 0,
+          "extra": 0
+        },
+        "authority": [],
+        "forgets_failed": [],
+        "concurrent_writes": [],
+        "concurrent_visible": 0,
+        "entity_counts": {}
+      },
+      {
+        "id": "n5-rust-mcp-http",
+        "duration_ms": 1218,
+        "fatal": "Error: sources add vault failed: Error [engine_capability_missing]: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.",
+        "server_version": "",
+        "metrics": null,
+        "calls": {
+          "primary": 0,
+          "trusted": 0,
+          "extra": 0
+        },
+        "authority": [],
+        "forgets_failed": [],
+        "concurrent_writes": [],
+        "concurrent_visible": 0,
+        "entity_counts": {}
+      }
+    ],
+    "gaps": {
+      "paraphrase_residue": {
+        "active_after_forget": 0,
+        "of": 0,
+        "note": "documented: withdrawal matches normalized claims lexically"
+      },
+      "non_guarantees": [
+        {
+          "item": "semantic paraphrase retraction",
+          "source": "withdrawal fingerprints fold case, whitespace and listed punctuation only (src/core/facts/withdrawal-schema.ts); a paraphrase has a different fingerprint"
+        },
+        {
+          "item": "physical erasure of page history (get_versions), vault Git history, files and backups",
+          "source": "src/core/facts/forget.ts header: \"These are retractions: original prose, files and backups may retain text\"; docs/guides/memory-boundaries.md"
+        },
+        {
+          "item": "prose outside the Facts fence",
+          "source": "src/core/facts/forget.ts header; the chunker drops forgotten fence rows only (src/core/remote-body.ts)"
+        },
+        {
+          "item": "struck fence rows",
+          "source": "forget strikes the row with a \"forgotten:\" marker and keeps it as the audit trail (src/core/facts/withdrawal-overlay.ts)"
+        }
+      ]
+    },
+    "retained_by_design": {
+      "struck_fence_rows_seen": 0,
+      "page_history_tokens": 0,
+      "vault_git_tokens": 0,
+      "prose_chunk_hits": 0
+    },
+    "meta_hot_memory_residue": {
+      "scope": "reported, not gated (a tier found during development, after the rules were frozen): remote responses whose MCP _meta.brain_hot_memory still carried a canary after its forget returned",
+      "pglite": {
+        "responses": 0,
+        "canaries": 0,
+        "cells_with_residue": []
+      },
+      "postgres": {
+        "responses": 0,
+        "canaries": 0,
+        "cells_with_residue": []
+      },
+      "witnessed_before_forget": 0,
+      "evidence": []
+    },
+    "unmeasured_tiers": [
+      {
+        "tier": "dream synthesis and consolidation (takes, synthesized pages)",
+        "reason": "these phases call a chat model; the hermetic arm strips every key and no fake chat endpoint was wired for this slice, so they were not run. The capability matrix lists them as tiers forget does not touch (a gap, not scored)."
+      },
+      {
+        "tier": "think",
+        "reason": "keyless think returns the gather only, with no synthesized answer; not probed."
+      },
+      {
+        "tier": "ontology and timeline rows",
+        "reason": "forget does not write to them (capability matrix, N5); the canaries here are not written there."
+      }
+    ],
+    "findings": [],
+    "leak_evidence": [],
+    "cells": [
+      {
+        "id": "n5-rust-cli",
+        "engine": "rust",
+        "interface": "cli",
+        "duration_ms": 1259,
+        "server_version": "",
+        "decide": {
+          "ok": false,
+          "slots": []
+        },
+        "writes": [],
+        "fact_ids": {},
+        "forgets": [],
+        "checkpoints": {},
+        "struck_by_design": 0,
+        "paraphrase": [],
+        "concurrent_writes": [],
+        "concurrent_visible": 0,
+        "retained_by_design": {
+          "page_history_tokens": 0,
+          "vault_git_tokens": 0,
+          "prose_chunk_hits": 0
+        },
+        "entity_counts": {},
+        "authority": [],
+        "meta_residue": {
+          "responses": 0,
+          "canaries": [],
+          "witnessed_before_forget": [],
+          "evidence": []
+        },
+        "score": null,
+        "private_canary_leaks": 0,
+        "leak_evidence": [],
+        "calls": {
+          "primary": 0,
+          "trusted": 0,
+          "extra": 0
+        },
+        "operator": [
+          {
+            "step": "init",
+            "args": [
+              "init",
+              "--migrate-only",
+              "--non-interactive"
+            ],
+            "code": 0,
+            "ms": 744,
+            "tail": "Schema up to date (engine: rust)."
+          },
+          {
+            "step": "sources-add:vault",
+            "args": [
+              "sources",
+              "add",
+              "vault",
+              "--path",
+              "<tmp>/n5-forget-residue-cells-4W4W0W/n5-rust-cli/vault-vault"
+            ],
+            "code": 1,
+            "ms": 502,
+            "tail": "Error [engine_capability_missing]: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.\nFix: Run it on a pglite or postgres brain, or wait for a gbrain release whose Rust engine supports it."
+          }
+        ],
+        "fatal": "Error: sources add vault failed: Error [engine_capability_missing]: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.\nFix: Run it on a pglite or postgres brain, or wait for a gbrain release whose Rust engine supports it.\n    at setup (eval/runner/lifecycle/slice.ts:243:37)\n    at async runCell (eval/runner/n5-forget-residue.ts:245:16)\n    at processTicksAndRejections (native:7:39)",
+        "remote_access_refused": null,
+        "remote_calls": 0
+      },
+      {
+        "id": "n5-rust-mcp-stdio",
+        "engine": "rust",
+        "interface": "mcp-stdio",
+        "duration_ms": 1282,
+        "server_version": "",
+        "decide": {
+          "ok": false,
+          "slots": []
+        },
+        "writes": [],
+        "fact_ids": {},
+        "forgets": [],
+        "checkpoints": {},
+        "struck_by_design": 0,
+        "paraphrase": [],
+        "concurrent_writes": [],
+        "concurrent_visible": 0,
+        "retained_by_design": {
+          "page_history_tokens": 0,
+          "vault_git_tokens": 0,
+          "prose_chunk_hits": 0
+        },
+        "entity_counts": {},
+        "authority": [],
+        "meta_residue": {
+          "responses": 0,
+          "canaries": [],
+          "witnessed_before_forget": [],
+          "evidence": []
+        },
+        "score": null,
+        "private_canary_leaks": 0,
+        "leak_evidence": [],
+        "calls": {
+          "primary": 0,
+          "trusted": 0,
+          "extra": 0
+        },
+        "operator": [
+          {
+            "step": "init",
+            "args": [
+              "init",
+              "--migrate-only",
+              "--non-interactive"
+            ],
+            "code": 0,
+            "ms": 762,
+            "tail": "Schema up to date (engine: rust)."
+          },
+          {
+            "step": "sources-add:vault",
+            "args": [
+              "sources",
+              "add",
+              "vault",
+              "--path",
+              "<tmp>/n5-forget-residue-cells-4W4W0W/n5-rust-mcp-stdio/vault-vault"
+            ],
+            "code": 1,
+            "ms": 509,
+            "tail": "Error [engine_capability_missing]: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.\nFix: Run it on a pglite or postgres brain, or wait for a gbrain release whose Rust engine supports it."
+          }
+        ],
+        "fatal": "Error: sources add vault failed: Error [engine_capability_missing]: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.\nFix: Run it on a pglite or postgres brain, or wait for a gbrain release whose Rust engine supports it.\n    at setup (eval/runner/lifecycle/slice.ts:243:37)\n    at async runCell (eval/runner/n5-forget-residue.ts:245:16)\n    at processTicksAndRejections (native:7:39)\n[server stderr tail]\n",
+        "remote_access_refused": null,
+        "remote_calls": 0
+      },
+      {
+        "id": "n5-rust-mcp-http",
+        "engine": "rust",
+        "interface": "mcp-http",
+        "duration_ms": 1218,
+        "server_version": "",
+        "decide": {
+          "ok": false,
+          "slots": []
+        },
+        "writes": [],
+        "fact_ids": {},
+        "forgets": [],
+        "checkpoints": {},
+        "struck_by_design": 0,
+        "paraphrase": [],
+        "concurrent_writes": [],
+        "concurrent_visible": 0,
+        "retained_by_design": {
+          "page_history_tokens": 0,
+          "vault_git_tokens": 0,
+          "prose_chunk_hits": 0
+        },
+        "entity_counts": {},
+        "authority": [],
+        "meta_residue": {
+          "responses": 0,
+          "canaries": [],
+          "witnessed_before_forget": [],
+          "evidence": []
+        },
+        "score": null,
+        "private_canary_leaks": 0,
+        "leak_evidence": [],
+        "calls": {
+          "primary": 0,
+          "trusted": 0,
+          "extra": 0
+        },
+        "operator": [
+          {
+            "step": "init",
+            "args": [
+              "init",
+              "--migrate-only",
+              "--non-interactive"
+            ],
+            "code": 0,
+            "ms": 751,
+            "tail": "Schema up to date (engine: rust)."
+          },
+          {
+            "step": "sources-add:vault",
+            "args": [
+              "sources",
+              "add",
+              "vault",
+              "--path",
+              "<tmp>/n5-forget-residue-cells-4W4W0W/n5-rust-mcp-http/vault-vault"
+            ],
+            "code": 1,
+            "ms": 457,
+            "tail": "Error [engine_capability_missing]: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.\nFix: Run it on a pglite or postgres brain, or wait for a gbrain release whose Rust engine supports it."
+          }
+        ],
+        "fatal": "Error: sources add vault failed: Error [engine_capability_missing]: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.\nFix: Run it on a pglite or postgres brain, or wait for a gbrain release whose Rust engine supports it.\n    at setup (eval/runner/lifecycle/slice.ts:243:37)\n    at async runCell (eval/runner/n5-forget-residue.ts:245:16)\n    at processTicksAndRejections (native:7:39)\n[server stderr tail]\n",
+        "remote_access_refused": null,
+        "remote_calls": 0
+      }
+    ]
+  },
+  "engine": "rust",
+  "not_applicable": [],
+  "accounting": {
+    "planned": 0,
+    "attempted": 0,
+    "scored": 0,
+    "errors": 0,
+    "misses": null,
+    "source": "derived"
+  }
+}

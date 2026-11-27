@@ -1,0 +1,4 @@
+evals_commit=8e36959c52cf4f327d1a20f634cde2e20b9069ae dirty=0 gbrain=d8eb35769120cf0b60704478aaef96a412ee0009
+addon_download_sha256=d325d17502bda4dd3ebcd73ff73a45e15016e87823a0c50cd4bb9261d4748d74 expected=d325d17502bda4dd3ebcd73ff73a45e15016e87823a0c50cd4bb9261d4748d74 bytes=53108048
+budget_run_id=engine-bench-gate-suites-v0.60.777.0-2026-11-27T06-29-39-395Z-f05e8d3f
+rc_run=0 rc_emit=0

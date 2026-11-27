@@ -1,0 +1,67 @@
+{
+  "schema": "engine-bench.gate-suite/1",
+  "suite": "cat19",
+  "gate": "E3",
+  "counted": true,
+  "amendment_text": "cat19 (E3, Cat 19 sick-brain remediation (hash embeddings); eval/runner/cat19-doctor-remediate.ts): Rust is within 0.5 points of, or equal in count to, each TypeScript engine.",
+  "gbrain": {
+    "overlay": {
+      "commit": "d8eb35769120cf0b60704478aaef96a412ee0009",
+      "ref": "d8eb35769120cf0b60704478aaef96a412ee0009",
+      "checkout_dirty": false
+    },
+    "rust_addon": {
+      "sha256": "d325d17502bda4dd3ebcd73ff73a45e15016e87823a0c50cd4bb9261d4748d74",
+      "target": "linux-x64-glibc"
+    }
+  },
+  "verdict": "FAIL",
+  "reason": "the Rust receipt has no brain_score (verdict fail) | Rust undefined vs pglite 85: more than 0.5 points apart | Rust 0 vs pglite 5: counts differ | Rust undefined vs postgres 85: more than 0.5 points apart | Rust 0 vs postgres 5: counts differ | The Rust run refused 1 engine calls at: core/persistence/maintenance.ts:59 (readManagedModeRows, persistence_journal, from core/import-file.ts:347) x1",
+  "rows": [
+    {
+      "id": "cat19",
+      "benchmark": "Cat 19 sick-brain remediation (hash embeddings)",
+      "verdict": "FAIL",
+      "measured": {
+        "pglite": {
+          "brain_score": 85,
+          "gates_passed": 5
+        },
+        "postgres": {
+          "brain_score": 85,
+          "gates_passed": 5
+        },
+        "rust": {
+          "gates_passed": 0
+        }
+      },
+      "reason": "the Rust receipt has no brain_score (verdict fail) | Rust undefined vs pglite 85: more than 0.5 points apart | Rust 0 vs pglite 5: counts differ | Rust undefined vs postgres 85: more than 0.5 points apart | Rust 0 vs postgres 5: counts differ | The Rust run refused 1 engine calls at: core/persistence/maintenance.ts:59 (readManagedModeRows, persistence_journal, from core/import-file.ts:347) x1"
+    }
+  ],
+  "losses": [
+    {
+      "id": "cat19:brain_score",
+      "reason": "the Rust receipt has no brain_score (verdict fail)"
+    },
+    {
+      "id": "cat19:brain_score:vs-pglite",
+      "reason": "Rust undefined vs pglite 85: more than 0.5 points apart"
+    },
+    {
+      "id": "cat19:gates_passed:vs-pglite",
+      "reason": "Rust 0 vs pglite 5: counts differ"
+    },
+    {
+      "id": "cat19:brain_score:vs-postgres",
+      "reason": "Rust undefined vs postgres 85: more than 0.5 points apart"
+    },
+    {
+      "id": "cat19:gates_passed:vs-postgres",
+      "reason": "Rust 0 vs postgres 5: counts differ"
+    },
+    {
+      "id": "cat19:refusal-sites",
+      "reason": "The Rust run refused 1 engine calls at: core/persistence/maintenance.ts:59 (readManagedModeRows, persistence_journal, from core/import-file.ts:347) x1"
+    }
+  ]
+}

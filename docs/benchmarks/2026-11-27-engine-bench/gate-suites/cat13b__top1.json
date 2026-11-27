@@ -1,0 +1,47 @@
+{
+  "schema": "engine-bench.gate-suite/1",
+  "suite": "cat13b/top1",
+  "gate": "E1",
+  "counted": true,
+  "amendment_text": "cat13b/top1 (E1, Cat 13b source swamp, gbrain arm, top-1; eval/runner/cat13b-source-swamp.ts): Rust is at least the PGLite and the Postgres value.",
+  "gbrain": {
+    "overlay": {
+      "commit": "d8eb35769120cf0b60704478aaef96a412ee0009",
+      "ref": "d8eb35769120cf0b60704478aaef96a412ee0009",
+      "checkout_dirty": false
+    },
+    "rust_addon": {
+      "sha256": "d325d17502bda4dd3ebcd73ff73a45e15016e87823a0c50cd4bb9261d4748d74",
+      "target": "linux-x64-glibc"
+    }
+  },
+  "verdict": "FAIL",
+  "reason": "Rust run did not complete (error): adapter init/teardown failed: OperationError: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.; adapter init/teardown failed: OperationError: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.; adapter init/teardown failed: OperationError: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.; adapter init/teardown failed: OperationError: This brain's engine does not support read | The Rust run refused 2 engine calls at: core/persistence/maintenance.ts:59 (readManagedModeRows, persistence_journal, from core/import-file.ts:347) x2",
+  "rows": [
+    {
+      "id": "cat13b/top1",
+      "benchmark": "Cat 13b source swamp, gbrain arm, top-1",
+      "verdict": "FAIL",
+      "measured": {
+        "pglite": {
+          "top1": 0.9333333333333333
+        },
+        "postgres": {
+          "top1": 0.9333333333333333
+        },
+        "rust": null
+      },
+      "reason": "Rust run did not complete (error): adapter init/teardown failed: OperationError: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.; adapter init/teardown failed: OperationError: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.; adapter init/teardown failed: OperationError: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.; adapter init/teardown failed: OperationError: This brain's engine does not support read | The Rust run refused 2 engine calls at: core/persistence/maintenance.ts:59 (readManagedModeRows, persistence_journal, from core/import-file.ts:347) x2"
+    }
+  ],
+  "losses": [
+    {
+      "id": "cat13b/top1",
+      "reason": "Rust run did not complete (error): adapter init/teardown failed: OperationError: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.; adapter init/teardown failed: OperationError: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.; adapter init/teardown failed: OperationError: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.; adapter init/teardown failed: OperationError: This brain's engine does not support read"
+    },
+    {
+      "id": "cat13b/top1:refusal-sites",
+      "reason": "The Rust run refused 2 engine calls at: core/persistence/maintenance.ts:59 (readManagedModeRows, persistence_journal, from core/import-file.ts:347) x2"
+    }
+  ]
+}

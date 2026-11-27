@@ -1,0 +1,42 @@
+# BrainBench N14: large-page fidelity (gbrain 0.60.777.0, overlay d8eb357; rust; tiers 2mb; arms single-page, managed-parts, native)
+native capability: present (get_page declares body {"type":"string","enum":["auto","full","none","outline","window"],"description":"auto: whole up to 256 KB, else outline + window; a window's edit_target is edit_page `within`. none: revision + size + tail_sha256 (append_page expected_tail_sha256).","fullSurfaceOnly":true}; append_page exists; upload sessions exist)
+[2mb] generated conversation: 2.0 MB, 20258 lines, 365 sections
+[2mb] generated project-log: 2.0 MB, 23888 lines, 365 sections
+[2mb] generated book: 1.5 MB, 4321 lines, 41 sections
+[2mb] conversation / single-page: start
+[2mb] conversation / managed-parts: start
+[2mb] conversation / managed-parts: done in 1.6 s, peak RSS 164 MB
+[2mb] conversation / native: start
+[2mb] conversation / single-page: done in 1.7 s, peak RSS 162 MB
+[2mb] project-log / single-page: start
+[2mb] conversation / native: done in 1.7 s, peak RSS 166 MB
+[2mb] project-log / managed-parts: start
+[2mb] project-log / single-page: done in 1.6 s, peak RSS 170 MB
+[2mb] project-log / native: start
+[2mb] project-log / managed-parts: done in 1.7 s, peak RSS 162 MB
+[2mb] book / single-page: start
+[2mb] project-log / native: done in 1.7 s, peak RSS 173 MB
+[2mb] book / managed-parts: start
+[2mb] book / single-page: done in 1.5 s, peak RSS 169 MB
+[2mb] book / native: start
+[2mb] book / managed-parts: done in 1.5 s, peak RSS 158 MB
+[2mb] book / native: done in 1.5 s, peak RSS 168 MB
+
+verdict: fail (roundtrip.not_stored=9)
+safety: crashes 0, responses over 1048576 B 0, round-trip byte loss 0, presence failures 0
+quality: native append embed ratio max n/a (<= 3), native recall gap vs parts 0 points (<= 2), native keyword recall at 2 MB 0 (>= 0.9); native capability present
+
+| tier | doc | arm | ingest | chunks | keyword recall@10 | min decile | delivered | reads ok | max frame B | append embed ratio | rewritten | round trip | ingest s | RSS over base MB |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 2mb | conversation | single-page | error (engine_capability_missing) | n/a | 0/40 | 0.00 | 0/40 | 0/0 | 75 | n/a | n/a | not_stored | 0.0 | 58 |
+| 2mb | conversation | managed-parts | error (engine_capability_missing) | n/a | 0/40 | 0.00 | 0/40 | 0/0 | 75 | n/a | n/a | not_stored | 0.0 | 58 |
+| 2mb | conversation | native | error (engine_capability_missing) | n/a | 0/40 | 0.00 | 0/40 | 0/0 | 75 | n/a | n/a | not_stored | 0.0 | 58 |
+| 2mb | project-log | single-page | error (engine_capability_missing) | n/a | 0/40 | 0.00 | 0/40 | 0/0 | 75 | n/a | n/a | not_stored | 0.0 | 58 |
+| 2mb | project-log | managed-parts | error (engine_capability_missing) | n/a | 0/40 | 0.00 | 0/40 | 0/0 | 75 | n/a | n/a | not_stored | 0.0 | 57 |
+| 2mb | project-log | native | error (engine_capability_missing) | n/a | 0/40 | 0.00 | 0/40 | 0/0 | 75 | n/a | n/a | not_stored | 0.0 | 59 |
+| 2mb | book | single-page | error (engine_capability_missing) | n/a | 0/40 | 0.00 | 0/40 | 0/0 | 75 | n/a | n/a | not_stored | 0.0 | 60 |
+| 2mb | book | managed-parts | error (engine_capability_missing) | n/a | 0/40 | 0.00 | 0/40 | 0/0 | 75 | n/a | n/a | not_stored | 0.0 | 59 |
+| 2mb | book | native | error (engine_capability_missing) | n/a | 0/40 | 0.00 | 0/40 | 0/0 | 75 | n/a | n/a | not_stored | 0.0 | 60 |
+
+gbrain findings: none
+receipt: ./out/correctness-work/n14-rust/receipt.json (hermetic arm 8.7 s)

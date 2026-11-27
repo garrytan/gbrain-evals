@@ -1,0 +1,203 @@
+{
+  "schema": "engine-bench.gate-suite/1",
+  "suite": "cat7",
+  "gate": "E1",
+  "counted": true,
+  "amendment_text": "cat7 (E1, Cat 7 latency and throughput, 1K and 10K pages; eval/runner/perf.ts): reported: it ran on every engine and each metric Rust loses is listed.",
+  "gbrain": {
+    "overlay": {
+      "commit": "d8eb35769120cf0b60704478aaef96a412ee0009",
+      "ref": "d8eb35769120cf0b60704478aaef96a412ee0009",
+      "checkout_dirty": false
+    },
+    "rust_addon": {
+      "sha256": "d325d17502bda4dd3ebcd73ff73a45e15016e87823a0c50cd4bb9261d4748d74",
+      "target": "linux-x64-glibc"
+    }
+  },
+  "verdict": "PASS",
+  "rows": [
+    {
+      "id": "cat7",
+      "benchmark": "Cat 7 latency and throughput, 1K and 10K pages",
+      "verdict": "PASS",
+      "measured": {
+        "pglite": {
+          "get_page@1000.p50_ms": 0.4279390000001513,
+          "get_links@1000.p50_ms": 1.0965919999998732,
+          "get_backlinks@1000.p50_ms": 0.13584499999979016,
+          "get_backlinks_hub@1000.p50_ms": 0.7014735000002474,
+          "get_timeline@1000.p50_ms": 0.0745230000002266,
+          "get_stats@1000.p50_ms": 2.1371320000002925,
+          "list_pages_50@1000.p50_ms": 1.2746325000002798,
+          "search_keyword@1000.p50_ms": 0.1582799999996496,
+          "traverse_paths_d1@1000.p50_ms": 1.3339045000002443,
+          "traverse_paths_d2@1000.p50_ms": 24.48865700000033,
+          "putPage_single@1000.p50_ms": 1.029815000000326,
+          "get_page@10000.p50_ms": 1.662284500001988,
+          "get_links@10000.p50_ms": 1.464577000002464,
+          "get_backlinks@10000.p50_ms": 0.55763499999739,
+          "get_backlinks_hub@10000.p50_ms": 1.133485499998642,
+          "get_timeline@10000.p50_ms": 0.07115250000060769,
+          "get_stats@10000.p50_ms": 7.297698999998829,
+          "list_pages_50@10000.p50_ms": 1.195303000000422,
+          "search_keyword@10000.p50_ms": 0.13282900000194786,
+          "traverse_paths_d1@10000.p50_ms": 1.409740499999316,
+          "traverse_paths_d2@10000.p50_ms": 110.27986750000127,
+          "putPage_single@10000.p50_ms": 1.0175204999977723,
+          "putPage_bulk@1000.ops_per_sec": 657.6303408900659,
+          "addLink_bulk@1000.ops_per_sec": 4307.033616359591,
+          "putPage_bulk@10000.ops_per_sec": 301.9912154083381,
+          "addLink_bulk@10000.ops_per_sec": 4394.911284457287
+        },
+        "postgres": {
+          "get_page@1000.p50_ms": 0.5750959999995757,
+          "get_links@1000.p50_ms": 1.934860000000299,
+          "get_backlinks@1000.p50_ms": 1.9239644999997836,
+          "get_backlinks_hub@1000.p50_ms": 2.7220829999996567,
+          "get_timeline@1000.p50_ms": 0.44568100000014965,
+          "get_stats@1000.p50_ms": 4.6293569999998,
+          "list_pages_50@1000.p50_ms": 4.285404999999628,
+          "search_keyword@1000.p50_ms": 4.5061424999994415,
+          "traverse_paths_d1@1000.p50_ms": 10.193183000000317,
+          "traverse_paths_d2@1000.p50_ms": 105.66595749999942,
+          "putPage_single@1000.p50_ms": 4.322682499998336,
+          "get_page@10000.p50_ms": 0.7913899999985006,
+          "get_links@10000.p50_ms": 0.4368664999929024,
+          "get_backlinks@10000.p50_ms": 0.45953300000110175,
+          "get_backlinks_hub@10000.p50_ms": 1.1354284999979427,
+          "get_timeline@10000.p50_ms": 0.5260200000047917,
+          "get_stats@10000.p50_ms": 10.778236499994819,
+          "list_pages_50@10000.p50_ms": 1.8015340000056312,
+          "search_keyword@10000.p50_ms": 4.147383499999705,
+          "traverse_paths_d1@10000.p50_ms": 61.851110000003246,
+          "traverse_paths_d2@10000.p50_ms": 241.06547500000306,
+          "putPage_single@10000.p50_ms": 5.837918499993975,
+          "putPage_bulk@1000.ops_per_sec": 220.98087560876996,
+          "addLink_bulk@1000.ops_per_sec": 1510.7179955492556,
+          "putPage_bulk@10000.ops_per_sec": 242.06323739250624,
+          "addLink_bulk@10000.ops_per_sec": 1135.416825537459
+        },
+        "rust": {
+          "get_page@1000.p50_ms": 0.20208750000028886,
+          "get_links@1000.p50_ms": 0.1532710000001316,
+          "get_backlinks@1000.p50_ms": 0.13731000000007043,
+          "get_backlinks_hub@1000.p50_ms": 2.185308999999961,
+          "get_timeline@1000.p50_ms": 0.09268800000018018,
+          "get_stats@1000.p50_ms": 21.799613000000136,
+          "list_pages_50@1000.p50_ms": 7.191087000000152,
+          "search_keyword@1000.p50_ms": 0.20377800000005664,
+          "traverse_paths_d1@1000.p50_ms": 2.3114789999990535,
+          "traverse_paths_d2@1000.p50_ms": 37.66674849999981,
+          "putPage_single@1000.p50_ms": 1.5594950000004246,
+          "get_page@10000.p50_ms": 0.14706549999391427,
+          "get_links@10000.p50_ms": 0.06296850000217091,
+          "get_backlinks@10000.p50_ms": 0.06629850000172155,
+          "get_backlinks_hub@10000.p50_ms": 0.8769529999990482,
+          "get_timeline@10000.p50_ms": 0.05089849999785656,
+          "get_stats@10000.p50_ms": 109.97219549999863,
+          "list_pages_50@10000.p50_ms": 24.360393999995722,
+          "search_keyword@10000.p50_ms": 0.12771199999406235,
+          "traverse_paths_d1@10000.p50_ms": 1.0683534999989206,
+          "traverse_paths_d2@10000.p50_ms": 56.927050999998755,
+          "putPage_single@10000.p50_ms": 1.913682999998855,
+          "putPage_bulk@1000.ops_per_sec": 405.13252330280454,
+          "addLink_bulk@1000.ops_per_sec": 1253.0178969021042,
+          "putPage_bulk@10000.ops_per_sec": 292.65877159085056,
+          "addLink_bulk@10000.ops_per_sec": 667.740282344176
+        }
+      },
+      "reason": null
+    }
+  ],
+  "losses": [
+    {
+      "id": "cat7:get_backlinks@1000.p50_ms:vs-pglite",
+      "reason": "Rust 0.137 vs pglite 0.136"
+    },
+    {
+      "id": "cat7:get_backlinks_hub@1000.p50_ms:vs-pglite",
+      "reason": "Rust 2.185 vs pglite 0.701"
+    },
+    {
+      "id": "cat7:get_timeline@1000.p50_ms:vs-pglite",
+      "reason": "Rust 0.093 vs pglite 0.075"
+    },
+    {
+      "id": "cat7:get_stats@1000.p50_ms:vs-pglite",
+      "reason": "Rust 21.800 vs pglite 2.137"
+    },
+    {
+      "id": "cat7:get_stats@1000.p50_ms:vs-postgres",
+      "reason": "Rust 21.800 vs postgres 4.629"
+    },
+    {
+      "id": "cat7:list_pages_50@1000.p50_ms:vs-pglite",
+      "reason": "Rust 7.191 vs pglite 1.275"
+    },
+    {
+      "id": "cat7:list_pages_50@1000.p50_ms:vs-postgres",
+      "reason": "Rust 7.191 vs postgres 4.285"
+    },
+    {
+      "id": "cat7:search_keyword@1000.p50_ms:vs-pglite",
+      "reason": "Rust 0.204 vs pglite 0.158"
+    },
+    {
+      "id": "cat7:traverse_paths_d1@1000.p50_ms:vs-pglite",
+      "reason": "Rust 2.311 vs pglite 1.334"
+    },
+    {
+      "id": "cat7:traverse_paths_d2@1000.p50_ms:vs-pglite",
+      "reason": "Rust 37.667 vs pglite 24.489"
+    },
+    {
+      "id": "cat7:putPage_single@1000.p50_ms:vs-pglite",
+      "reason": "Rust 1.559 vs pglite 1.030"
+    },
+    {
+      "id": "cat7:get_stats@10000.p50_ms:vs-pglite",
+      "reason": "Rust 109.972 vs pglite 7.298"
+    },
+    {
+      "id": "cat7:get_stats@10000.p50_ms:vs-postgres",
+      "reason": "Rust 109.972 vs postgres 10.778"
+    },
+    {
+      "id": "cat7:list_pages_50@10000.p50_ms:vs-pglite",
+      "reason": "Rust 24.360 vs pglite 1.195"
+    },
+    {
+      "id": "cat7:list_pages_50@10000.p50_ms:vs-postgres",
+      "reason": "Rust 24.360 vs postgres 1.802"
+    },
+    {
+      "id": "cat7:putPage_single@10000.p50_ms:vs-pglite",
+      "reason": "Rust 1.914 vs pglite 1.018"
+    },
+    {
+      "id": "cat7:putPage_bulk@1000.ops_per_sec:vs-pglite",
+      "reason": "Rust 405.133 vs pglite 657.630"
+    },
+    {
+      "id": "cat7:addLink_bulk@1000.ops_per_sec:vs-pglite",
+      "reason": "Rust 1253.018 vs pglite 4307.034"
+    },
+    {
+      "id": "cat7:addLink_bulk@1000.ops_per_sec:vs-postgres",
+      "reason": "Rust 1253.018 vs postgres 1510.718"
+    },
+    {
+      "id": "cat7:putPage_bulk@10000.ops_per_sec:vs-pglite",
+      "reason": "Rust 292.659 vs pglite 301.991"
+    },
+    {
+      "id": "cat7:addLink_bulk@10000.ops_per_sec:vs-pglite",
+      "reason": "Rust 667.740 vs pglite 4394.911"
+    },
+    {
+      "id": "cat7:addLink_bulk@10000.ops_per_sec:vs-postgres",
+      "reason": "Rust 667.740 vs postgres 1135.417"
+    }
+  ]
+}
