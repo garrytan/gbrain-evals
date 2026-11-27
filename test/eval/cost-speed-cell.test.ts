@@ -132,8 +132,8 @@ describe('held-back probes', () => {
       for (const p of held) expect([p.started_idle, p.polls > 0, p.errored_polls]).toEqual([true, true, 0]);
       expect(e.calibration).toMatchObject({ drained: true, started_idle: true, searches: 3, errored: 0, idle: true, unlabelled_routes: [] });
       const lastHeld = held.at(-1)!;
-      if (LATE.has(e.conversation)) expect([lastHeld.status, lastHeld.miss]).toEqual(['missed', 'late']);
-      else expect(held.every(p => p.status === 'found' && p.write_to_queryable_ms! >= 0 && p.miss === null)).toBe(true);
+      if (LATE.has(e.conversation)) expect([lastHeld.status, lastHeld.miss, lastHeld.miss_idle]).toEqual(['missed', 'late', true]);
+      else expect(held.every(p => p.status === 'found' && p.write_to_queryable_ms! >= 0 && p.miss === null && p.miss_idle === null)).toBe(true);
       const file = readFileSync(join(out, 'runs', def.id, 'r', realizationId(def.id, e.conversation, 0), 'write-probes.ndjson'), 'utf8').trim().split('\n');
       expect(file).toHaveLength(4);
     }

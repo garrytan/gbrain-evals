@@ -512,9 +512,10 @@ export interface ProbeRecord { realization_id: string; source_id: string; kind: 
 /**
  * A held-back probe cell's write-to-queryable probe (eval/runner/memory-qa/cost-speed-probes.ts): `bulk` during the bulk import
  * (reported apart), `held-back` one at a time on an idle system (counted). A held-back miss is `late` when one search after
- * the next idle check finds the session and `never` when it doesn't.
+ * the next idle check finds the session and `never` when it doesn't; `miss_idle` says whether that idle check saw the
+ * system idle or gave up at its limit.
  */
-export interface WriteProbe extends WriteProbeRecord { realization_id: string; kind: 'bulk' | 'held-back'; miss: 'late' | 'never' | null; idle_waited_ms: number | null; poll_errors: string[] }
+export interface WriteProbe extends WriteProbeRecord { realization_id: string; kind: 'bulk' | 'held-back'; miss: 'late' | 'never' | null; miss_idle: boolean | null; idle_waited_ms: number | null; poll_errors: string[] }
 /** The probe label's calibration window: searches on a drained system with their passages registered, closed by an idle check; any request not labelled probe names a route the label misses. */
 export interface ProbeCalibration { drained: boolean; started_idle: boolean; searches: number; errored: number; idle: boolean; waited_ms: number; requests: number | null; by_phase: Meter['byPhase'] | null; unlabelled_routes: string[] | null }
 export interface StagedRetrieval {
@@ -1123,18 +1124,19 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
       }
       const rec = probeRecord(input.source_id, polls, startedIdle, horizonMs);
       let miss: WriteProbe['miss'] = null;
+      let missIdle: boolean | null = null;
       if (rec.status === 'missed' && kind === 'held-back' && passage !== null) {
-        await idleCheck();
+        missIdle = (await idleCheck()).idle;
         await label(passage, 1);
         try { miss = (await search(passage, input.source_id)).found ? 'late' : 'never'; }
         catch (e) { errors.push((e as Error).message.slice(0, 200)); }
         finally { await label(passage, -1); }
       }
-      return { ...rec, realization_id: rid, kind, miss, idle_waited_ms: idleWaited, poll_errors: errors.slice(0, 20) };
+      return { ...rec, realization_id: rid, kind, miss, miss_idle: missIdle, idle_waited_ms: idleWaited, poll_errors: errors.slice(0, 20) };
     };
     /** A probe whose write threw or reported errors: errored, never polled, so a failed write is never a miss. */
     const writeFailedProbe = (input: SessionInput, kind: WriteProbe['kind'], startedIdle: boolean, idleWaited: number | null): WriteProbe =>
-      ({ ...probeRecord(input.source_id, [], startedIdle, horizonMs), realization_id: rid, kind, miss: null, idle_waited_ms: idleWaited, poll_errors: [`write failed: ${errors.at(-1)?.message ?? 'unknown'}`.slice(0, 200)] });
+      ({ ...probeRecord(input.source_id, [], startedIdle, horizonMs), realization_id: rid, kind, miss: null, miss_idle: null, idle_waited_ms: idleWaited, poll_errors: [`write failed: ${errors.at(-1)?.message ?? 'unknown'}`.slice(0, 200)] });
     const bulkProbes: Array<Promise<WriteProbe>> = [];
     const t0 = performance.now();
     let importError: string | null = null;
