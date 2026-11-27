@@ -459,10 +459,15 @@ export function cs1FullContext(fc: Cs1FullContextReader, profile: Cs1Profile) {
   const perCorrect = (v: number | null) => v === null || !accuracy.correct ? null : v / (p.questions * accuracy.key_matched!);
   const uncachedRate = sum(w => w.uncached_tokens ?? 0) > 0 ? sum(w => w.uncached_usd) / sum(w => w.uncached_tokens ?? 0) : null;
   if (sum(w => w.cache_write_tokens) === 0 && uncachedRate !== null && sum(w => w.questions) > 0) {
-    // A reader that reports no cache writes sends the whole history uncached with every question: warm and cold agree.
-    const usd = p.questions * (history * uncachedRate + sum(w => w.output_usd) / sum(w => w.questions));
-    return { fits: true as const, history_tokens: history, warm_usd: usd, cold_usd: usd, accuracy, cost_per_correct: accuracy.correct ? { warm_usd: perCorrect(usd), cold_usd: perCorrect(usd) } : null,
-      note: accuracy.correct ? 'no cache writes reported: priced at the uncached input rate' : 'no correct answers' };
+    // A reader that reports no cache writes fills its cache at the uncached input rate: cold sends the whole history
+    // uncached with every question, and warm, when cached reads were measured, fills once a day and reads the rest cached.
+    const out = sum(w => w.output_usd) / sum(w => w.questions);
+    const usd = p.questions * (history * uncachedRate + out);
+    const cachedRate = sum(w => w.cached_tokens) > 0 ? sum(w => w.cached_usd) / sum(w => w.cached_tokens) : null;
+    const writes = Math.min(p.questions, HOURS_PER_MONTH / 24);
+    const warm = cachedRate === null ? usd : writes * history * uncachedRate + (p.questions - writes) * history * cachedRate + p.questions * out;
+    return { fits: true as const, history_tokens: history, warm_usd: warm, cold_usd: usd, accuracy, cost_per_correct: accuracy.correct ? { warm_usd: perCorrect(warm), cold_usd: perCorrect(usd) } : null,
+      note: accuracy.correct ? (cachedRate === null ? 'no cache writes reported: priced at the uncached input rate' : 'no cache writes reported: cache fills priced at the uncached input rate') : 'no correct answers' };
   }
   const writeRate = sum(w => w.cache_write_tokens) > 0 ? sum(w => w.cache_write_usd) / sum(w => w.cache_write_tokens) : null;
   const cachedRate = sum(w => w.cached_tokens) > 0 ? sum(w => w.cached_usd) / sum(w => w.cached_tokens) : null;

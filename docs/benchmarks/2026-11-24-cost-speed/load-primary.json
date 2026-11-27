@@ -5654,7 +5654,7 @@
         "light": {
           "fits": true,
           "history_tokens": 129054,
-          "warm_usd": 1.0667412800000002,
+          "warm_usd": 1.02178747,
           "cold_usd": 1.0667412800000002,
           "accuracy": {
             "questions": 200,
@@ -5664,10 +5664,10 @@
             "key_matched": 0.155
           },
           "cost_per_correct": {
-            "warm_usd": 0.21506880645161294,
+            "warm_usd": 0.20600553830645163,
             "cold_usd": 0.21506880645161294
           },
-          "note": "no cache writes reported: priced at the uncached input rate"
+          "note": "no cache writes reported: cache fills priced at the uncached input rate"
         }
       }
     },

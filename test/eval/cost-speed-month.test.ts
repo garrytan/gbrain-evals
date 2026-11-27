@@ -251,6 +251,17 @@ describe('baseline-full-context', () => {
     expect(heavy.note).toBe('no cache writes reported: priced at the uncached input rate');
     expect(cs1FullContext({ ...plain, worlds: plain.worlds.map(w => ({ ...w, uncached_tokens: 0 })) }, 'heavy').note).toBe('not priced: no cache-write reads measured');
   });
+  test('a reader that reads from cache but reports no cache writes fills once a day at the uncached rate and reads the rest cached', () => {
+    const cached = { worlds: WORLDS.slice(0, 2).map(world => ({ world, questions: 20, cached_tokens: 19 * 180_000, cached_usd: 19 * 180_000 * 1e-7, cache_write_tokens: 0, cache_write_usd: 0, uncached_tokens: 180_000, uncached_usd: 180_000 * 2.5e-7, output_usd: 0.1, classes: classes(10) })),
+      fit: { heavy: { fits: true }, light: { fits: true, prompt_tokens: 110_000 } } };
+    const days = 730 / 24;
+    const heavy = cs1FullContext(cached, 'heavy');
+    expect(heavy.cold_usd).toBeCloseTo(300 * (968_000 * 2.5e-7 + 0.005), 6);
+    expect(heavy.warm_usd).toBeCloseTo(days * 968_000 * 2.5e-7 + (300 - days) * 968_000 * 1e-7 + 300 * 0.005, 6);
+    expect(heavy.warm_usd!).toBeLessThan(heavy.cold_usd!);
+    expect(heavy.cost_per_correct!.warm_usd).toBeCloseTo(heavy.warm_usd! / 150, 6);
+    expect(heavy.note).toBe('no cache writes reported: cache fills priced at the uncached input rate');
+  });
 });
 
 describe('decision rules', () => {

@@ -151,9 +151,9 @@ judge ran here.
 
 Full context isn't in the table: at the heavy profile the one-year history (about 968,000 tokens) doesn't fit either
 reader's input limit. At the light profile (215 messages and 32 questions a month, a one-year history of about 104,000
-tokens) it costs $28.24 to $29.63 a month with claude-opus-5-5 (warm cache to cold) and $1.07 with particle-1, which
-reported no cache writes and is priced at its uncached rate; it had 14 key-matched correct and 176 unclear answers of
-200 with claude-opus-5-5, and 31 and 153 with particle-1. At the light profile a rented server costs more than any
+tokens) it costs $28.24 to $29.63 a month with claude-opus-5-5 (warm cache to cold) and $1.02 to $1.07 with particle-1,
+which read from its cache but reported no cache writes, so each cache fill is priced at its uncached rate; it had 14
+key-matched correct and 176 unclear answers of 200 with claude-opus-5-5, and 31 and 153 with particle-1. At the light profile a rented server costs more than any
 system's provider calls and reading combined, so full context costs less a month than any system on a rented server and
 more than any system run without one (the light table is in
 [`table-primary-light.md`](2026-11-24-cost-speed/table-primary-light.md)).
