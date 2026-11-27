@@ -1,0 +1,24 @@
+# BrainBench N1: knowledge update and supersession (gbrain 0.60.777.0, overlay d8eb357)
+[n1] start rust/cli
+[n1] start rust/mcp-stdio
+[n1] start rust/mcp-http
+[n1] done n1-rust-cli in 1s FATAL Error: sources add vault failed: Error [engine_capability_missing]: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.
+[n1] done n1-rust-mcp-stdio in 1s FATAL Error: sources add vault failed: Error [engine_capability_missing]: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.
+[n1] done n1-rust-mcp-http in 1s FATAL Error: sources add vault failed: Error [engine_capability_missing]: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.
+
+verdict: error (Error: sources add vault failed: Error [engine_capability_missing]: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.
+Fix: Run it on a pglite or postgres brain, or wait for a gbrain release whose Rust engine supports it.
+    at setup (./eval/runner/lifecycle/slice.ts:243:37)
+    at async runCell (/h)
+safety contracts (rust cells, 3 cells):
+  stale values served as current: 0 of 0 current-value and history probes
+  private values in remote responses: 0 (exposure probes with signal: 0 of 0)
+  acknowledged writes lost: 0
+quality metrics:
+  current-value accuracy: n/a (0 of 0 current-value probes)
+  history retained: n/a (0 of 0 history probes)
+  negative controls: 0 of 0
+  in-process ontology arm (unmanaged engine, exploratory): current 0.0% of 18, stale 0, as-of 0.0%, remote leaks 0
+promotion rules: fail (current-value-floor, history-retained-floor)
+gbrain findings: see docs/benchmarks/2026-10-01-wave-bugs.md (N1-*)
+receipt: ./out/correctness-work/n1-rust/receipt.json

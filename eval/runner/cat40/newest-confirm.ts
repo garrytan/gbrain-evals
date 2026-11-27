@@ -69,7 +69,7 @@ export function worldPlan(world: NewestWorld, build: string, harnessSha: string,
   const common = ['--world', file, '--concurrency', '10', '--repeat', '1', '--budget-ledger', ledger, '--transcripts', '--accept-freeze-drift', driftNote(harnessSha, date)];
   const gbrain = ['--arms', 'gbrain', '--gbrain-label', NEWEST_LABEL, '--gbrain-repo', '../gbrain', '--gbrain-ref', build, '--gbrain-root', gbrainRootFor(world), '--slots', String(NEWEST_SLOTS), '--no-pglite-analyze'];
   const run = (id: string, model: string, arm: string[], extra: string[] = [], note?: string): Step => ({
-    id, argv: ['bun', 'eval/runner/cat40-model-ladder.ts', ...common, '--models', model, '--judge', JUDGE_FOR[model], ...arm, ...extra, '--out', `${dir}/${id}`, '--budget-usd', cap(id)],
+    id, argv: ['bun', 'eval/runner/cat40-model-ladder.ts', ...common, '--models', model, '--judge', JUDGE_FOR[model], ...arm, ...extra, '--out', `${dir}/${id}`, '--budget-usd', cap(id), ...(model === PARTICLE ? ['--paid-window', '$PAID_WINDOW'] : [])],
     ...(note ? { note } : {}), ...(model === PARTICLE ? { paid_window: 'particle' as const } : {}),
   });
   const short = (m: string) => (m.startsWith('claude') ? 'opus' : m.startsWith('gpt') ? 'sol' : 'particle');

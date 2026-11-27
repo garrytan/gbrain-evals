@@ -1,0 +1,42 @@
+{
+  "schema": "engine-bench.gate-suite/1",
+  "suite": "cat10",
+  "gate": "E1",
+  "counted": true,
+  "amendment_text": "cat10 (E1, Cat 10 adversarial input, ops succeeded; eval/runner/adversarial.ts): Rust passes every case of its own run.",
+  "gbrain": {
+    "overlay": {
+      "commit": "d8eb35769120cf0b60704478aaef96a412ee0009",
+      "ref": "d8eb35769120cf0b60704478aaef96a412ee0009",
+      "checkout_dirty": false
+    },
+    "rust_addon": {
+      "sha256": "d325d17502bda4dd3ebcd73ff73a45e15016e87823a0c50cd4bb9261d4748d74",
+      "target": "linux-x64-glibc"
+    }
+  },
+  "verdict": "PASS",
+  "rows": [
+    {
+      "id": "cat10",
+      "benchmark": "Cat 10 adversarial input, ops succeeded",
+      "verdict": "PASS",
+      "measured": {
+        "pglite": {
+          "ops_succeeded": 133,
+          "ops_attempted": 133
+        },
+        "postgres": {
+          "ops_succeeded": 133,
+          "ops_attempted": 133
+        },
+        "rust": {
+          "ops_succeeded": 133,
+          "ops_attempted": 133
+        }
+      },
+      "reason": null
+    }
+  ],
+  "losses": []
+}

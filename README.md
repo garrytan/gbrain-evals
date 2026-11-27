@@ -203,6 +203,7 @@ behaviour, such as `forget` leaving nothing behind or a sync catching up, where 
 | Graph walks on fictional graphs of 10,000 to 1,000,000 pages: Postgres against HydraDB as the walk engine | Postgres faster at every size, same answer on all 54,842 compared calls: 95th-percentile warm time **1.44 s vs 6.28 s** at 100,000 pages and 3.45 s vs 6.28 s at 1,000,000⁹ | `fc1121cae58` | [Graph backend](docs/benchmarks/2026-10-17-graph-backend.md) |
 | **Keeping memory correct, private and safe** | | | |
 | Serving the new value after an update | **388 of 388** probes, never stale, on PGLite and Postgres through the CLI and MCP¹⁰ | `6ce7195b4` (v0.60.733.0) | [Knowledge updates](docs/benchmarks/2026-10-01-n1-knowledge-update.md) |
+| gbrain's opt-in Rust storage engine against PGLite and Postgres (counted: correctness, output bytes, 470 LongMemEval-S questions and the 15 gate suites gbrain's design plan names) | **Not ready yet**: on this release a Rust brain refuses gbrain's own page write, and Rust passed 3 of 15 gate suites; PGLite and Postgres matched on all 470 questions and on the 14 scored suites | `d8eb35769` (v0.60.777.0) | [Engine-bench counted wave](docs/benchmarks/2026-11-27-engine-bench.md) |
 | Nothing left behind after `forget` | **0** prohibited outputs, 6 of 6 reinstatements¹⁰ | `6ce7195b4` (v0.60.733.0) | [Forget residue](docs/benchmarks/2026-10-01-n5-forget-residue.md) |
 | Flagging the sentences of a pinned answer whose evidence changed, and refreshing the answer, after one note changes (240 synthetic questions per model) | **90 of 90** edited, superseded or deleted claims flagged, and every refreshed answer after them right except six gpt-6.2-sol answers its judge marked wrongly; **0 of 60** contradictions flagged, and 25.9% of unchanged sentences flagged. Refreshed answers right: claude-opus-5-5 217 of 240, particle-1 199 of 240, gpt-6.2-sol 233 of 240; every miss by Opus and particle-1 is a contradiction answer giving both the old and new city, which the judge scored inconsistently, so the models are not yet told apart. A rescore added afterwards, with a rule for those answers written after the labels were seen, puts particle-1 4.2 points below Opus (interval 0.8 to 7.5 lower); it is a sensitivity check and settles nothing | `38831bb6` (v0.60.769.0) | [Pinned questions](docs/benchmarks/pinned-questions-results.md) |
 | Leaks: private pages reaching agent callers or remote callers not granted them (fewer is better) | **0**, in process and on Postgres over real HTTP (155 of 155 cells, 5 kinds of caller)¹⁰ | `6ce7195b4` (v0.60.733.0) | [Privacy on Postgres](docs/benchmarks/2026-10-06-n6-postgres-http.md) |
@@ -571,10 +572,16 @@ the same reranker 128 ([matched comparison](docs/benchmarks/2026-10-02-concept-v
 
 ## Known limits
 
-- gbrain trails plain files on hard company questions whose sources disagree: 66 against 79 of 80 right at v0.60.742.0
-  (-16.25 points), as at earlier builds, `09d21554d` included (-11.25 on the same tasks)
+- On its shipping defaults, gbrain trails plain files on hard company questions whose sources disagree: 66 against 79
+  of 80 right at v0.60.742.0 (-16.25 points), as at earlier builds, `09d21554d` included (-11.25 on the same tasks)
   ([hard company questions, newest build](docs/benchmarks/2026-11-19-cat40-hard-newest.md);
-  [old-build control](docs/benchmarks/2026-11-19-cat40-hard-old-build-control.md)).
+  [old-build control](docs/benchmarks/2026-11-19-cat40-hard-old-build-control.md)). Turning on
+  `search.long_page_unit=section`, which is off by default, wins most of a gap like it back on other worlds where the
+  deciding documents are long: on six unseen worlds at v0.60.775.0, Opus 5.5 answers 9.58 points more of these questions
+  (+5.0 to +14.58) with no harm on other questions, and its gap to files is +0.42 (-4.17 to +5.42), so that run can't
+  tell level from behind.
+  GPT-6.2 Sol stays behind files with it on (-4.58, -8.75 to -0.83)
+  ([section delivery confirmation](docs/benchmarks/2026-11-24-cat40-h4-fix-confirmation.md)).
 - A timeline read on a 1,000-page brain took about 0.075 ms at `77cf8e111` against 0.045 ms before gbrain's Foundations
   1 release (0.075 and 0.078 ms on the two hosts measured). It has not been measured at the pin. This and the next three
   items are open entries in the [bug ledger](docs/benchmarks/2026-10-01-wave-bugs.md).
@@ -741,6 +748,18 @@ v0.60.776.0 and every compared system that still runs, and the section's opening
 rented server and the answer model set the bill; gbrain's low write cost reflects saving chat sessions without
 extracting facts from them; a session saved to gbrain was searchable after 1.2 seconds at the median. The October block
 is unchanged.
+
+### 2026-11-27: Rust engine counted wave
+
+The results table adds the [engine-bench counted wave](docs/benchmarks/2026-11-27-engine-bench.md) on gbrain
+v0.60.777.0: the opt-in Rust engine is not ready yet, and PGLite and Postgres give the same answers.
+
+### 2026-11-26: Section delivery where sources disagree
+
+The known limit on questions where sources disagree adds the
+[section delivery confirmation](docs/benchmarks/2026-11-24-cat40-h4-fix-confirmation.md): with
+`search.long_page_unit=section` on, gbrain v0.60.775.0 answers more of those questions on six unseen worlds with long
+deciding documents, and for Opus 5.5 its gap to plain files can't be told from level.
 
 ### 2026-11-26: Weekly line judges described as never checked
 

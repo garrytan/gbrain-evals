@@ -1,0 +1,42 @@
+{
+  "schema": "engine-bench.gate-suite/1",
+  "suite": "brainbench/cat4",
+  "gate": "E2",
+  "counted": true,
+  "amendment_text": "brainbench/cat4 (E2, Cat 4 timeline round-trip; eval/runner/temporal.ts): Rust passes every case of its own run.",
+  "gbrain": {
+    "overlay": {
+      "commit": "d8eb35769120cf0b60704478aaef96a412ee0009",
+      "ref": "d8eb35769120cf0b60704478aaef96a412ee0009",
+      "checkout_dirty": false
+    },
+    "rust_addon": {
+      "sha256": "d325d17502bda4dd3ebcd73ff73a45e15016e87823a0c50cd4bb9261d4748d74",
+      "target": "linux-x64-glibc"
+    }
+  },
+  "verdict": "PASS",
+  "rows": [
+    {
+      "id": "brainbench/cat4",
+      "benchmark": "Cat 4 timeline round-trip",
+      "verdict": "PASS",
+      "measured": {
+        "pglite": {
+          "passed": 114,
+          "total": 114
+        },
+        "postgres": {
+          "passed": 114,
+          "total": 114
+        },
+        "rust": {
+          "passed": 114,
+          "total": 114
+        }
+      },
+      "reason": null
+    }
+  ],
+  "losses": []
+}

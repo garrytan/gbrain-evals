@@ -1,0 +1,42 @@
+# BrainBench N5: forgetting and withdrawal residue (gbrain 0.60.777.0, overlay d8eb357)
+[n5] start pglite/cli
+[n5] start pglite/mcp-stdio
+[n5] start pglite/mcp-http
+[n5] n5-pglite-mcp-stdio witness: 133 present of 147 pairs
+[n5] n5-pglite-mcp-http witness: 133 present of 147 pairs
+[n5] n5-pglite-mcp-stdio immediate: 102 present of 161 pairs
+[n5] n5-pglite-mcp-http immediate: 102 present of 161 pairs
+[n5] n5-pglite-mcp-stdio settled: 102 present of 161 pairs
+[n5] n5-pglite-mcp-http settled: 102 present of 161 pairs
+[n5] n5-pglite-cli witness: 139 present of 147 pairs
+[n5] n5-pglite-mcp-stdio stale_reimport: 90 present of 161 pairs
+[n5] n5-pglite-mcp-http stale_reimport: 90 present of 161 pairs
+[n5] n5-pglite-mcp-stdio restart: 90 present of 161 pairs
+[n5] n5-pglite-mcp-http restart: 90 present of 161 pairs
+[n5] n5-pglite-mcp-stdio concurrent: 96 present of 182 pairs
+[n5] n5-pglite-mcp-http concurrent: 96 present of 182 pairs
+[n5] done n5-pglite-mcp-stdio in 167s
+[n5] done n5-pglite-mcp-http in 171s
+[n5] n5-pglite-cli immediate: 106 present of 161 pairs
+[n5] n5-pglite-cli settled: 106 present of 161 pairs
+[n5] n5-pglite-cli stale_reimport: 92 present of 161 pairs
+[n5] n5-pglite-cli restart: 92 present of 161 pairs
+[n5] n5-pglite-cli concurrent: 99 present of 182 pairs
+[n5] done n5-pglite-cli in 525s
+
+verdict: pass
+safety contracts (pglite cells, 3 cells):
+  prohibited active outputs after forget: 0 (forgotten pairs with a witness: 184, without: 17)
+  reactivations: 0
+  collateral expirations: 0
+  unauthorized forgets applied: 0
+  private canaries in remote responses: 0
+quality metrics:
+  retained-neighbor recall: 100.0% (909 of 909 witnessed retained pairs over post-forget checkpoints)
+  reinstatement: 100.0% (6 of 6 corrected claims)
+  retained recall with the capped context_pack tier included (erratum, not gated): 100.0%
+  remote responses whose _meta hot memory carried a forgotten canary (not gated): 0
+  paraphrase still active after forget (documented gap): 6 of 6
+promotion rules: pass (none failed)
+gbrain findings: see docs/benchmarks/2026-10-01-wave-bugs.md (N5-*)
+receipt: ./out/correctness-work/n5-pglite/receipt.json

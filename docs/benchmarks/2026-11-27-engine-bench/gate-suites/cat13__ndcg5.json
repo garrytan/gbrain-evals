@@ -1,0 +1,47 @@
+{
+  "schema": "engine-bench.gate-suite/1",
+  "suite": "cat13/ndcg5",
+  "gate": "E1",
+  "counted": true,
+  "amendment_text": "cat13/ndcg5 (E1, Cat 13 conceptual search, gbrain arm, nDCG@5; eval/runner/cat13-conceptual.ts): the per-query 95% paired lower bound of Rust minus each TypeScript engine is at least -0.018. Ember's reading of RUST_ENGINE.md (lines 489 and 498, and plan D24) at gbrain master 5c9f3051, fixed 2026-11-23 after the keyless b66e4077 pilot had produced Rust numbers: nDCG@5 is read as the per-query 95% paired lower bound of Rust minus each TypeScript engine, at least -0.018, with identical top-5 ids counted as ties. The strict point comparison (Rust's mean at least both) is a secondary row listing the queries whose tie order flips. Reported, not gating, for Dec 1 (plan D24).",
+  "gbrain": {
+    "overlay": {
+      "commit": "d8eb35769120cf0b60704478aaef96a412ee0009",
+      "ref": "d8eb35769120cf0b60704478aaef96a412ee0009",
+      "checkout_dirty": false
+    },
+    "rust_addon": {
+      "sha256": "d325d17502bda4dd3ebcd73ff73a45e15016e87823a0c50cd4bb9261d4748d74",
+      "target": "linux-x64-glibc"
+    }
+  },
+  "verdict": "FAIL",
+  "reason": "Reported, not gating, for Dec 1 (plan D24). Rust run did not complete (error): adapter init/teardown failed: OperationError: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.; adapter init/teardown failed: OperationError: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.; adapter init/teardown failed: OperationError: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.; adapter init/teardown failed: OperationError: This brain's engine does not support read | The Rust run refused 1 engine calls at: core/persistence/maintenance.ts:59 (readManagedModeRows, persistence_journal, from core/import-file.ts:347) x1",
+  "rows": [
+    {
+      "id": "cat13/ndcg5",
+      "benchmark": "Cat 13 conceptual search, gbrain arm, nDCG@5",
+      "verdict": "FAIL",
+      "measured": {
+        "pglite": {
+          "ndcg5": 0.5565097736720215
+        },
+        "postgres": {
+          "ndcg5": 0.5565097736720215
+        },
+        "rust": null
+      },
+      "reason": "Reported, not gating, for Dec 1 (plan D24). Rust run did not complete (error): adapter init/teardown failed: OperationError: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.; adapter init/teardown failed: OperationError: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.; adapter init/teardown failed: OperationError: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.; adapter init/teardown failed: OperationError: This brain's engine does not support read | The Rust run refused 1 engine calls at: core/persistence/maintenance.ts:59 (readManagedModeRows, persistence_journal, from core/import-file.ts:347) x1"
+    }
+  ],
+  "losses": [
+    {
+      "id": "cat13/ndcg5",
+      "reason": "Rust run did not complete (error): adapter init/teardown failed: OperationError: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.; adapter init/teardown failed: OperationError: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.; adapter init/teardown failed: OperationError: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.; adapter init/teardown failed: OperationError: This brain's engine does not support read"
+    },
+    {
+      "id": "cat13/ndcg5:refusal-sites",
+      "reason": "The Rust run refused 1 engine calls at: core/persistence/maintenance.ts:59 (readManagedModeRows, persistence_journal, from core/import-file.ts:347) x1"
+    }
+  ]
+}

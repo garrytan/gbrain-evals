@@ -1,0 +1,5 @@
+evals_commit: 8e36959c52cf4f327d1a20f634cde2e20b9069ae dirty=0
+tag v0.60.777.0: d8eb35769120cf0b60704478aaef96a412ee0009
+gbrain checkout: d8eb35769120cf0b60704478aaef96a412ee0009
+~/vm/addon/gbrain_engine.linux-x64-glibc.node: OK
+addon bytes: 53108048

@@ -1,0 +1,2378 @@
+  Setting up brain schema (v338)...
+  v142: takes.embedding resized to vector(1024); existing take vectors cleared
+  333 migration(s) applied
+[lme-recall] pglite: store template ready
+  Setting up brain schema (v338)...
+  v142: takes.embedding resized to vector(1024); existing take vectors cleared
+  333 migration(s) applied
+[lme-recall] postgres: store template ready
+[lme-recall] rust: store template ready
+[gbrain] embeddings are off on this brain by choice (embedding_disabled), so search is keyword-only and no query text is sent to an embedding provider. If the user wants semantic search, `gbrain doctor --json` names the enable command; turning it on needs their consent.
+[lme-recall] 5/125 pglite 2.61s/question, postgres 2.83s/question, rust 0.00s/question
+[lme-recall] 10/125 pglite 2.52s/question, postgres 2.85s/question, rust 0.00s/question
+[lme-recall] 15/125 pglite 2.51s/question, postgres 2.84s/question, rust 0.00s/question
+[lme-recall] 20/125 pglite 2.49s/question, postgres 2.83s/question, rust 0.00s/question
+[lme-recall] 25/125 pglite 2.48s/question, postgres 2.83s/question, rust 0.00s/question
+[lme-recall] 30/125 pglite 2.47s/question, postgres 2.83s/question, rust 0.00s/question
+[lme-recall] 35/125 pglite 2.46s/question, postgres 2.84s/question, rust 0.00s/question
+[lme-recall] 40/125 pglite 2.46s/question, postgres 2.86s/question, rust 0.00s/question
+[lme-recall] 45/125 pglite 2.46s/question, postgres 2.87s/question, rust 0.00s/question
+[lme-recall] 50/125 pglite 2.46s/question, postgres 2.86s/question, rust 0.00s/question
+[lme-recall] 55/125 pglite 2.46s/question, postgres 2.85s/question, rust 0.00s/question
+[lme-recall] 60/125 pglite 2.45s/question, postgres 2.85s/question, rust 0.00s/question
+[lme-recall] 65/125 pglite 2.45s/question, postgres 2.85s/question, rust 0.00s/question
+[lme-recall] 70/125 pglite 2.45s/question, postgres 2.86s/question, rust 0.00s/question
+[lme-recall] 75/125 pglite 2.45s/question, postgres 2.87s/question, rust 0.00s/question
+[lme-recall] 80/125 pglite 2.45s/question, postgres 2.87s/question, rust 0.00s/question
+[lme-recall] 85/125 pglite 2.45s/question, postgres 2.88s/question, rust 0.00s/question
+[lme-recall] 90/125 pglite 2.45s/question, postgres 2.88s/question, rust 0.00s/question
+[lme-recall] 95/125 pglite 2.44s/question, postgres 2.88s/question, rust 0.00s/question
+[lme-recall] 100/125 pglite 2.45s/question, postgres 2.89s/question, rust 0.00s/question
+[lme-recall] 105/125 pglite 2.45s/question, postgres 2.89s/question, rust 0.00s/question
+[lme-recall] 110/125 pglite 2.45s/question, postgres 2.89s/question, rust 0.00s/question
+[lme-recall] 115/125 pglite 2.45s/question, postgres 2.90s/question, rust 0.00s/question
+[lme-recall] 120/125 pglite 2.45s/question, postgres 2.91s/question, rust 0.00s/question
+[lme-recall] 125/125 pglite 2.45s/question, postgres 2.91s/question, rust 0.00s/question
+{
+  "schema": "engine-bench.lme-recall/3",
+  "started_at": "2026-11-27T05:46:58.917Z",
+  "finished_at": "2026-11-27T05:59:40.875Z",
+  "counted": true,
+  "preregistration_attestation": {
+    "preregistration": "docs/benchmarks/2026-11-17-engine-bench-preregistration.md",
+    "preregistration_commit": "8e36959c52cf4f327d1a20f634cde2e20b9069ae",
+    "runner_commit": "8e36959c52cf4f327d1a20f634cde2e20b9069ae",
+    "worktree_clean_for_preregistration": true,
+    "on_origin": true,
+    "attested_at": "2026-11-27T05:46:58.917Z"
+  },
+  "gbrain": {
+    "version": "0.60.777.0",
+    "overlay": {
+      "requested": "gbrain@v0.60.777.0",
+      "ref": "v0.60.777.0",
+      "commit": "d8eb35769120cf0b60704478aaef96a412ee0009",
+      "tree": "8656a204b93a149ff392c05b4b6713a76400e596",
+      "version": "0.60.777.0",
+      "checkout_dirty": false,
+      "verified": {
+        "copy_tree": "8656a204b93a149ff392c05b4b6713a76400e596",
+        "tree_matches": true,
+        "symlinks_under_src": 0,
+        "dir_is_realpath": true,
+        "cli_version": "0.60.777.0",
+        "cli_version_matches": true
+      },
+      "copied_not_symlinked": true
+    },
+    "rust_addon": {
+      "sha256": "d325d17502bda4dd3ebcd73ff73a45e15016e87823a0c50cd4bb9261d4748d74",
+      "bytes": 53108048,
+      "target": "linux-x64-glibc",
+      "engine_build": "e228393ad2237f9aed947ca98ab785d324e793ddc31963cc8d03f5e188ebe53c",
+      "engine_abi": 1,
+      "catalog_version": 0,
+      "format_versions": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ]
+    }
+  },
+  "dataset": {
+    "file": "longmemeval_s_cleaned.json",
+    "sha256": "d6f21ea9d60a0d56f34a05b609c79c88a451d2ae03597821ea3d5a9678c3a442",
+    "matches_published_sha256": true,
+    "total_questions": 500,
+    "selected": 500,
+    "abstention_selected": 30,
+    "stratify": null,
+    "limit": null,
+    "seed": 42,
+    "question_ids": [
+      "e47becba",
+      "118b2229",
+      "51a45a95",
+      "58bf7951",
+      "1e043500",
+      "c5e8278d",
+      "6ade9755",
+      "6f9b354f",
+      "58ef2f1c",
+      "f8c5f88b",
+      "5d3d2817",
+      "7527f7e2",
+      "c960da58",
+      "3b6f954b",
+      "726462e0",
+      "94f70d80",
+      "66f24dbb",
+      "ad7109d1",
+      "af8d2e46",
+      "dccbc061",
+      "c8c3f81d",
+      "8ebdbe50",
+      "6b168ec8",
+      "75499fd8",
+      "21436231",
+      "95bcc1c8",
+      "0862e8bf",
+      "853b0a1d",
+      "a06e4cfe",
+      "37d43f65",
+      "b86304ba",
+      "d52b4f67",
+      "25e5aa4f",
+      "caf9ead2",
+      "8550ddae",
+      "60d45044",
+      "3f1e9474",
+      "86b68151",
+      "577d4d32",
+      "ec81a493",
+      "15745da0",
+      "e01b8e2f",
+      "bc8a6e93",
+      "ccb36322",
+      "001be529",
+      "b320f3f8",
+      "19b5f2b3",
+      "4fd1909e",
+      "545bd2b5",
+      "8a137a7f",
+      "76d63226",
+      "86f00804",
+      "8e9d538c",
+      "311778f1",
+      "c19f7a0b",
+      "4100d0a0",
+      "29f2956b",
+      "1faac195",
+      "faba32e5",
+      "f4f1d8a4",
+      "c14c00dd",
+      "36580ce8",
+      "3d86fd0a",
+      "a82c026e",
+      "0862e8bf_abs",
+      "15745da0_abs",
+      "bc8a6e93_abs",
+      "19b5f2b3_abs",
+      "29f2956b_abs",
+      "f4f1d8a4_abs",
+      "0a995998",
+      "6d550036",
+      "gpt4_59c863d7",
+      "b5ef892d",
+      "e831120c",
+      "3a704032",
+      "gpt4_d84a3211",
+      "aae3761f",
+      "gpt4_f2262a51",
+      "dd2973ad",
+      "c4a1ceb8",
+      "gpt4_a56e767c",
+      "6cb6f249",
+      "46a3abf7",
+      "36b9f61e",
+      "28dc39ac",
+      "gpt4_2f8be40d",
+      "2e6d26dc",
+      "gpt4_15e38248",
+      "88432d0a",
+      "80ec1f4f",
+      "d23cf73b",
+      "gpt4_7fce9456",
+      "d682f1a2",
+      "7024f17c",
+      "gpt4_5501fe77",
+      "gpt4_2ba83207",
+      "2318644b",
+      "2ce6a0f2",
+      "gpt4_d12ceb0e",
+      "00ca467f",
+      "b3c15d39",
+      "gpt4_31ff4165",
+      "eeda8a6d",
+      "2788b940",
+      "60bf93ed",
+      "9d25d4e0",
+      "129d1232",
+      "60472f9c",
+      "gpt4_194be4b3",
+      "a9f6b44c",
+      "d851d5ba",
+      "5a7937c8",
+      "gpt4_ab202e7f",
+      "gpt4_e05b82a6",
+      "gpt4_731e37d7",
+      "edced276",
+      "10d9b85a",
+      "e3038f8c",
+      "2b8f3739",
+      "1a8a66a6",
+      "c2ac3c61",
+      "bf659f65",
+      "gpt4_372c3eed",
+      "gpt4_2f91af09",
+      "81507db6",
+      "88432d0a_abs",
+      "80ec1f4f_abs",
+      "eeda8a6d_abs",
+      "60bf93ed_abs",
+      "edced276_abs",
+      "gpt4_372c3eed_abs",
+      "8a2466db",
+      "06878be2",
+      "75832dbd",
+      "0edc2aef",
+      "35a27287",
+      "32260d93",
+      "195a1a1b",
+      "afdc33df",
+      "caf03d32",
+      "54026fce",
+      "06f04340",
+      "6b7dfb22",
+      "1a1907b4",
+      "09d032c9",
+      "38146c39",
+      "d24813b1",
+      "57f827a0",
+      "95228167",
+      "505af2f5",
+      "75f70248",
+      "d6233ab6",
+      "1da05512",
+      "fca70973",
+      "b6025781",
+      "a89d7624",
+      "b0479f84",
+      "1d4e3b97",
+      "07b6f563",
+      "1c0ddc50",
+      "0a34ad58",
+      "d3ab962e",
+      "2311e44b",
+      "cc06de0d",
+      "a11281a2",
+      "4f54b7c9",
+      "85fa3a3f",
+      "9aaed6a3",
+      "1f2b8d4f",
+      "e6041065",
+      "51c32626",
+      "d905b33f",
+      "7405e8b1",
+      "f35224e0",
+      "6456829e",
+      "a4996e51",
+      "3c1045c8",
+      "60036106",
+      "681a1674",
+      "e25c3b8d",
+      "4adc0475",
+      "4bc144e2",
+      "ef66a6e5",
+      "5025383b",
+      "a1cc6108",
+      "9ee3ecd6",
+      "3fdac837",
+      "91b15a6e",
+      "27016adc",
+      "720133ac",
+      "77eafa52",
+      "8979f9ec",
+      "0100672e",
+      "a96c20ee",
+      "92a0aa75",
+      "3fe836c9",
+      "1c549ce4",
+      "6c49646a",
+      "1192316e",
+      "0ea62687",
+      "67e0d0f2",
+      "bb7c3b45",
+      "ba358f49",
+      "61f8c8f8",
+      "60159905",
+      "ef9cf60a",
+      "73d42213",
+      "bc149d6b",
+      "099778bb",
+      "09ba9854",
+      "d6062bb9",
+      "157a136e",
+      "c18a7dc8",
+      "a3332713",
+      "55241a1f",
+      "a08a253f",
+      "f0e564bc",
+      "078150f1",
+      "8cf4d046",
+      "a346bb18",
+      "37f165cf",
+      "8e91e7d9",
+      "87f22b4a",
+      "e56a43b9",
+      "efc3f7c2",
+      "21d02d0d",
+      "2311e44b_abs",
+      "6456829e_abs",
+      "e5ba910e_abs",
+      "a96c20ee_abs",
+      "ba358f49_abs",
+      "09ba9854_abs",
+      "gpt4_59149c77",
+      "gpt4_f49edff3",
+      "71017276",
+      "b46e15ed",
+      "gpt4_fa19884c",
+      "0bc8ad92",
+      "af082822",
+      "gpt4_4929293a",
+      "gpt4_b5700ca9",
+      "9a707b81",
+      "gpt4_1d4ab0c9",
+      "gpt4_e072b769",
+      "0db4c65d",
+      "gpt4_1d80365e",
+      "gpt4_7f6b06db",
+      "gpt4_6dc9b45b",
+      "gpt4_8279ba02",
+      "gpt4_18c2b244",
+      "gpt4_a1b77f9c",
+      "gpt4_1916e0ea",
+      "gpt4_7a0daae1",
+      "gpt4_468eb063",
+      "gpt4_7abb270c",
+      "gpt4_1e4a8aeb",
+      "gpt4_4fc4f797",
+      "4dfccbf7",
+      "gpt4_61e13b3c",
+      "gpt4_45189cb4",
+      "2ebe6c90",
+      "gpt4_e061b84f",
+      "370a8ff4",
+      "gpt4_d6585ce8",
+      "gpt4_4ef30696",
+      "gpt4_ec93e27f",
+      "6e984301",
+      "8077ef71",
+      "gpt4_f420262c",
+      "gpt4_8e165409",
+      "gpt4_74aed68e",
+      "bcbe585f",
+      "gpt4_21adecb5",
+      "5e1b23de",
+      "gpt4_98f46fc6",
+      "gpt4_af6db32f",
+      "eac54adc",
+      "gpt4_7ddcf75f",
+      "gpt4_a2d1d1f6",
+      "gpt4_85da3956",
+      "gpt4_b0863698",
+      "gpt4_68e94287",
+      "gpt4_e414231e",
+      "gpt4_7ca326fa",
+      "gpt4_7bc6cf22",
+      "2ebe6c92",
+      "gpt4_e061b84g",
+      "71017277",
+      "b46e15ee",
+      "gpt4_d6585ce9",
+      "gpt4_1e4a8aec",
+      "gpt4_f420262d",
+      "gpt4_59149c78",
+      "gpt4_e414231f",
+      "gpt4_4929293b",
+      "gpt4_468eb064",
+      "gpt4_fa19884d",
+      "9a707b82",
+      "eac54add",
+      "4dfccbf8",
+      "0bc8ad93",
+      "6e984302",
+      "gpt4_8279ba03",
+      "gpt4_b5700ca0",
+      "gpt4_68e94288",
+      "gpt4_2655b836",
+      "gpt4_2487a7cb",
+      "gpt4_76048e76",
+      "gpt4_2312f94c",
+      "0bb5a684",
+      "08f4fc43",
+      "2c63a862",
+      "gpt4_385a5000",
+      "2a1811e2",
+      "bbf86515",
+      "gpt4_5dcc0aab",
+      "gpt4_0b2f1d21",
+      "f0853d11",
+      "gpt4_6ed717ea",
+      "gpt4_70e84552",
+      "a3838d2b",
+      "gpt4_93159ced",
+      "gpt4_2d58bcd6",
+      "gpt4_65aabe59",
+      "982b5123",
+      "b9cfe692",
+      "gpt4_4edbafa2",
+      "c8090214",
+      "gpt4_483dd43c",
+      "e4e14d04",
+      "c9f37c46",
+      "gpt4_2c50253f",
+      "dcfa8644",
+      "gpt4_b4a80587",
+      "gpt4_9a159967",
+      "cc6d1ec1",
+      "gpt4_8c8961ae",
+      "gpt4_d9af6064",
+      "gpt4_7de946e7",
+      "d01c6aa8",
+      "993da5e2",
+      "a3045048",
+      "gpt4_d31cdae3",
+      "gpt4_cd90e484",
+      "gpt4_88806d6e",
+      "gpt4_4cd9eba1",
+      "gpt4_93f6379c",
+      "b29f3365",
+      "gpt4_2f56ae70",
+      "6613b389",
+      "gpt4_78cf46a3",
+      "gpt4_0a05b494",
+      "gpt4_1a1dc16d",
+      "gpt4_2f584639",
+      "gpt4_213fd887",
+      "gpt4_5438fa52",
+      "gpt4_c27434e8",
+      "gpt4_fe651585",
+      "8c18457d",
+      "gpt4_70e84552_abs",
+      "gpt4_93159ced_abs",
+      "982b5123_abs",
+      "c8090214_abs",
+      "gpt4_c27434e8_abs",
+      "gpt4_fe651585_abs",
+      "6a1eabeb",
+      "6aeb4375",
+      "830ce83f",
+      "852ce960",
+      "945e3d21",
+      "d7c942c3",
+      "71315a70",
+      "89941a93",
+      "ce6d2d27",
+      "9ea5eabc",
+      "07741c44",
+      "a1eacc2a",
+      "184da446",
+      "031748ae",
+      "4d6b87c8",
+      "0f05491a",
+      "08e075c7",
+      "f9e8c073",
+      "41698283",
+      "2698e78f",
+      "b6019101",
+      "45dc21b6",
+      "5a4f22c0",
+      "6071bd76",
+      "e493bb7c",
+      "618f13b2",
+      "72e3ee87",
+      "c4ea545c",
+      "01493427",
+      "6a27ffc2",
+      "2133c1b5",
+      "18bc8abd",
+      "db467c8c",
+      "7a87bd0c",
+      "e61a7584",
+      "1cea1afa",
+      "ed4ddc30",
+      "8fb83627",
+      "b01defab",
+      "22d2cb42",
+      "0e4e4c46",
+      "4b24c848",
+      "7e974930",
+      "603deb26",
+      "59524333",
+      "5831f84d",
+      "eace081b",
+      "affe2881",
+      "50635ada",
+      "e66b632c",
+      "0ddfec37",
+      "f685340e",
+      "cc5ded98",
+      "dfde3500",
+      "69fee5aa",
+      "7401057b",
+      "cf22b7bf",
+      "a2f3aa27",
+      "c7dc5443",
+      "06db6396",
+      "3ba21379",
+      "9bbe84a2",
+      "10e09553",
+      "dad224aa",
+      "ba61f0b9",
+      "42ec0761",
+      "5c40ec5b",
+      "c6853660",
+      "26bdc477",
+      "0977f2af",
+      "6aeb4375_abs",
+      "031748ae_abs",
+      "2698e78f_abs",
+      "2133c1b5_abs",
+      "0ddfec37_abs",
+      "f685340e_abs",
+      "89941a94",
+      "07741c45",
+      "7161e7e2",
+      "c4f10528",
+      "89527b6b",
+      "e9327a54",
+      "4c36ccef",
+      "6ae235be",
+      "7e00a6cb",
+      "1903aded",
+      "ceb54acb",
+      "f523d9fe",
+      "0e5e2d1a",
+      "fea54f57",
+      "cc539528",
+      "dc439ea3",
+      "18dcd5a5",
+      "488d3006",
+      "58470ed2",
+      "8cf51dda",
+      "1d4da289",
+      "8464fc84",
+      "8aef76bc",
+      "71a3fd6b",
+      "2bf43736",
+      "70b3e69b",
+      "8752c811",
+      "3249768e",
+      "1b9b7252",
+      "1568498a",
+      "6222b6eb",
+      "e8a79c70",
+      "d596882b",
+      "e3fc4d6e",
+      "51b23612",
+      "3e321797",
+      "e982271f",
+      "352ab8bd",
+      "fca762bc",
+      "7a8d0b71",
+      "a40e080f",
+      "8b9d4367",
+      "5809eb10",
+      "41275add",
+      "4388e9dd",
+      "4baee567",
+      "561fabcd",
+      "b759caee",
+      "ac031881",
+      "28bcfaac",
+      "16c90bf4",
+      "c8f1aeed",
+      "eaca4986",
+      "c7cf7dfd",
+      "e48988bc",
+      "1de5cff2",
+      "65240037",
+      "778164c6"
+    ]
+  },
+  "shard": {
+    "worker_id": 2,
+    "total_workers": 4,
+    "questions": 125
+  },
+  "ndjson": "out/lme-w2.ndjson",
+  "resumed_rows": 0,
+  "run_config_hashes": {
+    "pglite": "851b7807cafb9015b7171d0dfafddf0bdbd1f4bbcb29d80fe3bda1fd1e5700cf",
+    "postgres": "27519caf77e53d76f8fc864553523dd0049fea76f98cfb2491b38db9066570ee",
+    "rust": "a67c0796c1c56528921fce3b2c6148f20da6ecbd05d948494f18496c827cdd1c"
+  },
+  "top_k": 5,
+  "arms": [
+    "keyword",
+    "vector",
+    "hybrid"
+  ],
+  "search_config": {
+    "search.mode": "balanced",
+    "search.reranker.enabled": "false",
+    "search.autocut": "false"
+  },
+  "embedder": {
+    "mode": "cache",
+    "model": "voyage:voyage-4",
+    "dimensions": 1024,
+    "cache_path": "~/lme-cache/embed-cache-voyage_voyage-4@1024.sqlite",
+    "plumbing_only": false,
+    "note": "Vectors came from the content-addressed cache only; a miss stops the run and no provider was called."
+  },
+  "network": "every HTTP(S) request to a non-loopback host was refused during the run",
+  "engines": [
+    {
+      "kind": "pglite",
+      "status": "ran",
+      "store_strategy": "copy of a store initialized once",
+      "n_questions": 125,
+      "n_errors": 0,
+      "errors": [],
+      "recall": {
+        "keyword": {
+          "recall_all_at_5": 0.8067226890756303,
+          "recall_any_at_5": 0.9243697478991597,
+          "n_scored": 119
+        },
+        "vector": {
+          "recall_all_at_5": 0.9327731092436975,
+          "recall_any_at_5": 0.9747899159663865,
+          "n_scored": 119
+        },
+        "hybrid": {
+          "recall_all_at_5": 0.9243697478991597,
+          "recall_any_at_5": 0.9747899159663865,
+          "n_scored": 119
+        }
+      },
+      "timing_ms": {
+        "total": {
+          "mean": 2451.1,
+          "p50": 2448.3,
+          "p90": 2560.2,
+          "max": 2797.5
+        },
+        "open": {
+          "mean": 499.7,
+          "p50": 495.3
+        },
+        "import": {
+          "mean": 1730.6,
+          "p50": 1725.7,
+          "p90": 1815.7
+        },
+        "search_by_arm": {
+          "keyword": {
+            "mean": 59.4,
+            "p50": 57.6
+          },
+          "vector": {
+            "mean": 10.4,
+            "p50": 10.4
+          },
+          "hybrid": {
+            "mean": 90.8,
+            "p50": 88.2
+          }
+        }
+      },
+      "projected_full_run_minutes": 20.4
+    },
+    {
+      "kind": "postgres",
+      "status": "ran",
+      "store_strategy": "CREATE DATABASE ... TEMPLATE of a store initialized once (on the harness admin connection, not the engine)",
+      "n_questions": 125,
+      "n_errors": 0,
+      "errors": [],
+      "recall": {
+        "keyword": {
+          "recall_all_at_5": 0.8067226890756303,
+          "recall_any_at_5": 0.9243697478991597,
+          "n_scored": 119
+        },
+        "vector": {
+          "recall_all_at_5": 0.9327731092436975,
+          "recall_any_at_5": 0.9747899159663865,
+          "n_scored": 119
+        },
+        "hybrid": {
+          "recall_all_at_5": 0.9243697478991597,
+          "recall_any_at_5": 0.9747899159663865,
+          "n_scored": 119
+        }
+      },
+      "timing_ms": {
+        "total": {
+          "mean": 2910.8,
+          "p50": 2906.5,
+          "p90": 3104.9,
+          "max": 3430.7
+        },
+        "open": {
+          "mean": 433.7,
+          "p50": 430.5
+        },
+        "import": {
+          "mean": 2187.6,
+          "p50": 2185.8,
+          "p90": 2344.5
+        },
+        "search_by_arm": {
+          "keyword": {
+            "mean": 86.5,
+            "p50": 87.2
+          },
+          "vector": {
+            "mean": 16.2,
+            "p50": 17.2
+          },
+          "hybrid": {
+            "mean": 94.7,
+            "p50": 94.8
+          }
+        }
+      },
+      "projected_full_run_minutes": 24.3
+    },
+    {
+      "kind": "rust",
+      "status": "ran",
+      "store_strategy": "copy of a store initialized once",
+      "n_questions": 125,
+      "n_errors": 125,
+      "errors": [
+        {
+          "question_id": "51a45a95",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "6ade9755",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "5d3d2817",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "726462e0",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "af8d2e46",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "6b168ec8",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "0862e8bf",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "b86304ba",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "8550ddae",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "577d4d32",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "bc8a6e93",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "19b5f2b3",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "76d63226",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "c19f7a0b",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "faba32e5",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "3d86fd0a",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "bc8a6e93_abs",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "0a995998",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "e831120c",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "gpt4_f2262a51",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "6cb6f249",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "gpt4_2f8be40d",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "80ec1f4f",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "7024f17c",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "2ce6a0f2",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "gpt4_31ff4165",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "9d25d4e0",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "a9f6b44c",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "gpt4_e05b82a6",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "e3038f8c",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "bf659f65",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "88432d0a_abs",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "edced276_abs",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "75832dbd",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "195a1a1b",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "06f04340",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "38146c39",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "505af2f5",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "fca70973",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "1d4e3b97",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "d3ab962e",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "4f54b7c9",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "e6041065",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "f35224e0",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "60036106",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "4bc144e2",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "9ee3ecd6",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "720133ac",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "a96c20ee",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "6c49646a",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "bb7c3b45",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "ef9cf60a",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "09ba9854",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "a3332713",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "078150f1",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "8e91e7d9",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "21d02d0d",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "a96c20ee_abs",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "gpt4_f49edff3",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "0bc8ad92",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "9a707b81",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "gpt4_1d80365e",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "gpt4_18c2b244",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "gpt4_468eb063",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "4dfccbf7",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "gpt4_e061b84f",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "gpt4_ec93e27f",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "gpt4_8e165409",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "5e1b23de",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "gpt4_7ddcf75f",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "gpt4_68e94287",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "2ebe6c92",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "gpt4_d6585ce9",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "gpt4_e414231f",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "9a707b82",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "6e984302",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "gpt4_2655b836",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "0bb5a684",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "2a1811e2",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "f0853d11",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "gpt4_93159ced",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "b9cfe692",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "e4e14d04",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "gpt4_b4a80587",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "gpt4_d9af6064",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "a3045048",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "gpt4_4cd9eba1",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "6613b389",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "gpt4_2f584639",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "gpt4_fe651585",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "982b5123_abs",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "6a1eabeb",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "945e3d21",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "ce6d2d27",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "184da446",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "08e075c7",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "b6019101",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "e493bb7c",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "01493427",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "db467c8c",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "ed4ddc30",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "0e4e4c46",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "59524333",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "50635ada",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "cc5ded98",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "cf22b7bf",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "3ba21379",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "ba61f0b9",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "26bdc477",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "2698e78f_abs",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "89941a94",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "89527b6b",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "7e00a6cb",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "0e5e2d1a",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "18dcd5a5",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "1d4da289",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "2bf43736",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "1b9b7252",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "d596882b",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "e982271f",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "a40e080f",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "4388e9dd",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "ac031881",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "eaca4986",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        },
+        {
+          "question_id": "65240037",
+          "error": "This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+        }
+      ],
+      "recall": {
+        "keyword": {
+          "recall_all_at_5": null,
+          "recall_any_at_5": null,
+          "n_scored": 0
+        },
+        "vector": {
+          "recall_all_at_5": null,
+          "recall_any_at_5": null,
+          "n_scored": 0
+        },
+        "hybrid": {
+          "recall_all_at_5": null,
+          "recall_any_at_5": null,
+          "n_scored": 0
+        }
+      },
+      "timing_ms": {
+        "total": {
+          "mean": null,
+          "p50": null,
+          "p90": null,
+          "max": null
+        },
+        "open": {
+          "mean": null,
+          "p50": null
+        },
+        "import": {
+          "mean": null,
+          "p50": null,
+          "p90": null
+        },
+        "search_by_arm": {
+          "keyword": {
+            "mean": null,
+            "p50": null
+          },
+          "vector": {
+            "mean": null,
+            "p50": null
+          },
+          "hybrid": {
+            "mean": null,
+            "p50": null
+          }
+        }
+      }
+    }
+  ],
+  "agreement": [
+    {
+      "arm": "keyword",
+      "engines": [
+        "pglite",
+        "postgres",
+        "rust"
+      ],
+      "n_questions": 0,
+      "identical_top5_share": null,
+      "identical_top5_set_share": null,
+      "n_all_empty": 0
+    },
+    {
+      "arm": "vector",
+      "engines": [
+        "pglite",
+        "postgres",
+        "rust"
+      ],
+      "n_questions": 0,
+      "identical_top5_share": null,
+      "identical_top5_set_share": null,
+      "n_all_empty": 0
+    },
+    {
+      "arm": "hybrid",
+      "engines": [
+        "pglite",
+        "postgres",
+        "rust"
+      ],
+      "n_questions": 0,
+      "identical_top5_share": null,
+      "identical_top5_set_share": null,
+      "n_all_empty": 0
+    }
+  ],
+  "bootstrap": {
+    "seed": 20261117,
+    "draws": 10000
+  },
+  "comparisons": [
+    {
+      "arm": "keyword",
+      "a": "pglite",
+      "b": "postgres",
+      "n_questions": 125,
+      "excluded_errors": [],
+      "exact_ties": 119,
+      "recall_all_delta": {
+        "n_pairs": 119,
+        "mean_a": 0.8067226890756303,
+        "mean_b": 0.8067226890756303,
+        "delta": 0,
+        "ci95": [
+          0,
+          0
+        ],
+        "p_two_sided": 1,
+        "wins_b": 0,
+        "losses_b": 0,
+        "mcnemar_p": 1
+      },
+      "identical_top5_ordered": 1,
+      "identical_top5_set": 1,
+      "n_differences": 0
+    },
+    {
+      "arm": "keyword",
+      "a": "pglite",
+      "b": "rust",
+      "n_questions": 0,
+      "excluded_errors": [
+        "2698e78f_abs",
+        "88432d0a_abs",
+        "982b5123_abs",
+        "a96c20ee_abs",
+        "bc8a6e93_abs",
+        "edced276_abs"
+      ],
+      "rust_errors": [
+        "01493427",
+        "06f04340",
+        "078150f1",
+        "0862e8bf",
+        "08e075c7",
+        "09ba9854",
+        "0a995998",
+        "0bb5a684",
+        "0bc8ad92",
+        "0e4e4c46",
+        "0e5e2d1a",
+        "184da446",
+        "18dcd5a5",
+        "195a1a1b",
+        "19b5f2b3",
+        "1b9b7252",
+        "1d4da289",
+        "1d4e3b97",
+        "21d02d0d",
+        "26bdc477",
+        "2a1811e2",
+        "2bf43736",
+        "2ce6a0f2",
+        "2ebe6c92",
+        "38146c39",
+        "3ba21379",
+        "3d86fd0a",
+        "4388e9dd",
+        "4bc144e2",
+        "4dfccbf7",
+        "4f54b7c9",
+        "505af2f5",
+        "50635ada",
+        "51a45a95",
+        "577d4d32",
+        "59524333",
+        "5d3d2817",
+        "5e1b23de",
+        "60036106",
+        "65240037",
+        "6613b389",
+        "6a1eabeb",
+        "6ade9755",
+        "6b168ec8",
+        "6c49646a",
+        "6cb6f249",
+        "6e984302",
+        "7024f17c",
+        "720133ac",
+        "726462e0",
+        "75832dbd",
+        "76d63226",
+        "7e00a6cb",
+        "80ec1f4f",
+        "8550ddae",
+        "89527b6b",
+        "89941a94",
+        "8e91e7d9",
+        "945e3d21",
+        "9a707b81",
+        "9a707b82",
+        "9d25d4e0",
+        "9ee3ecd6",
+        "a3045048",
+        "a3332713",
+        "a40e080f",
+        "a96c20ee",
+        "a9f6b44c",
+        "ac031881",
+        "af8d2e46",
+        "b6019101",
+        "b86304ba",
+        "b9cfe692",
+        "ba61f0b9",
+        "bb7c3b45",
+        "bc8a6e93",
+        "bf659f65",
+        "c19f7a0b",
+        "cc5ded98",
+        "ce6d2d27",
+        "cf22b7bf",
+        "d3ab962e",
+        "d596882b",
+        "db467c8c",
+        "e3038f8c",
+        "e493bb7c",
+        "e4e14d04",
+        "e6041065",
+        "e831120c",
+        "e982271f",
+        "eaca4986",
+        "ed4ddc30",
+        "ef9cf60a",
+        "f0853d11",
+        "f35224e0",
+        "faba32e5",
+        "fca70973",
+        "gpt4_18c2b244",
+        "gpt4_1d80365e",
+        "gpt4_2655b836",
+        "gpt4_2f584639",
+        "gpt4_2f8be40d",
+        "gpt4_31ff4165",
+        "gpt4_468eb063",
+        "gpt4_4cd9eba1",
+        "gpt4_68e94287",
+        "gpt4_7ddcf75f",
+        "gpt4_8e165409",
+        "gpt4_93159ced",
+        "gpt4_b4a80587",
+        "gpt4_d6585ce9",
+        "gpt4_d9af6064",
+        "gpt4_e05b82a6",
+        "gpt4_e061b84f",
+        "gpt4_e414231f",
+        "gpt4_ec93e27f",
+        "gpt4_f2262a51",
+        "gpt4_f49edff3",
+        "gpt4_fe651585"
+      ],
+      "rust_verdict": "fail",
+      "rust_point_estimate": -0.8067226890756303,
+      "rust_secondary": {
+        "lower_bound_at_least_0": "fail",
+        "non_inferiority_minus_0_02": "fail"
+      },
+      "exact_ties": 0,
+      "recall_all_delta": {
+        "n_pairs": 119,
+        "mean_a": 0.8067226890756303,
+        "mean_b": 0,
+        "delta": -0.8067226890756303,
+        "ci95": [
+          -0.8739495798319328,
+          -0.7310924369747899
+        ],
+        "p_two_sided": 0.00009999000099990002,
+        "wins_b": 0,
+        "losses_b": 96,
+        "mcnemar_p": 2.524354896707238e-29
+      },
+      "identical_top5_ordered": 0,
+      "identical_top5_set": 0,
+      "n_differences": 0
+    },
+    {
+      "arm": "keyword",
+      "a": "postgres",
+      "b": "rust",
+      "n_questions": 0,
+      "excluded_errors": [
+        "2698e78f_abs",
+        "88432d0a_abs",
+        "982b5123_abs",
+        "a96c20ee_abs",
+        "bc8a6e93_abs",
+        "edced276_abs"
+      ],
+      "rust_errors": [
+        "01493427",
+        "06f04340",
+        "078150f1",
+        "0862e8bf",
+        "08e075c7",
+        "09ba9854",
+        "0a995998",
+        "0bb5a684",
+        "0bc8ad92",
+        "0e4e4c46",
+        "0e5e2d1a",
+        "184da446",
+        "18dcd5a5",
+        "195a1a1b",
+        "19b5f2b3",
+        "1b9b7252",
+        "1d4da289",
+        "1d4e3b97",
+        "21d02d0d",
+        "26bdc477",
+        "2a1811e2",
+        "2bf43736",
+        "2ce6a0f2",
+        "2ebe6c92",
+        "38146c39",
+        "3ba21379",
+        "3d86fd0a",
+        "4388e9dd",
+        "4bc144e2",
+        "4dfccbf7",
+        "4f54b7c9",
+        "505af2f5",
+        "50635ada",
+        "51a45a95",
+        "577d4d32",
+        "59524333",
+        "5d3d2817",
+        "5e1b23de",
+        "60036106",
+        "65240037",
+        "6613b389",
+        "6a1eabeb",
+        "6ade9755",
+        "6b168ec8",
+        "6c49646a",
+        "6cb6f249",
+        "6e984302",
+        "7024f17c",
+        "720133ac",
+        "726462e0",
+        "75832dbd",
+        "76d63226",
+        "7e00a6cb",
+        "80ec1f4f",
+        "8550ddae",
+        "89527b6b",
+        "89941a94",
+        "8e91e7d9",
+        "945e3d21",
+        "9a707b81",
+        "9a707b82",
+        "9d25d4e0",
+        "9ee3ecd6",
+        "a3045048",
+        "a3332713",
+        "a40e080f",
+        "a96c20ee",
+        "a9f6b44c",
+        "ac031881",
+        "af8d2e46",
+        "b6019101",
+        "b86304ba",
+        "b9cfe692",
+        "ba61f0b9",
+        "bb7c3b45",
+        "bc8a6e93",
+        "bf659f65",
+        "c19f7a0b",
+        "cc5ded98",
+        "ce6d2d27",
+        "cf22b7bf",
+        "d3ab962e",
+        "d596882b",
+        "db467c8c",
+        "e3038f8c",
+        "e493bb7c",
+        "e4e14d04",
+        "e6041065",
+        "e831120c",
+        "e982271f",
+        "eaca4986",
+        "ed4ddc30",
+        "ef9cf60a",
+        "f0853d11",
+        "f35224e0",
+        "faba32e5",
+        "fca70973",
+        "gpt4_18c2b244",
+        "gpt4_1d80365e",
+        "gpt4_2655b836",
+        "gpt4_2f584639",
+        "gpt4_2f8be40d",
+        "gpt4_31ff4165",
+        "gpt4_468eb063",
+        "gpt4_4cd9eba1",
+        "gpt4_68e94287",
+        "gpt4_7ddcf75f",
+        "gpt4_8e165409",
+        "gpt4_93159ced",
+        "gpt4_b4a80587",
+        "gpt4_d6585ce9",
+        "gpt4_d9af6064",
+        "gpt4_e05b82a6",
+        "gpt4_e061b84f",
+        "gpt4_e414231f",
+        "gpt4_ec93e27f",
+        "gpt4_f2262a51",
+        "gpt4_f49edff3",
+        "gpt4_fe651585"
+      ],
+      "rust_verdict": "fail",
+      "rust_point_estimate": -0.8067226890756303,
+      "rust_secondary": {
+        "lower_bound_at_least_0": "fail",
+        "non_inferiority_minus_0_02": "fail"
+      },
+      "exact_ties": 0,
+      "recall_all_delta": {
+        "n_pairs": 119,
+        "mean_a": 0.8067226890756303,
+        "mean_b": 0,
+        "delta": -0.8067226890756303,
+        "ci95": [
+          -0.8739495798319328,
+          -0.7310924369747899
+        ],
+        "p_two_sided": 0.00009999000099990002,
+        "wins_b": 0,
+        "losses_b": 96,
+        "mcnemar_p": 2.524354896707238e-29
+      },
+      "identical_top5_ordered": 0,
+      "identical_top5_set": 0,
+      "n_differences": 0
+    },
+    {
+      "arm": "vector",
+      "a": "pglite",
+      "b": "postgres",
+      "n_questions": 125,
+      "excluded_errors": [],
+      "exact_ties": 119,
+      "recall_all_delta": {
+        "n_pairs": 119,
+        "mean_a": 0.9327731092436975,
+        "mean_b": 0.9327731092436975,
+        "delta": 0,
+        "ci95": [
+          0,
+          0
+        ],
+        "p_two_sided": 1,
+        "wins_b": 0,
+        "losses_b": 0,
+        "mcnemar_p": 1
+      },
+      "identical_top5_ordered": 1,
+      "identical_top5_set": 1,
+      "n_differences": 0
+    },
+    {
+      "arm": "vector",
+      "a": "pglite",
+      "b": "rust",
+      "n_questions": 0,
+      "excluded_errors": [
+        "2698e78f_abs",
+        "88432d0a_abs",
+        "982b5123_abs",
+        "a96c20ee_abs",
+        "bc8a6e93_abs",
+        "edced276_abs"
+      ],
+      "rust_errors": [
+        "01493427",
+        "06f04340",
+        "078150f1",
+        "0862e8bf",
+        "08e075c7",
+        "09ba9854",
+        "0a995998",
+        "0bb5a684",
+        "0bc8ad92",
+        "0e4e4c46",
+        "0e5e2d1a",
+        "184da446",
+        "18dcd5a5",
+        "195a1a1b",
+        "19b5f2b3",
+        "1b9b7252",
+        "1d4da289",
+        "1d4e3b97",
+        "21d02d0d",
+        "26bdc477",
+        "2a1811e2",
+        "2bf43736",
+        "2ce6a0f2",
+        "2ebe6c92",
+        "38146c39",
+        "3ba21379",
+        "3d86fd0a",
+        "4388e9dd",
+        "4bc144e2",
+        "4dfccbf7",
+        "4f54b7c9",
+        "505af2f5",
+        "50635ada",
+        "51a45a95",
+        "577d4d32",
+        "59524333",
+        "5d3d2817",
+        "5e1b23de",
+        "60036106",
+        "65240037",
+        "6613b389",
+        "6a1eabeb",
+        "6ade9755",
+        "6b168ec8",
+        "6c49646a",
+        "6cb6f249",
+        "6e984302",
+        "7024f17c",
+        "720133ac",
+        "726462e0",
+        "75832dbd",
+        "76d63226",
+        "7e00a6cb",
+        "80ec1f4f",
+        "8550ddae",
+        "89527b6b",
+        "89941a94",
+        "8e91e7d9",
+        "945e3d21",
+        "9a707b81",
+        "9a707b82",
+        "9d25d4e0",
+        "9ee3ecd6",
+        "a3045048",
+        "a3332713",
+        "a40e080f",
+        "a96c20ee",
+        "a9f6b44c",
+        "ac031881",
+        "af8d2e46",
+        "b6019101",
+        "b86304ba",
+        "b9cfe692",
+        "ba61f0b9",
+        "bb7c3b45",
+        "bc8a6e93",
+        "bf659f65",
+        "c19f7a0b",
+        "cc5ded98",
+        "ce6d2d27",
+        "cf22b7bf",
+        "d3ab962e",
+        "d596882b",
+        "db467c8c",
+        "e3038f8c",
+        "e493bb7c",
+        "e4e14d04",
+        "e6041065",
+        "e831120c",
+        "e982271f",
+        "eaca4986",
+        "ed4ddc30",
+        "ef9cf60a",
+        "f0853d11",
+        "f35224e0",
+        "faba32e5",
+        "fca70973",
+        "gpt4_18c2b244",
+        "gpt4_1d80365e",
+        "gpt4_2655b836",
+        "gpt4_2f584639",
+        "gpt4_2f8be40d",
+        "gpt4_31ff4165",
+        "gpt4_468eb063",
+        "gpt4_4cd9eba1",
+        "gpt4_68e94287",
+        "gpt4_7ddcf75f",
+        "gpt4_8e165409",
+        "gpt4_93159ced",
+        "gpt4_b4a80587",
+        "gpt4_d6585ce9",
+        "gpt4_d9af6064",
+        "gpt4_e05b82a6",
+        "gpt4_e061b84f",
+        "gpt4_e414231f",
+        "gpt4_ec93e27f",
+        "gpt4_f2262a51",
+        "gpt4_f49edff3",
+        "gpt4_fe651585"
+      ],
+      "rust_verdict": "fail",
+      "rust_point_estimate": -0.9327731092436975,
+      "rust_secondary": {
+        "lower_bound_at_least_0": "fail",
+        "non_inferiority_minus_0_02": "fail"
+      },
+      "exact_ties": 0,
+      "recall_all_delta": {
+        "n_pairs": 119,
+        "mean_a": 0.9327731092436975,
+        "mean_b": 0,
+        "delta": -0.9327731092436975,
+        "ci95": [
+          -0.9747899159663865,
+          -0.8823529411764706
+        ],
+        "p_two_sided": 0.00009999000099990002,
+        "wins_b": 0,
+        "losses_b": 111,
+        "mcnemar_p": 7.703719777548943e-34
+      },
+      "identical_top5_ordered": 0,
+      "identical_top5_set": 0,
+      "n_differences": 0
+    },
+    {
+      "arm": "vector",
+      "a": "postgres",
+      "b": "rust",
+      "n_questions": 0,
+      "excluded_errors": [
+        "2698e78f_abs",
+        "88432d0a_abs",
+        "982b5123_abs",
+        "a96c20ee_abs",
+        "bc8a6e93_abs",
+        "edced276_abs"
+      ],
+      "rust_errors": [
+        "01493427",
+        "06f04340",
+        "078150f1",
+        "0862e8bf",
+        "08e075c7",
+        "09ba9854",
+        "0a995998",
+        "0bb5a684",
+        "0bc8ad92",
+        "0e4e4c46",
+        "0e5e2d1a",
+        "184da446",
+        "18dcd5a5",
+        "195a1a1b",
+        "19b5f2b3",
+        "1b9b7252",
+        "1d4da289",
+        "1d4e3b97",
+        "21d02d0d",
+        "26bdc477",
+        "2a1811e2",
+        "2bf43736",
+        "2ce6a0f2",
+        "2ebe6c92",
+        "38146c39",
+        "3ba21379",
+        "3d86fd0a",
+        "4388e9dd",
+        "4bc144e2",
+        "4dfccbf7",
+        "4f54b7c9",
+        "505af2f5",
+        "50635ada",
+        "51a45a95",
+        "577d4d32",
+        "59524333",
+        "5d3d2817",
+        "5e1b23de",
+        "60036106",
+        "65240037",
+        "6613b389",
+        "6a1eabeb",
+        "6ade9755",
+        "6b168ec8",
+        "6c49646a",
+        "6cb6f249",
+        "6e984302",
+        "7024f17c",
+        "720133ac",
+        "726462e0",
+        "75832dbd",
+        "76d63226",
+        "7e00a6cb",
+        "80ec1f4f",
+        "8550ddae",
+        "89527b6b",
+        "89941a94",
+        "8e91e7d9",
+        "945e3d21",
+        "9a707b81",
+        "9a707b82",
+        "9d25d4e0",
+        "9ee3ecd6",
+        "a3045048",
+        "a3332713",
+        "a40e080f",
+        "a96c20ee",
+        "a9f6b44c",
+        "ac031881",
+        "af8d2e46",
+        "b6019101",
+        "b86304ba",
+        "b9cfe692",
+        "ba61f0b9",
+        "bb7c3b45",
+        "bc8a6e93",
+        "bf659f65",
+        "c19f7a0b",
+        "cc5ded98",
+        "ce6d2d27",
+        "cf22b7bf",
+        "d3ab962e",
+        "d596882b",
+        "db467c8c",
+        "e3038f8c",
+        "e493bb7c",
+        "e4e14d04",
+        "e6041065",
+        "e831120c",
+        "e982271f",
+        "eaca4986",
+        "ed4ddc30",
+        "ef9cf60a",
+        "f0853d11",
+        "f35224e0",
+        "faba32e5",
+        "fca70973",
+        "gpt4_18c2b244",
+        "gpt4_1d80365e",
+        "gpt4_2655b836",
+        "gpt4_2f584639",
+        "gpt4_2f8be40d",
+        "gpt4_31ff4165",
+        "gpt4_468eb063",
+        "gpt4_4cd9eba1",
+        "gpt4_68e94287",
+        "gpt4_7ddcf75f",
+        "gpt4_8e165409",
+        "gpt4_93159ced",
+        "gpt4_b4a80587",
+        "gpt4_d6585ce9",
+        "gpt4_d9af6064",
+        "gpt4_e05b82a6",
+        "gpt4_e061b84f",
+        "gpt4_e414231f",
+        "gpt4_ec93e27f",
+        "gpt4_f2262a51",
+        "gpt4_f49edff3",
+        "gpt4_fe651585"
+      ],
+      "rust_verdict": "fail",
+      "rust_point_estimate": -0.9327731092436975,
+      "rust_secondary": {
+        "lower_bound_at_least_0": "fail",
+        "non_inferiority_minus_0_02": "fail"
+      },
+      "exact_ties": 0,
+      "recall_all_delta": {
+        "n_pairs": 119,
+        "mean_a": 0.9327731092436975,
+        "mean_b": 0,
+        "delta": -0.9327731092436975,
+        "ci95": [
+          -0.9747899159663865,
+          -0.8823529411764706
+        ],
+        "p_two_sided": 0.00009999000099990002,
+        "wins_b": 0,
+        "losses_b": 111,
+        "mcnemar_p": 7.703719777548943e-34
+      },
+      "identical_top5_ordered": 0,
+      "identical_top5_set": 0,
+      "n_differences": 0
+    },
+    {
+      "arm": "hybrid",
+      "a": "pglite",
+      "b": "postgres",
+      "n_questions": 125,
+      "excluded_errors": [],
+      "exact_ties": 119,
+      "recall_all_delta": {
+        "n_pairs": 119,
+        "mean_a": 0.9243697478991597,
+        "mean_b": 0.9243697478991597,
+        "delta": 0,
+        "ci95": [
+          0,
+          0
+        ],
+        "p_two_sided": 1,
+        "wins_b": 0,
+        "losses_b": 0,
+        "mcnemar_p": 1
+      },
+      "identical_top5_ordered": 1,
+      "identical_top5_set": 1,
+      "n_differences": 0
+    },
+    {
+      "arm": "hybrid",
+      "a": "pglite",
+      "b": "rust",
+      "n_questions": 0,
+      "excluded_errors": [
+        "2698e78f_abs",
+        "88432d0a_abs",
+        "982b5123_abs",
+        "a96c20ee_abs",
+        "bc8a6e93_abs",
+        "edced276_abs"
+      ],
+      "rust_errors": [
+        "01493427",
+        "06f04340",
+        "078150f1",
+        "0862e8bf",
+        "08e075c7",
+        "09ba9854",
+        "0a995998",
+        "0bb5a684",
+        "0bc8ad92",
+        "0e4e4c46",
+        "0e5e2d1a",
+        "184da446",
+        "18dcd5a5",
+        "195a1a1b",
+        "19b5f2b3",
+        "1b9b7252",
+        "1d4da289",
+        "1d4e3b97",
+        "21d02d0d",
+        "26bdc477",
+        "2a1811e2",
+        "2bf43736",
+        "2ce6a0f2",
+        "2ebe6c92",
+        "38146c39",
+        "3ba21379",
+        "3d86fd0a",
+        "4388e9dd",
+        "4bc144e2",
+        "4dfccbf7",
+        "4f54b7c9",
+        "505af2f5",
+        "50635ada",
+        "51a45a95",
+        "577d4d32",
+        "59524333",
+        "5d3d2817",
+        "5e1b23de",
+        "60036106",
+        "65240037",
+        "6613b389",
+        "6a1eabeb",
+        "6ade9755",
+        "6b168ec8",
+        "6c49646a",
+        "6cb6f249",
+        "6e984302",
+        "7024f17c",
+        "720133ac",
+        "726462e0",
+        "75832dbd",
+        "76d63226",
+        "7e00a6cb",
+        "80ec1f4f",
+        "8550ddae",
+        "89527b6b",
+        "89941a94",
+        "8e91e7d9",
+        "945e3d21",
+        "9a707b81",
+        "9a707b82",
+        "9d25d4e0",
+        "9ee3ecd6",
+        "a3045048",
+        "a3332713",
+        "a40e080f",
+        "a96c20ee",
+        "a9f6b44c",
+        "ac031881",
+        "af8d2e46",
+        "b6019101",
+        "b86304ba",
+        "b9cfe692",
+        "ba61f0b9",
+        "bb7c3b45",
+        "bc8a6e93",
+        "bf659f65",
+        "c19f7a0b",
+        "cc5ded98",
+        "ce6d2d27",
+        "cf22b7bf",
+        "d3ab962e",
+        "d596882b",
+        "db467c8c",
+        "e3038f8c",
+        "e493bb7c",
+        "e4e14d04",
+        "e6041065",
+        "e831120c",
+        "e982271f",
+        "eaca4986",
+        "ed4ddc30",
+        "ef9cf60a",
+        "f0853d11",
+        "f35224e0",
+        "faba32e5",
+        "fca70973",
+        "gpt4_18c2b244",
+        "gpt4_1d80365e",
+        "gpt4_2655b836",
+        "gpt4_2f584639",
+        "gpt4_2f8be40d",
+        "gpt4_31ff4165",
+        "gpt4_468eb063",
+        "gpt4_4cd9eba1",
+        "gpt4_68e94287",
+        "gpt4_7ddcf75f",
+        "gpt4_8e165409",
+        "gpt4_93159ced",
+        "gpt4_b4a80587",
+        "gpt4_d6585ce9",
+        "gpt4_d9af6064",
+        "gpt4_e05b82a6",
+        "gpt4_e061b84f",
+        "gpt4_e414231f",
+        "gpt4_ec93e27f",
+        "gpt4_f2262a51",
+        "gpt4_f49edff3",
+        "gpt4_fe651585"
+      ],
+      "rust_verdict": "fail",
+      "rust_point_estimate": -0.9243697478991597,
+      "rust_secondary": {
+        "lower_bound_at_least_0": "fail",
+        "non_inferiority_minus_0_02": "fail"
+      },
+      "exact_ties": 0,
+      "recall_all_delta": {
+        "n_pairs": 119,
+        "mean_a": 0.9243697478991597,
+        "mean_b": 0,
+        "delta": -0.9243697478991597,
+        "ci95": [
+          -0.9663865546218487,
+          -0.8739495798319328
+        ],
+        "p_two_sided": 0.00009999000099990002,
+        "wins_b": 0,
+        "losses_b": 110,
+        "mcnemar_p": 1.5407439555097887e-33
+      },
+      "identical_top5_ordered": 0,
+      "identical_top5_set": 0,
+      "n_differences": 0
+    },
+    {
+      "arm": "hybrid",
+      "a": "postgres",
+      "b": "rust",
+      "n_questions": 0,
+      "excluded_errors": [
+        "2698e78f_abs",
+        "88432d0a_abs",
+        "982b5123_abs",
+        "a96c20ee_abs",
+        "bc8a6e93_abs",
+        "edced276_abs"
+      ],
+      "rust_errors": [
+        "01493427",
+        "06f04340",
+        "078150f1",
+        "0862e8bf",
+        "08e075c7",
+        "09ba9854",
+        "0a995998",
+        "0bb5a684",
+        "0bc8ad92",
+        "0e4e4c46",
+        "0e5e2d1a",
+        "184da446",
+        "18dcd5a5",
+        "195a1a1b",
+        "19b5f2b3",
+        "1b9b7252",
+        "1d4da289",
+        "1d4e3b97",
+        "21d02d0d",
+        "26bdc477",
+        "2a1811e2",
+        "2bf43736",
+        "2ce6a0f2",
+        "2ebe6c92",
+        "38146c39",
+        "3ba21379",
+        "3d86fd0a",
+        "4388e9dd",
+        "4bc144e2",
+        "4dfccbf7",
+        "4f54b7c9",
+        "505af2f5",
+        "50635ada",
+        "51a45a95",
+        "577d4d32",
+        "59524333",
+        "5d3d2817",
+        "5e1b23de",
+        "60036106",
+        "65240037",
+        "6613b389",
+        "6a1eabeb",
+        "6ade9755",
+        "6b168ec8",
+        "6c49646a",
+        "6cb6f249",
+        "6e984302",
+        "7024f17c",
+        "720133ac",
+        "726462e0",
+        "75832dbd",
+        "76d63226",
+        "7e00a6cb",
+        "80ec1f4f",
+        "8550ddae",
+        "89527b6b",
+        "89941a94",
+        "8e91e7d9",
+        "945e3d21",
+        "9a707b81",
+        "9a707b82",
+        "9d25d4e0",
+        "9ee3ecd6",
+        "a3045048",
+        "a3332713",
+        "a40e080f",
+        "a96c20ee",
+        "a9f6b44c",
+        "ac031881",
+        "af8d2e46",
+        "b6019101",
+        "b86304ba",
+        "b9cfe692",
+        "ba61f0b9",
+        "bb7c3b45",
+        "bc8a6e93",
+        "bf659f65",
+        "c19f7a0b",
+        "cc5ded98",
+        "ce6d2d27",
+        "cf22b7bf",
+        "d3ab962e",
+        "d596882b",
+        "db467c8c",
+        "e3038f8c",
+        "e493bb7c",
+        "e4e14d04",
+        "e6041065",
+        "e831120c",
+        "e982271f",
+        "eaca4986",
+        "ed4ddc30",
+        "ef9cf60a",
+        "f0853d11",
+        "f35224e0",
+        "faba32e5",
+        "fca70973",
+        "gpt4_18c2b244",
+        "gpt4_1d80365e",
+        "gpt4_2655b836",
+        "gpt4_2f584639",
+        "gpt4_2f8be40d",
+        "gpt4_31ff4165",
+        "gpt4_468eb063",
+        "gpt4_4cd9eba1",
+        "gpt4_68e94287",
+        "gpt4_7ddcf75f",
+        "gpt4_8e165409",
+        "gpt4_93159ced",
+        "gpt4_b4a80587",
+        "gpt4_d6585ce9",
+        "gpt4_d9af6064",
+        "gpt4_e05b82a6",
+        "gpt4_e061b84f",
+        "gpt4_e414231f",
+        "gpt4_ec93e27f",
+        "gpt4_f2262a51",
+        "gpt4_f49edff3",
+        "gpt4_fe651585"
+      ],
+      "rust_verdict": "fail",
+      "rust_point_estimate": -0.9243697478991597,
+      "rust_secondary": {
+        "lower_bound_at_least_0": "fail",
+        "non_inferiority_minus_0_02": "fail"
+      },
+      "exact_ties": 0,
+      "recall_all_delta": {
+        "n_pairs": 119,
+        "mean_a": 0.9243697478991597,
+        "mean_b": 0,
+        "delta": -0.9243697478991597,
+        "ci95": [
+          -0.9663865546218487,
+          -0.8739495798319328
+        ],
+        "p_two_sided": 0.00009999000099990002,
+        "wins_b": 0,
+        "losses_b": 110,
+        "mcnemar_p": 1.5407439555097887e-33
+      },
+      "identical_top5_ordered": 0,
+      "identical_top5_set": 0,
+      "n_differences": 0
+    }
+  ]
+}
+[lme-recall] receipt: out/lme-w2.json
