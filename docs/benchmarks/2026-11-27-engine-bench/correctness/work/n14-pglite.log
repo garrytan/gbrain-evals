@@ -39,4 +39,4 @@ quality: native append embed ratio max 2.76 (<= 3), native recall gap vs parts 0
 | 2mb | book | native | stored | 637 | 40/40 | 1.00 | 40/40 | 40/40 | 21100 | 1.869 | 16 | match | 1.7 | 21 |
 
 gbrain findings: none
-receipt: /home/ubi/work/gbrain-evals/out/correctness-work/n14-pglite/receipt.json (hermetic arm 83.4 s)
+receipt: ./out/correctness-work/n14-pglite/receipt.json (hermetic arm 83.4 s)

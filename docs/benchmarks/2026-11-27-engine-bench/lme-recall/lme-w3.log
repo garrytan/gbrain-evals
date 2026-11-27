@@ -623,7 +623,7 @@
     "mode": "cache",
     "model": "voyage:voyage-4",
     "dimensions": 1024,
-    "cache_path": "/home/ubi/lme-cache/embed-cache-voyage_voyage-4@1024.sqlite",
+    "cache_path": "~/lme-cache/embed-cache-voyage_voyage-4@1024.sqlite",
     "plumbing_only": false,
     "note": "Vectors came from the content-addressed cache only; a miss stops the run and no provider was called."
   },

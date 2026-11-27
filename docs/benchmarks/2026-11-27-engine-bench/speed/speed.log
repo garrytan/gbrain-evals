@@ -41,4 +41,4 @@
 [postgres] removed container gbrain-engine-bench-2837-1795752040028
 
 wrote out/speed/speed-2026-11-27T05-44-01-10000.json (6933s)
-/home/ubi/work/gbrain-evals/out/speed/speed-2026-11-27T05-44-01-10000.json
+./out/speed/speed-2026-11-27T05-44-01-10000.json

@@ -34,4 +34,4 @@ quality metrics:
   in-process ontology arm (unmanaged engine, exploratory): current 100.0% of 18, stale 0, as-of 100.0%, remote leaks 0
 promotion rules: pass (none failed)
 gbrain findings: see docs/benchmarks/2026-10-01-wave-bugs.md (N1-*)
-receipt: /home/ubi/work/gbrain-evals/out/correctness-work/n1-postgres/receipt.json
+receipt: ./out/correctness-work/n1-postgres/receipt.json

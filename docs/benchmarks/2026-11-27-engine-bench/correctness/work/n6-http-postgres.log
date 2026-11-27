@@ -28,4 +28,4 @@
 [n6pg] phase warm-owner: 1899 probes in 45s
 [n6pg] phase interleaved: 4034 probes in 73s
 [n6pg] phase scoped-again: 2135 probes in 38s
-[n6pg] verdict pass: mandatory 155/155 covered, leaks 0, oracles 0, accepted 0; pool max 9 connections; receipt /home/ubi/work/gbrain-evals/out/correctness-work/n6-http-postgres/receipt.json
+[n6pg] verdict pass: mandatory 155/155 covered, leaks 0, oracles 0, accepted 0; pool max 9 connections; receipt ./out/correctness-work/n6-http-postgres/receipt.json

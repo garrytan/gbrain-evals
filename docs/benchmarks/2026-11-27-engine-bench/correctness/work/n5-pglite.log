@@ -39,4 +39,4 @@ quality metrics:
   paraphrase still active after forget (documented gap): 6 of 6
 promotion rules: pass (none failed)
 gbrain findings: see docs/benchmarks/2026-10-01-wave-bugs.md (N5-*)
-receipt: /home/ubi/work/gbrain-evals/out/correctness-work/n5-pglite/receipt.json
+receipt: ./out/correctness-work/n5-pglite/receipt.json

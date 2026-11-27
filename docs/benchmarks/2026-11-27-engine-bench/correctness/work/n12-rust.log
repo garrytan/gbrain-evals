@@ -2,4 +2,4 @@
 registered: 7 transcript adapters [hermes, openclaw, codex, claude-code, grok, claude-export, chatgpt], 22 parser patterns
 run error: harness: This brain's engine does not support getLinks (option temporal) yet (it needs the links capability), so nothing ran.
 runtime: 4.5s
-receipt: /home/ubi/work/gbrain-evals/out/correctness-work/n12-rust/receipt.json
+receipt: ./out/correctness-work/n12-rust/receipt.json

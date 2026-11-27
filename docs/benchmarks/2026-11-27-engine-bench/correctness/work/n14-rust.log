@@ -39,4 +39,4 @@ quality: native append embed ratio max n/a (<= 3), native recall gap vs parts 0 
 | 2mb | book | native | error (engine_capability_missing) | n/a | 0/40 | 0.00 | 0/40 | 0/0 | 75 | n/a | n/a | not_stored | 0.0 | 60 |
 
 gbrain findings: none
-receipt: /home/ubi/work/gbrain-evals/out/correctness-work/n14-rust/receipt.json (hermetic arm 8.7 s)
+receipt: ./out/correctness-work/n14-rust/receipt.json (hermetic arm 8.7 s)

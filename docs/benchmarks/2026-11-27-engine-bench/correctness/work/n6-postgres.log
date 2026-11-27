@@ -351,4 +351,4 @@
 [n6] learned                      probes=6 signal=0 leaks=0 oracles=0
 [n6] onboarding_status            probes=6 signal=0 leaks=0 oracles=0
 [n6] propose_jobs                 probes=6 signal=0 leaks=0 oracles=0
-[n6] coverage 33/99 read ops; content leaks 0, existence 0, oracles 0, gate bypasses 0; receipt /home/ubi/work/gbrain-evals/out/correctness-work/n6-postgres/receipt.json
+[n6] coverage 33/99 read ops; content leaks 0, existence 0, oracles 0, gate bypasses 0; receipt ./out/correctness-work/n6-postgres/receipt.json

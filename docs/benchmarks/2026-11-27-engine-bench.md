@@ -60,7 +60,7 @@ bun eval/runner/engine-bench/gate-suites.ts emit --out "$SUITES_DIR" --counted
 bun eval/runner/engine-bench/eval-gates.ts --engine-format-version 7 --answers aggregate.json --speed <speed receipt> --correctness <correctness receipt> --surface-parity <surface-parity receipt> --suite "$SUITES_DIR"/<suite>.json ...
 ```
 
-The gate-suite stage's only paid calls are Cat 13 and Cat 13b's OpenAI embeddings, made once by PGLite under the budget ledger. Every other stage is keyless. The raw receipts, per-question rows and logs are in [2026-11-27-engine-bench/](2026-11-27-engine-bench/). Paths on the run machines appear in the logs as they were printed.
+The gate-suite stage's only paid calls are Cat 13 and Cat 13b's OpenAI embeddings, made once by PGLite under the budget ledger. Every other stage is keyless. The raw receipts, per-question rows and logs are in [2026-11-27-engine-bench/](2026-11-27-engine-bench/). In the logs, the run machines' home directory is shown as `~/` and the checkout as `./`; nothing else in them is changed.
 
 ## Disclosures
 

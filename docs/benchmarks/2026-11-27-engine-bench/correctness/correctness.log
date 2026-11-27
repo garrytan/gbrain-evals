@@ -1,38 +1,38 @@
-[correctness] n1 on pglite: bun eval/runner/n1-knowledge-update.ts --gbrain /home/ubi/gbrain@v0.60.777.0 --output /home/ubi/work/gbrain-evals/out/correctness-work/n1-pglite
+[correctness] n1 on pglite: bun eval/runner/n1-knowledge-update.ts --gbrain ~/gbrain@v0.60.777.0 --output ./out/correctness-work/n1-pglite
 [correctness] n1 on pglite: exit 0 in 338s
-[correctness] n1 on postgres: bun eval/runner/n1-knowledge-update.ts --gbrain /home/ubi/gbrain@v0.60.777.0 --output /home/ubi/work/gbrain-evals/out/correctness-work/n1-postgres
+[correctness] n1 on postgres: bun eval/runner/n1-knowledge-update.ts --gbrain ~/gbrain@v0.60.777.0 --output ./out/correctness-work/n1-postgres
 [correctness] n1 on postgres: exit 0 in 247s
-[correctness] n1 on rust: bun eval/runner/n1-knowledge-update.ts --gbrain /home/ubi/gbrain@v0.60.777.0 --output /home/ubi/work/gbrain-evals/out/correctness-work/n1-rust
+[correctness] n1 on rust: bun eval/runner/n1-knowledge-update.ts --gbrain ~/gbrain@v0.60.777.0 --output ./out/correctness-work/n1-rust
 [correctness] n1 on rust: exit 3 in 6s
-[correctness] n5 on pglite: bun eval/runner/n5-forget-residue.ts --gbrain /home/ubi/gbrain@v0.60.777.0 --output /home/ubi/work/gbrain-evals/out/correctness-work/n5-pglite
+[correctness] n5 on pglite: bun eval/runner/n5-forget-residue.ts --gbrain ~/gbrain@v0.60.777.0 --output ./out/correctness-work/n5-pglite
 [correctness] n5 on pglite: exit 0 in 527s
-[correctness] n5 on postgres: bun eval/runner/n5-forget-residue.ts --gbrain /home/ubi/gbrain@v0.60.777.0 --output /home/ubi/work/gbrain-evals/out/correctness-work/n5-postgres
+[correctness] n5 on postgres: bun eval/runner/n5-forget-residue.ts --gbrain ~/gbrain@v0.60.777.0 --output ./out/correctness-work/n5-postgres
 [correctness] n5 on postgres: exit 0 in 399s
-[correctness] n5 on rust: bun eval/runner/n5-forget-residue.ts --gbrain /home/ubi/gbrain@v0.60.777.0 --output /home/ubi/work/gbrain-evals/out/correctness-work/n5-rust
+[correctness] n5 on rust: bun eval/runner/n5-forget-residue.ts --gbrain ~/gbrain@v0.60.777.0 --output ./out/correctness-work/n5-rust
 [correctness] n5 on rust: exit 3 in 5s
-[correctness] n6 on pglite: bun eval/runner/n6-visibility-fuzz.ts --gbrain /home/ubi/gbrain@v0.60.777.0 --output /home/ubi/work/gbrain-evals/out/correctness-work/n6-pglite
+[correctness] n6 on pglite: bun eval/runner/n6-visibility-fuzz.ts --gbrain ~/gbrain@v0.60.777.0 --output ./out/correctness-work/n6-pglite
 [correctness] n6 on pglite: exit 0 in 145s
-[correctness] n6 on postgres: bun eval/runner/n6-visibility-fuzz.ts --gbrain /home/ubi/gbrain@v0.60.777.0 --output /home/ubi/work/gbrain-evals/out/correctness-work/n6-postgres
+[correctness] n6 on postgres: bun eval/runner/n6-visibility-fuzz.ts --gbrain ~/gbrain@v0.60.777.0 --output ./out/correctness-work/n6-postgres
 [correctness] n6 on postgres: exit 0 in 818s
-[correctness] n6 on rust: bun eval/runner/n6-visibility-fuzz.ts --gbrain /home/ubi/gbrain@v0.60.777.0 --output /home/ubi/work/gbrain-evals/out/correctness-work/n6-rust
+[correctness] n6 on rust: bun eval/runner/n6-visibility-fuzz.ts --gbrain ~/gbrain@v0.60.777.0 --output ./out/correctness-work/n6-rust
 [correctness] n6 on rust: exit 1 in 3s
-[correctness] n6-http on pglite: bun eval/runner/n6-postgres-http.ts --gbrain /home/ubi/gbrain@v0.60.777.0 --output /home/ubi/work/gbrain-evals/out/correctness-work/n6-http-pglite
+[correctness] n6-http on pglite: bun eval/runner/n6-postgres-http.ts --gbrain ~/gbrain@v0.60.777.0 --output ./out/correctness-work/n6-http-pglite
 [correctness] n6-http on pglite: exit 69 in 1s refused (engine_not_supported_by_runner)
-[correctness] n6-http on postgres: bun eval/runner/n6-postgres-http.ts --gbrain /home/ubi/gbrain@v0.60.777.0 --output /home/ubi/work/gbrain-evals/out/correctness-work/n6-http-postgres
+[correctness] n6-http on postgres: bun eval/runner/n6-postgres-http.ts --gbrain ~/gbrain@v0.60.777.0 --output ./out/correctness-work/n6-http-postgres
 [correctness] n6-http on postgres: exit 0 in 230s
-[correctness] n6-http on rust: bun eval/runner/n6-postgres-http.ts --gbrain /home/ubi/gbrain@v0.60.777.0 --output /home/ubi/work/gbrain-evals/out/correctness-work/n6-http-rust
+[correctness] n6-http on rust: bun eval/runner/n6-postgres-http.ts --gbrain ~/gbrain@v0.60.777.0 --output ./out/correctness-work/n6-http-rust
 [correctness] n6-http on rust: exit 69 in 2s refused (engine_not_supported_by_runner)
-[correctness] n12 on pglite: bun eval/runner/n12-format-fidelity.ts --gbrain /home/ubi/gbrain@v0.60.777.0 --output /home/ubi/work/gbrain-evals/out/correctness-work/n12-pglite
+[correctness] n12 on pglite: bun eval/runner/n12-format-fidelity.ts --gbrain ~/gbrain@v0.60.777.0 --output ./out/correctness-work/n12-pglite
 [correctness] n12 on pglite: exit 0 in 10s
-[correctness] n12 on postgres: bun eval/runner/n12-format-fidelity.ts --gbrain /home/ubi/gbrain@v0.60.777.0 --output /home/ubi/work/gbrain-evals/out/correctness-work/n12-postgres
+[correctness] n12 on postgres: bun eval/runner/n12-format-fidelity.ts --gbrain ~/gbrain@v0.60.777.0 --output ./out/correctness-work/n12-postgres
 [correctness] n12 on postgres: exit 0 in 18s
-[correctness] n12 on rust: bun eval/runner/n12-format-fidelity.ts --gbrain /home/ubi/gbrain@v0.60.777.0 --output /home/ubi/work/gbrain-evals/out/correctness-work/n12-rust
+[correctness] n12 on rust: bun eval/runner/n12-format-fidelity.ts --gbrain ~/gbrain@v0.60.777.0 --output ./out/correctness-work/n12-rust
 [correctness] n12 on rust: exit 3 in 5s
-[correctness] n14 on pglite: bun eval/runner/n14-large-page-fidelity.ts --tiers 2mb --gbrain /home/ubi/gbrain@v0.60.777.0 --output /home/ubi/work/gbrain-evals/out/correctness-work/n14-pglite
+[correctness] n14 on pglite: bun eval/runner/n14-large-page-fidelity.ts --tiers 2mb --gbrain ~/gbrain@v0.60.777.0 --output ./out/correctness-work/n14-pglite
 [correctness] n14 on pglite: exit 0 in 86s
-[correctness] n14 on postgres: bun eval/runner/n14-large-page-fidelity.ts --tiers 2mb --gbrain /home/ubi/gbrain@v0.60.777.0 --output /home/ubi/work/gbrain-evals/out/correctness-work/n14-postgres
+[correctness] n14 on postgres: bun eval/runner/n14-large-page-fidelity.ts --tiers 2mb --gbrain ~/gbrain@v0.60.777.0 --output ./out/correctness-work/n14-postgres
 [correctness] n14 on postgres: exit 0 in 109s
-[correctness] n14 on rust: bun eval/runner/n14-large-page-fidelity.ts --tiers 2mb --gbrain /home/ubi/gbrain@v0.60.777.0 --output /home/ubi/work/gbrain-evals/out/correctness-work/n14-rust
+[correctness] n14 on rust: bun eval/runner/n14-large-page-fidelity.ts --tiers 2mb --gbrain ~/gbrain@v0.60.777.0 --output ./out/correctness-work/n14-rust
 [correctness] n14 on rust: exit 1 in 12s
 correctness: gbrain 0.60.777.0, engines pglite,postgres,rust, rust fail, 0 finding(s), 2960s
   n1: pglite pass 338s, postgres pass 247s, rust error 6s; rust fail

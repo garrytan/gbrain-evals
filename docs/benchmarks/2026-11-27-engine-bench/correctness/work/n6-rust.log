@@ -28,12 +28,12 @@ OperationError: This brain's engine does not support transaction yet (it needs t
  receiptFields: undefined,
        code: "engine_capability_missing"
 
-      at opError (/home/ubi/work/gbrain-evals/.gbrain-overlays/v0.60.777.0/src/core/ops/contract.ts:204:13)
-      at refuse (/home/ubi/work/gbrain-evals/.gbrain-overlays/v0.60.777.0/src/core/rust-engine.ts:340:29)
-      at <anonymous> (/home/ubi/work/gbrain-evals/eval/runner/eval-engine.ts:258:58)
-      at appendCoverage (/home/ubi/work/gbrain-evals/.gbrain-overlays/v0.60.777.0/src/core/belief/coverage.ts:40:28)
-      at enableBeliefLedger (/home/ubi/work/gbrain-evals/.gbrain-overlays/v0.60.777.0/src/core/belief/coverage.ts:115:23)
-      at seed (/home/ubi/work/gbrain-evals/eval/runner/n6-visibility-fuzz.ts:579:52)
-      at async runN6Hermetic (/home/ubi/work/gbrain-evals/eval/runner/n6-visibility-fuzz.ts:790:28)
-      at async withHermeticEnv (/home/ubi/work/gbrain-evals/eval/runner/hermetic-env.ts:120:26)
+      at opError (./.gbrain-overlays/v0.60.777.0/src/core/ops/contract.ts:204:13)
+      at refuse (./.gbrain-overlays/v0.60.777.0/src/core/rust-engine.ts:340:29)
+      at <anonymous> (./eval/runner/eval-engine.ts:258:58)
+      at appendCoverage (./.gbrain-overlays/v0.60.777.0/src/core/belief/coverage.ts:40:28)
+      at enableBeliefLedger (./.gbrain-overlays/v0.60.777.0/src/core/belief/coverage.ts:115:23)
+      at seed (./eval/runner/n6-visibility-fuzz.ts:579:52)
+      at async runN6Hermetic (./eval/runner/n6-visibility-fuzz.ts:790:28)
+      at async withHermeticEnv (./eval/runner/hermetic-env.ts:120:26)
 

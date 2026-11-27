@@ -17,4 +17,4 @@ parser: speaker 100.0% of 836 turns; timestamp exact (minute) 100.0% of 570 time
 attendance: precision 100.0%, recall 83.3% of 30 attendees (documented forms: recall 100.0% of 20)
 gaps: generic JSON detected as nothing (parser no_match); 1970-01-01 fallback on 532 of 532 date-less turns with no page date; seconds dropped on 36 turns
 runtime: 9.9s
-receipt: /home/ubi/work/gbrain-evals/out/correctness-work/n12-pglite/receipt.json
+receipt: ./out/correctness-work/n12-pglite/receipt.json
