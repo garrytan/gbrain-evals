@@ -307,7 +307,7 @@ Committed on the results branch before any pilot or counted cell. It changes no 
 
 Both 2 and 3 were raised by the preregistration's second review round and left open on #662 for this amendment.
 
-``` 2026-11-26: query counts after the pilot, brute-force ground truth, and a truth stop
+### 2026-11-26: query counts after the pilot, brute-force ground truth, and a truth stop
 
 Committed on the results branch after the pilot and before any counted cell. It changes no arm, filter, size, metric,
 margin or outcome rule. Approved by the experiment's owner on GST-4006.
