@@ -281,11 +281,11 @@ CLAUDE.md asks; they go in the paid-window request and the tracking issue.
 
 | Row | Write and background, dollars per million ingested tokens | Answer-model input per question | Machine hours per world |
 |---|---|---|---|
-| `gbrain-defaults` | 1.0 (measured embeddings 0.08, plus background fact extraction at an assumed 0.9 or less) | 23,800 tokens | 2 |
-| `ext-extract-first` | 95 (its recipe's rate from the scoreboard's development smokes, `ingest_usd_per_mtok` in `definitions.ts`; the battleground's 20.09 for gpt-4.1-mini in its matched configuration, times the 2.84 per-call ratio [its pilot](../../eval/systems/extract-first/PILOT.md) measured for gpt-5-mini, gives about 57, so the plan takes the higher) | 1,200 tokens | 20 (its recipe's 110 hours per million tokens, `hours_per_mtok`, for a world of about 0.18 million) |
-| `ext-memory-bank` | 3.7 (1.85 measured for its recipe with observations off, doubled for observations) | 10,400 tokens | 2 |
-| `ext-verbatim-session` | 0 | 8,000 tokens | 1.5 |
-| `baseline-hybrid` | 0.14 (measured) | 7,100 tokens | 1 |
+| `gbrain-defaults` | 0.11 (the paid pilot; it makes no fact-extraction calls on conversation pages, amendment of 2026-11-25, item 19) | 5,100 tokens (the paid pilot) | 2 |
+| `ext-extract-first` | 70.1 (the paid pilot; item 19. Before it, 95: its recipe's rate from the scoreboard's development smokes, `ingest_usd_per_mtok` in `definitions.ts`; the battleground's 20.09 for gpt-4.1-mini in its matched configuration, times the 2.84 per-call ratio [its pilot](../../eval/systems/extract-first/PILOT.md) measured for gpt-5-mini, gives about 57, so the plan took the higher) | 1,000 tokens (the paid pilot) | 20 (its recipe's 110 hours per million tokens, `hours_per_mtok`, for a world of about 0.18 million) |
+| `ext-memory-bank` | 9.06 (the paid pilot, 2.45 times the earlier 3.7; item 19) | 9,550 tokens (the paid pilot) | 2 |
+| `ext-verbatim-session` | 0 | 15,900 tokens (the paid pilot; item 19) | 1.5 |
+| `baseline-hybrid` | 0.14 (measured) | 14,550 tokens (the paid pilot; item 19) | 1 |
 | `baseline-file-agent` | 0 | 73,000 tokens over the agent's turns | 1.5 |
 | `baseline-none` | 0 | the question only | 0.5 |
 | `baseline-full-context` | 0 | the whole world, cached after the first read | 0.5 |
@@ -319,7 +319,9 @@ Each system's pilot must show:
 - **the part under test ran:** usage lines with provider usage fields for each call the table above says the system
   makes on write and on read (verbatim-session, the file agent and the floors must show no provider write lines), at
   least 20 completed counted probes with a time or a miss, no probe search billed to another phase, hosting samples
-  with nonzero resident memory, and for memory-bank, consolidation calls in its background lines;
+  with nonzero resident memory, an idle line measured over the idle window on `bg1-dev-11` (amendment of 2026-11-25,
+  item 15) with gbrain's upkeep trigger run and priced, and for memory-bank, consolidation calls in its background
+  lines;
 - **no judge:** there is none; every pilot answer gets a matcher class;
 - **the units can be supplied:** the paid pilot's write-and-drain time per session, times a world's session count, is
   inside the planned machine hours, the keyless capacity check finishes, and the write and background rate falls inside
@@ -386,7 +388,245 @@ accurate any system is beyond the key match on these questions.
 
 ## Amendments
 
-None yet.
+### 2026-11-24: probe attribution, idle check, probe errors and the world pool
+
+Made on the results branch before any paid call, from the review of this plan's final draft. Where this amendment
+and the text above differ, this amendment wins.
+
+1. **Probe searches are labelled by their own text.** A write can still be sending provider requests when a probe
+   searches, because some systems (the extract-first server among them) return from a write before their work ends.
+   So phase by arrival time alone could bill a write's requests to the probe or the reverse. Before each probe the
+   harness registers the probe's passage with the metering proxy (`/__proxy/probe` in
+   `eval/runner/metering-proxy.ts`). An embedding or rerank request whose every search text is exactly that passage
+   is labelled `probe`, so a batched write embedding that happens to hold the passage keeps its own phase; every
+   other request keeps its write, background or idle phase. Each request is still logged and charged once, so the
+   phases sum to the bill; a keyless test in `test/eval/cost-speed-probes.test.ts` overlaps a write and a probe on
+   one slot and checks both. The passage is the first 300 characters of the session's longest turn, or, when that turn
+   is 300 characters or shorter, the turn without its last word (`probePassage`), so it is never a whole turn and a
+   system that embeds turn by turn never sends it as a write. A search that also calls a language model (query
+   expansion, for one) would carry the passage inside a prompt that this label doesn't read, so the pilot checks the
+   label: before its probes, each system answers 10 calibration searches while drained and idle. The window closes
+   only when the idle check after the last search passes, so work a read sets off later falls inside it, and any
+   provider request in it not labelled `probe` names a route the label misses (`unlabelledMeterRoutes` in
+   `eval/runner/memory-qa/cost-speed-probes.ts`). Such a system fails its pilot until its read's provider calls go through a
+   slot of their own. gbrain v0.60.769.0's read made only Voyage embedding and rerank calls in the keyless check, but
+   the pilot checks it like every other system.
+2. **A bounded idle check replaces "the system reports ready" between probes.** gbrain's shim can wait several minutes
+   per drain round, and its `/finish` can say ready while background work is undrained. Before each counted probe
+   the harness waits until the system reports no pending background work (or can't say) and its provider slot has been
+   quiet for 60 seconds, checking each second, for at most 10 minutes; a status call that fails counts as not idle.
+   The check only watches: it never drains or
+   stops the system's scheduler. A probe that starts after the 10 minutes without the system idle is recorded as
+   "not idle" and doesn't count. A `/finish` that says ready with undrained background work isn't drained.
+   Each counted world adds up to 21 × 20 minutes (7 hours) of probe and idle time to the machine hours above, and the
+   pilot up to 20 × 20 minutes. The pilot's machine-hours check counts this allowance.
+3. **Errored polls are not misses.** A probe is found at its first poll within the horizon that returns the session,
+   missed when its polls reached the horizon, every one returned and none found the session in time, and errored
+   otherwise: a poll errored, or polling stopped before the horizon. A poll's time is when it returned, and polling
+   continues until a poll returns at or after the horizon, so a true miss always reaches it. Errored probes are reported per system but stay out of p50, p95 and the miss share in decision 3. A world
+   whose probes are more than a tenth errored or not idle is void: none of its probes count, and it is reported.
+   The pilot's 20 probes must be found or missed, with none errored. The probe-record, void-window and idle rules are
+   in `eval/runner/memory-qa/cost-speed-probes.ts`; the cells that use them are built on the results branch before the pilot.
+4. **The pilot and capacity worlds stay out of the counted pool.** If the smallest-difference check raises the world
+   count, it draws only from the 18 dev worlds other than `bg1-dev-11` and `bg1-dev-12`. If 18 worlds can't resolve
+   the stated difference, the results say so and report the interval they reach instead of adding those two.
+5. **No interim look.** The counted run is planned within the registry's `under-500` tier (R113), so it takes no
+   interim look and runs every counted world in one pass. If the cap set before the counted run falls above that tier,
+   a dated amendment before the first counted cell preregisters instead one look at half the worlds, with its stop
+   bounds, and the registry entry's tier and `interim_look` change with it.
+
+### 2026-11-25: build, read route, scheduled jobs, hosting prices and the token basis
+
+Made on the results branch before any paid call. Where this amendment and the text above differ, this amendment wins.
+
+1. **gbrain build.** gbrain's newest release at launch is v0.60.771.0
+   (`97ef356f574a66709ef1bf4ae1cad604727852d8`), so every gbrain cell runs it (`CS1_GBRAIN_BUILD` in
+   `eval/runner/q1/cells/cs1.ts`), and the build freezes when the first counted gbrain cell starts. Its starter surface
+   no longer takes `limit` on `list_write_requests`, so the shim stopped sending it; before that fix the capacity
+   check's `/finish` errored and its probes were skipped.
+2. **Extract-first's read goes through a read route.** Its search embeds the entities it extracts from the query
+   with texts other than the probe passage, so the probe label (amendment of 2026-11-24, item 1) missed them. The
+   read-route stack (`docs/comparison-systems/ext-extract-first/read-route/`) sends the server's reads through the
+   proxy route `/<slot>~read/`, metered as the slot itself; while a probe is registered every request on that route is
+   labelled `probe`, and each usage line records `read: true`. Writes keep the plain slot. The pinned bundle's files
+   are unchanged.
+3. **Scheduled jobs priced per run.** A job whose cadence is longer than its idle window is priced by running its
+   documented trigger once before the window, under its own meter key, and counting that run's dollars times the runs a
+   month at its shipped cadence; the window's own rate covers everything else. gbrain's daily upkeep is
+   `gbrain maintain --unattended`, run with serve stopped; a keyless run on v0.60.771.0 ran its 15 steps and a second
+   run reported upkeep not due, so the restarted server doesn't run it again inside the window. The priced run is the
+   brain's first upkeep after the bulk import, so its embedding catch-up (capped by gbrain at a daily amount) covers the
+   whole imported history rather than one day's writes; this can only overstate gbrain's idle line, and the results say
+   so beside it.
+4. **Hosting prices.** The primary ladder is AWS EC2 m7i on demand (Linux, us-east-1) with EBS gp3 storage; the
+   sensitivity row is m7g (Graviton) on the same terms. Prices were read on 2026-11-25 from AWS's public price lists and
+   are fixed in `CS1_PRICE_LADDERS` (`eval/runner/q1/cells/cs1.ts`).
+5. **Token basis.** Dollars per million tokens divide by the content tokens written (the turns' text, as the
+   workload profile counts them), not by the tokens of whatever framing a system adds, so systems are priced against the
+   same history.
+6. **History growth.** The first and last quarters are those of the bulk import's writes, each quarter's dollars being
+   the write and background lines that arrive from its first write until the next quarter's first
+   (`writes.ndjson` per world). Bulk writes are also polled for write-to-queryable time; those times are reported
+   beside the held-back probes and don't enter p50, p95 or decision 3.
+7. **Misses split.** A missed probe is searched once more after the system is idle again and reported as late (found
+   then) or never found; both count as misses in decision 3.
+8. **Capacity units are keyless only.** The launch check refuses a capacity unit in any campaign, and a capacity cell
+   refuses to run unless its lease proxy reports a keyless upstream.
+9. **Pilot leases.** Each pilot cell's planned spend is at most a tenth of its counted row (`estimate` in
+   `cs1-cells.json`). Its lease is a runaway stop that reserves each request's worst case, so for the two rows whose
+   reader runs whole agent loops or whole-history reads (the file agent and full context) the lease is larger than a
+   tenth; the window cap covers the leases, and the pilot report gives the spend.
+10. **gbrain's fixed-evidence read on the starter surface.** v0.60.771.0's starter surface refuses `limit` and
+    `autocut` on `query` before reading anything, so the harness's readiness probe (a fixed-evidence read) failed
+    on every gbrain cell and marked it degraded. The shim now drops each knob the surface refuses, runs the read at
+    gbrain's defaults for it, and records the dropped knobs on the read. Question reads use the shipped default read
+    and are unchanged.
+11. **Keyless capacity check.** Each capacity cell wrote all 154 sessions of `bg1-dev-12` behind the fake upstream.
+    gbrain v0.60.771.0 drained (`/finish` ready, no pending work), found 21 of 21 held-back probes and 20 of 20 bulk
+    probes, and its calibration window held only probe-labelled requests. Extract-first on the read route held the
+    whole world and its calibration window held only probe-labelled requests, but its extraction stores nothing from
+    the fake's replies, so every probe missed; memory-bank likewise stored nothing in the first capacity run. For those
+    two systems the fake can't stand in for the provider, so their capacity is checked on their first counted world,
+    as the Pilot section says. Verbatim-session, the hybrid baseline and the file agent held the whole world in the
+    first run. The answers are matcher-checked only for running: the fake's replies answer nothing.
+
+Added after a keyless rehearsal of all eight pilot cells on the pilot VM, before any paid call. Every rehearsal lease
+settled. It found four things, fixed here:
+
+12. **Reply cache.** Readers cached replies by prompt in a cache the whole machine shares, so a read whose prompt
+    matched an earlier one was answered from the cache with no provider call: in the rehearsal, extract-first's and
+    memory-bank's empty-evidence reads replayed the no-memory floor's replies, unmetered. A replay would leave a read
+    out of the read line and its latency, and a keyless reply left on the pilot VM could answer a paid read. Every
+    cost-and-speed cell, and any run behind a keyless upstream, now keeps its reply cache inside its own output
+    directory (`qaCacheRoot` in `eval/runner/q1/cell.ts`).
+13. **Hosting samples.** On the VM the run user is outside the docker group, so every hosting sample recorded an error
+    and no memory or disk reading. The sampler now reads docker through `sudo -n` when the socket refuses it, as the
+    stack's own bootstrap does, and the loader lists a unit with no samples or failed samples as a problem.
+14. **Read sizes.** The rehearsal read the pilot world's questions through each row's shipped read. Hybrid search
+    delivered 22,500 tokens per question and verbatim-session 17,600 (the fake counts a quarter of the prompt's
+    characters, close to cl100k), against the plan's 7,100 and 8,000, which came from default-delivery smokes on other
+    worlds. Hybrid's pilot cell stopped at its lease on its fourth question. The plan table now takes the measured
+    sizes, which raises those two rows' estimates and leases; the pilot's rate check compares against them. gbrain's
+    rehearsal read was smaller than its planned 23,800, but the fake's embeddings don't rank as the provider's do, so
+    its plan is unchanged until the pilot measures it.
+15. **Pilot idle window.** The pilot had no idle window, so it could not show gbrain's upkeep trigger priced or any
+    row's idle line measured, both parts R111 asks the pilot to show ran. Every writing row's pilot cell now idles on
+    `bg1-dev-11` for the same window as its counted cell (2 hours for gbrain, 30 minutes for the others), with the same
+    jobs and triggers.
+
+Added after a scoped review of items 12 and 13, before any paid call:
+
+16. **No harness cache in a measured call.** Item 12 scoped the reply cache to the cell, but in a cost-and-speed cell
+    any harness-side cache in the measurement path is wrong: a hit is unmetered spend and a near-zero latency. The
+    review also found the hybrid baseline's embedding cache shared across the machine, keyed only by model, size and
+    text; on the pilot VM it held the first rehearsal's fake vectors, and the third rehearsal's hybrid cell made no
+    embedding call at all. Cost-and-speed cells now run with both caches off (`uncachedCell` in
+    `eval/runner/q1/cell.ts`): the reader's reply cache neither reads nor stores a reply, and the hybrid embedder
+    sends every call's texts, so no cell has a cache hit to mark or count. The VM's shared caches were deleted before
+    the paid pilot. A search of the code these cells run, for caches and memos kept outside the cell's output
+    directory, found:
+    - the reply cache (`ChatClient`, `eval/runner/memory-qa/qa-v2.ts`) and the hybrid embedding cache
+      (`cachedOpenAIEmbedder`, `eval/runner/cat40/pg-arm.ts`): off, as above;
+    - two in-process memos in `cell.ts` (`memoCounter`, `readerFitTokenizer`) that hold local tokenizer counts:
+      harmless, because counting makes no provider call and adds no time to a measured call;
+    - the cache in `eval/runner/memory-qa/qa.ts`, whose client the reader's client extends: never read, because the
+      reader's client replaces its chat call; and the embedding cache in `eval/runner/memory-qa/run-systems.ts`: not
+      on these cells' path, which builds its systems in `cell.ts`;
+    - the file agent's tree and full-context reads: the tree lives under the cell's output directory and is rebuilt
+      for every write, and full-context reads have no cache;
+    - caches inside the compared systems themselves (gbrain's query cache, each vendor server's own state): shipped
+      behavior and part of what is measured. Their state lives in each stack's volumes, which the cell command's
+      `eval/systems/bootstrap.sh down -v` removes when the cell ends, and gbrain's shim records a query-cache hit on
+      the read. A cell killed before that step can leave its volumes behind, so the VM is checked for leftover
+      volumes before each paid cell starts.
+
+A keyless hybrid cell on the VM after the fix sent all 115 of its embedding calls and all 8 reads through the lease
+proxy, and no cache directory was created outside its output.
+
+Added after the paid pilot (window CS1-PILOT), before any counted cell. These items freeze the counted run:
+
+17. **The idle wait before a held-back probe is 20 minutes.** Extract-first's per-write extraction took 2 to 10
+    minutes to go quiet after each probe write. 3 of its 20 probes reached the 10-minute cap and started without the
+    system idle, which is more than a tenth, so its world's probe window was void and none of its probes counted, though
+    all 20 found their session. The wait is now at most 20 minutes (`CS1_IDLE_MAX_MS` in `eval/runner/q1/cell.ts`),
+    the amount amendment item 2 already planned per probe. It changes every row's probe procedure, not only
+    extract-first's. The other rows' pilots stand: none of their probes waited more than 10 minutes, so a 20-minute cap
+    would have given them the same records. The probe horizon (10 minutes to be found) is unchanged. Extract-first is
+    piloted again alone under the new wait before its counted cell. In that re-pilot all 20 probes started with the
+    system idle (the longest wait was 18 minutes) and all 20 were found, so its probe window counts.
+18. **World end and the pilot method.** The pool's world end is 2026-11-22 (`GBRAIN_EVALS_BG1_WORLD_END`); the
+    development default of 2026-11-08 is refused because it lies more than 14 days before launch, so every counted cell
+    starts by 2026-12-06 or this item is amended again. The pilot ran all eight pilot cells as local cells of one
+    campaign on one VM, each behind its own lease proxy and lease, with the three external stacks moved to their own shim
+    ports (8701 to 8703) beside gbrain's 8700, after keyless rehearsals of every cell on the same VM.
+19. **Pilot results and the re-plan.** Every pilot lease settled, and the loader put every billed dollar in a world.
+    gbrain, memory-bank, verbatim-session, hybrid, the file agent and the two floors passed every R111 check above;
+    extract-first passed all but the probe window (item 17). Measured against the plan:
+    - gbrain's write and background rate was 0.11 dollars per million tokens against the planned 1.0, below the band.
+      Shipped gbrain makes no fact-extraction calls on these sessions: the harness writes them as conversation pages, its
+      facts backstop skips conversation pages (`src/core/facts/eligibility.ts`, reason `conversation_pipeline`), and
+      conversation facts are extracted only by `gbrain extract-conversation-facts`, which a shipped install does not
+      run on its own and which only the F6 configuration of the shim calls. This is shipped behavior and is what the
+      row measures; the results page says, beside gbrain's dollar figure and not in a footnote, that gbrain's cost
+      reflects writing these sessions without extracting facts from them. Its daily upkeep ran through its trigger in
+      the 2-hour idle window and made no provider call.
+    - memory-bank's rate was 9.06 against the planned 3.7, 2.45 times it, outside the band. Its consolidation calls
+      ran in its background lines, as the plan expected, but at more than twice the rate the observations-off
+      measurement doubled suggested. The plan takes the measured rate.
+    - extract-first's rate was 70.1 against the planned 95, inside the band; it wrote and drained 60 sessions in 7.0
+      hours, about 17.5 hours for a counted world against the planned 20.
+    - Per-question reads were smaller than planned for gbrain (5,100 cl100k tokens against 23,800), verbatim-session
+      (15,900 against 17,600), hybrid (14,550 against 22,500), memory-bank (9,550 against 10,400) and extract-first
+      (1,000 against 1,200). The plan takes the measured sizes. The file agent keeps its planned 73,000, because the
+      pilot's 60-session tree is smaller than a counted world's, and full context is priced from its measured reads.
+    The plan table above carries the new values, and `cs1-cells.json` is regenerated from them. The counted run's
+    caps follow from them; their amounts are in the paid-window request, as the Plan section says.
+
+### 2026-11-26: gbrain v0.60.776.0
+
+Made on the results branch before any counted cell. Where this amendment and the text above differ, this amendment
+wins.
+
+20. **gbrain build v0.60.776.0.** gbrain released v0.60.776.0 (`3a360389f152e62ccb627ab96eccfad8a9204e75`) on
+    2026-11-26, 5 releases and 103 commits after v0.60.771.0, and before any counted gbrain cell started. So every
+    counted gbrain cell runs it (`CS1_GBRAIN_BUILD`), and the build freezes here instead of at item 1's. The gbrain
+    pilot row ran v0.60.771.0 and stands, for these reasons:
+    - The facts backstop's eligibility rule is byte-identical (`src/core/facts/eligibility.ts`), so conversation pages
+      are still skipped with reason `conversation_pipeline`. Item 19's finding on gbrain's write rate rests on that rule.
+      The commits that touch fact extraction change how a page's own facts block is reconciled, and none of them adds
+      a provider call.
+    - The background jobs in `CS1_IDLE_JOBS` keep their cadences. The files they cite change only in an opt-in socket
+      and in the addon install after a self-upgrade, and their citations now name v0.60.776.0.
+    - Two keyless checks ran on v0.60.776.0 on one VM, behind the fake upstream:
+      - The capacity cell wrote all 154 sessions of `bg1-dev-12` and found 21 of 21 held-back probes, each started
+        with the system idle, and 20 of 20 bulk probes.
+      - A rehearsal of the gbrain pilot cell wrote `bg1-dev-11` and found 20 of 20 held-back and 20 of 20 bulk
+        probes, and its 2-hour idle window held no request.
+    - In both checks, gbrain's write, probe and background traffic was embedding and rerank requests only. The only chat
+      and messages requests were the readers' answers. The rehearsal's write and background embedding requests matched
+      the v0.60.771.0 rehearsal's to within one request.
+
+    gbrain v0.60.776.0 names an installed Rust addon by its SHA-256, so the harness test that plants a stray addon
+    now writes it where gbrain looks. That is the only harness change.
+
+### 2026-11-27: deviations recorded after the counted run
+
+Recorded on the results branch after the counted run ended and before any result was published. None changes a rule,
+a measure or a system's configuration; the [results page](2026-11-24-cost-speed.md#deviations-from-the-plan) gives each
+in full.
+
+21. **File-agent cells count.** Both file-agent cells ended with exit code 0, 100 of 100 answers per reader and a settled
+    lease, and the launcher marked them failed because its checkpoint watcher stopped on a file the running cell had
+    just deleted (a race in `attemptRows`, `eval/runner/shootout-cell.ts`). Completion here is the cell's, not the
+    launcher's, so both count and neither is rerun. The watcher now skips such files, with a test.
+22. **Memory-bank's first attempt on its first world** stopped during setup when its container image couldn't be found by
+    digest, before any provider call, and was closed with no spend. The second attempt is the counted one.
+23. **The smallest-detectable-difference simulation** that "Statistics" asks for before the freeze wasn't run. The
+    counted intervals resolve both stated differences, and the results report them as measured.
+24. **The no-memory floor has no server.** The loader had priced the floor's harness process as hosting, against
+    "system cost is zero by construction" in "Systems". It now gives the floor none, with a test; no other row changed.
+25. **One hosting sample failed.** 1 of memory-bank's 283 hosting samples recorded a Docker error and no reading; the
+    other 282 set its server size.
 
 ## Disclosures
 

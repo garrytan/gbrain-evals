@@ -2,7 +2,7 @@ import { describe, expect, test } from 'bun:test';
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import {
   EvalEngineUnavailable, cliEngineConfig, evalEngineKind, evalEngineRequested, isCapabilityMissing, openEvalEngine,
   rawSqlNotApplicable, rustAddonEnv, rustAddonIdentity, rustAddonRefusal, supportsRawSql,
@@ -106,11 +106,13 @@ describe('openEvalEngine', () => {
   test('on the pinned gbrain, a stray addon in the gbrain home that the release manifest does not name is refused as a mismatch on rust and never reached by pglite', async () => {
     const gut = resolveGbrainUnderTest(null);
     const { detectAddonTarget } = await import(join(gut.root, 'src/core/rust-engine/addon-target.ts'));
+    const { addonPath } = await import(join(gut.root, 'src/core/rust-engine/addon-loader.ts'));
     const target = detectAddonTarget();
     const home = mkdtempSync(join(tmpdir(), 'eval-engine-stray-addon-'));
     const rustDir = join(home, '.gbrain', 'engines', 'rust');
-    mkdirSync(join(rustDir, 'stray'), { recursive: true });
-    writeFileSync(join(rustDir, 'stray', `${target}.node`), 'not an addon');
+    const stray = addonPath(rustDir, 'stray', target, '0'.repeat(64));
+    mkdirSync(dirname(stray), { recursive: true });
+    writeFileSync(stray, 'not an addon');
     writeFileSync(join(rustDir, `manifest-${gut.version}.json`), JSON.stringify({ gbrain_version: gut.version, engine_abi: 1, engine_build: 'stray', targets: { [target]: { asset: `${target}.node`, sha256: '0'.repeat(64), bytes: 12 } } }));
     const saved = process.env.GBRAIN_HOME;
     process.env.GBRAIN_HOME = home;

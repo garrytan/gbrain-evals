@@ -387,12 +387,15 @@ export interface FileAgentOptions {
   effort?: string;
 }
 
+type Tree = { root: string; files: Map<string, TreeFile>; users: number; stale: boolean };
+
 export class FileAgentSystem implements AnsweringSystem {
   readonly name = 'baseline-file-agent';
   /** Limit events of every grep since construction, for the cell's receipt. */
   readonly limitEvents: GrepLimitEvent[] = [];
   private sessions = new Map<string, StoredSession[]>();
-  private trees = new Map<string, { root: string; files: Map<string, TreeFile> }>();
+  private trees = new Map<string, Tree>();
+  private builds = 0;
   private workDir: string;
   /** Every provider attempt's receipt (FileAgentReceipt), one per line. */
   readonly receiptsPath: string;
@@ -420,8 +423,20 @@ export class FileAgentSystem implements AnsweringSystem {
 
   private invalidate(ns: string) {
     const t = this.trees.get(ns);
-    if (t) rmSync(t.root, { recursive: true, force: true });
+    if (!t) return;
     this.trees.delete(ns);
+    t.stale = true;
+    if (!t.users) rmSync(t.root, { recursive: true, force: true });
+  }
+
+  /** Runs fn on the namespace's current tree; a write that lands meanwhile builds a new tree, and this one is removed once no grep holds it. */
+  private async holding<T>(ns: string, fn: (t: Tree) => Promise<T>): Promise<T> {
+    const t = this.tree(ns);
+    t.users++;
+    try { return await fn(t); } finally {
+      t.users--;
+      if (t.stale && !t.users) rmSync(t.root, { recursive: true, force: true });
+    }
   }
 
   async reset(ns: string) { this.sessions.delete(ns); this.invalidate(ns); }
@@ -444,21 +459,36 @@ export class FileAgentSystem implements AnsweringSystem {
     return { status: list.some(x => x.source_id === src) ? 'deleted' : 'partial', receipt: {} };
   }
 
-  /** The namespace's tree on disk, written once until the namespace changes. */
-  tree(ns: string): { root: string; files: Map<string, TreeFile> } {
+  /** The namespace's tree on disk, written once until the namespace changes, each build in its own directory. */
+  tree(ns: string): Tree {
     const hit = this.trees.get(ns);
     if (hit) return hit;
-    const root = join(this.workDir, ns);
-    rmSync(root, { recursive: true, force: true });
+    const root = join(this.workDir, ns, String(++this.builds));
     mkdirSync(root, { recursive: true });
     const files = layoutSessions(ns, this.sessions.get(ns) ?? []);
     for (const [path, f] of files) {
       mkdirSync(dirname(join(root, path)), { recursive: true });
       writeFileSync(join(root, path), f.content);
     }
-    const t = { root, files };
+    const t: Tree = { root, files, users: 0, stale: false };
     this.trees.set(ns, t);
     return t;
+  }
+
+  /**
+   * The cost-and-speed write-to-queryable poll for the file agent: a deterministic grep for `passage` (a fixed string)
+   * over the namespace's tree through the agent's own grep tool, with no model call; the source ids of the matching files.
+   * Grep matches line by line, so a passage that spans lines is searched by its first line. A grep error or cancellation
+   * throws, so the poll is recorded as errored.
+   */
+  async grepSources(ns: string, passage: string): Promise<string[]> {
+    return this.holding(ns, async ({ root, files }) => {
+      const line = passage.split('\n').find(l => l.trim()) ?? passage;
+      const out = await ripgrep(root, this.opts.grepLimits ?? DEFAULT_GREP_LIMITS, e => { this.limitEvents.push(e); })({ pattern: line.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), path: '.', ignore_case: false, max_results: null, files_only: true });
+      if (/^grep (error|cancelled)/.test(out)) throw new Error(out.slice(0, 200));
+      if (out === 'No matches.') return [];
+      return [...new Set(out.split('\n').filter(Boolean).flatMap(p => { const src = files.get(cleanPath(p))?.source_id; return src ? [src] : []; }))];
+    });
   }
 
   async answer(ns: string, q: PublicQuestion, opts: AnswerOptions): Promise<AgentAnswer> {

@@ -32,6 +32,7 @@ writes all three before `init` runs its embedding probe.
 | `/delete_source` | `unsupported`: the starter surface has no page delete |
 | `/answer` | gbrain's own answer (the protocol's optional route, advertised as `/capabilities` → `answer`: modes `synthesize`, plus `think` on the full surface, and `models.synthesize`, gbrain's resolved `models.think`): `synthesize` (starter), or `think` with `model` and `reference_date` on the full surface |
 | `/stats`, `/restart` | serve memory and brain size, and serve restart time, for the stress pilot |
+| `/trigger` | `{ns, job: "maintain"}`: one `gbrain maintain --unattended` run with serve stopped, then `gbrain maintain --status`, so the cost-and-speed experiment prices the daily upkeep round per run |
 
 `service_ms` is measured in the shim around each MCP call; `gbrain_ms` in each response is the MCP call itself.
 Namespaces run one at a time (`parallel_namespaces: false`): each brain is a clean install at one fixed

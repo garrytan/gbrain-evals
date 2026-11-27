@@ -81,6 +81,8 @@ import { cachedOpenAIEmbedder, PG_EMBED_DIMS } from '../cat40/pg-arm.ts';
 import { DecideError, renderOperatorMessage } from '../decisions/errors.ts';
 import { loadSplit } from '../decisions/splits.ts';
 import { ndcgAtK, percentile, recallAllAtK, recallAnyAtK } from '../metrics.ts';
+import { HostingSampler, type HostingSample } from '../memory-qa/hosting-samples.ts';
+import { awaitIdle, finishDrained, probePassage, probeRecord, unlabelledMeterRoutes, type Poll, type ProbeRecord as WriteProbeRecord } from '../memory-qa/cost-speed-probes.ts';
 import { DEFAULT_ROUTE_CAPS, ProxyControl, upstreamTrouble, type Meter, type Phase } from '../metering-proxy.ts';
 import { BG1_SET, BG1C_SET, bg1RunClock, fromHome, bg1SealedSet, bg1UnitConversations, bg1WorldEnd, loadCorpus, readBg1Manifest, readRs1Manifest, rs1UnitConversations, type Bg1Manifest, type Corpus, type MemoryQuestion, type Rs1Manifest, type Session } from '../memory-qa/corpus.ts';
 import { ContextStore } from '../memory-qa/arms.ts';
@@ -109,9 +111,10 @@ import { loadRS1Manifest, stage1OverCap, type RS1Manifest } from './cells/rs1.ts
 import { loadBN10Manifest } from './cells/bn10.ts';
 import { bg1Stage1OverCap, listPrice, loadBG1Manifest, type BG1Manifest } from './cells/bg1.ts';
 import { BG1C_MANIFEST_PATH, type BG1CManifest } from './cells/bg1c.ts';
-import { BG1C_BLOCK_IDS, isWindowedBenchmark, WEEKLY_PILOT_BLOCK_IDS } from './cells/definitions.ts';
+import { CS1_CAMPAIGN, loadCS1Manifest } from './cells/cs1.ts';
+import { BG1C_BLOCK_IDS, CS1_BLOCK_IDS, isWindowedBenchmark, OWN_BUNDLE_CONFIGS, WEEKLY_PILOT_BLOCK_IDS } from './cells/definitions.ts';
 import { buildWeeklyPilotManifest, WEEKLY_PILOT_COUNTED, WEEKLY_PILOT_GBRAIN_ENV, WEEKLY_PILOT_LENGTH_ENV, weeklyPilotBuild, weeklyPilotLength, type WeeklyLineRereadPlan, type WeeklyPilotManifest } from './cells/weekly-line.ts';
-import { BG1_DEV_ALIAS_CONVERSATIONS, BG1_DEV_LONG_CONVERSATIONS, BGW_CAMPAIGN } from '../memory-qa/bg1-names.ts';
+import { BG1_DEV_ALIAS_CONVERSATIONS, BG1_DEV_CONVERSATIONS, BG1_DEV_LONG_CONVERSATIONS, BGW_CAMPAIGN } from '../memory-qa/bg1-names.ts';
 import { ledgerCaps as bg1LedgerCaps, requireRs1Window as requireBg1Window, WindowRefusal as Bg1WindowRefusal } from '../paid-arm.ts';
 import { exitCodeOf, refuse, renderMessage, ScoreboardError, type ScoreboardMessage } from './scoreboard-errors.ts';
 import type { UsageReceipt } from '../usage-receipt.ts';
@@ -241,9 +244,9 @@ export function splitConversations(benchmark: string, split: CellDefinition['spl
   return new Set(split === 'dev' ? dev : split === 'sealed' ? s.sealed : [...dev, ...s.sealed]);
 }
 
-/** A dev cell's conversations, so the loader never reads a sealed conversation's file (BEAM) or keeps it (LoCoMo), and a bg1-dev cell naming a long or alias dev world loads that world rather than stage 1's three; null loads everything. */
+/** A dev cell's conversations, so the loader never reads a sealed conversation's file (BEAM) or keeps it (LoCoMo), and a bg1-dev cell naming a world outside stage 1's three (an extra, a long or an alias dev world) loads the worlds it names rather than those three; null loads everything. */
 export function devOnly(def: Pick<CellDefinition, 'benchmark' | 'split' | 'only_conversations'>): Set<string> | null {
-  if (def.benchmark === 'bg1-dev' && def.only_conversations?.some(c => BG1_DEV_WEEKLY_WORLDS.includes(c))) return new Set(def.only_conversations);
+  if (def.benchmark === 'bg1-dev' && def.only_conversations?.some(c => !BG1_DEV_CONVERSATIONS.includes(c))) return new Set(def.only_conversations);
   if (def.split !== 'dev' || !(def.benchmark === 'locomo' || def.benchmark.startsWith('beam-'))) return null;
   const dev = loadSplit(def.benchmark).dev;
   const outside = (def.only_conversations ?? []).filter(c => !dev.includes(c));
@@ -364,6 +367,26 @@ export function needsCustody(def: Pick<CellDefinition, 'benchmark' | 'split'>): 
 }
 
 /**
+ * Where a cell's reader and judge replies are cached. A sealed cell, a cost-and-speed cell (every read is a metered
+ * call it prices, so no reply may come from another cell or run) and any run behind a keyless upstream (whose stand-in
+ * replies must never answer a later paid run on the same machine) keep the cache inside the cell's own --out; other
+ * cells share GBRAIN_EVALS_QA_CACHE or ~/.cache/gbrain-evals/qa-cache, in its keyless/ or paid/ folder by the run's upstream.
+ */
+export function qaCacheRoot(def: Pick<CellDefinition, 'block'>, out: string, env: Record<string, string | undefined>, custody: boolean, keyless: boolean): string {
+  const own = custody || (CS1_BLOCK_IDS as readonly string[]).includes(def.block) || !!env.SHOOTOUT_KEYLESS_UPSTREAM;
+  return own ? join(out, 'cache', 'qa') : join(env.GBRAIN_EVALS_QA_CACHE ?? join(homedir(), '.cache', 'gbrain-evals', 'qa-cache'), keyless ? 'keyless' : 'paid');
+}
+
+/**
+ * A cost-and-speed cell runs with the harness's reply and embedding caches off: each measured call goes to the provider
+ * through the lease proxy, because a cache hit would be unmetered spend with a near-zero latency.
+ */
+/** The longest wait for a held-back probe's slot to go quiet (amendment of 2026-11-25, item 17: extract-first's drain passed 10 minutes). */
+export const CS1_IDLE_MAX_MS = 20 * 60_000;
+
+export const uncachedCell = (def: Pick<CellDefinition, 'block'>): boolean => (CS1_BLOCK_IDS as readonly string[]).includes(def.block);
+
+/**
  * Contract 10 for a run that opens a sealed cell's conversations: GBRAIN_EVALS_CUSTODY_LOG set, `out` a custody root
  * outside the repository, and the opening logged (with `purpose`) before the corpus or any sealed staging is read.
  */
@@ -410,6 +433,14 @@ export interface CellOptions {
   finishTimeoutS?: number;
   probeTimeoutMs?: number;
   probeIntervalMs?: number;
+  /** Held-back probes: how long the slot must be quiet before a probe (default 60 s) and the longest wait for it (default 20 minutes; cost and speed's amendment of 2026-11-25, item 17). */
+  idleQuietMs?: number;
+  idleMaxMs?: number;
+  /** Cells with an idle window: its length in place of the definition's (tests), and the hosting sample interval (default 60 s). */
+  idleWindowMs?: number;
+  /** A trigger run's timeout in seconds (default 7200). */
+  triggerTimeoutS?: number;
+  hostingIntervalMs?: number;
   /** Keyless baseline-hybrid: hash vectors instead of OpenAI embeddings. */
   embed?: 'hash' | 'real';
   /** How long questions wait for the launcher's store snapshot after ingest (default 4 hours); the snapshot stops the stack. */
@@ -444,6 +475,8 @@ export interface CellDeps {
   rs1Manifest?: Rs1Manifest;
   /** BG1 kept cells: the filled manifest whose kept list names the unit's worlds (default: corpus.ts readBg1Manifest). */
   bg1Manifest?: Bg1Manifest;
+  /** Hosting samples (cells with hosting_samples): one reading of the stack's containers and volumes (default: the docker CLI). */
+  hostingRead?: () => Promise<Pick<HostingSample, 'containers' | 'volumes'>>;
 }
 
 export interface ArmResult { cell_id: string; dir: string; status: 'complete' | 'partial' | 'invalid'; config_sha256: string; answers: number; judgments: number; rows: number; readers: string[] }
@@ -456,6 +489,10 @@ export interface CellResult { cell: string; out: string; status: 'complete' | 'p
 interface RealizationEvent {
   realization_id: string; conversation: string; attempt: number; event: 'started' | 'ingested' | 'invalidated'; at: string;
   reason?: string; restored_from?: string; ingest?: IngestSummary; probes?: ProbeRecord[];
+  /** Held-back probe cells (cost and speed): the bulk-import and held-back write-to-queryable probes and the label calibration window. */
+  write_probes?: WriteProbe[]; calibration?: ProbeCalibration;
+  /** Held-back probe cells: the realization's opaque namespace, which names its ingest, calibration and probe meter keys. */
+  ns?: string;
   /** A22: the earlier realization whose answers, judgments and final retrievals this one carries. */
   carried_from?: string; carried?: { answers: number; judgments: number; retrievals: number };
 }
@@ -465,11 +502,22 @@ export interface BackgroundLiabilities { pending_jobs: Record<string, number> | 
 export interface F6BuildSummary { ok: boolean; problems: string[]; recorded?: boolean; last_pass?: { status: string; pages_failed: number; pages_skipped_unparsed: number; failed_reasons: Record<string, number> }; [k: string]: unknown }
 export interface IngestSummary {
   sessions: number; failed_sessions: number; synthetic_times: number; messages: number; ingested_tokens: number;
+  /** Held-back probe cells (cost and speed): the turns' content alone in cl100k tokens, the workload profile's basis, and the bulk import's write-and-drain time, from its first write to /finish returning, without the probes and idle checks after it. */
+  content_tokens?: number; bulk_wall_ms?: number;
   wall_ms: number; write_ms: { p50: number | null; p95: number | null; total: number };
   finish: { ready: boolean; waited_ms: number; completeness: string; background_liabilities?: BackgroundLiabilities; f6_build?: F6BuildSummary };
   readiness_probe: string; degraded: boolean; errors: Array<{ source_id: string; kind: string; message: string }>;
 }
 export interface ProbeRecord { realization_id: string; source_id: string; kind: 'last' | 'sample'; status: 'found' | 'missed' | 'not-measurable'; write_start_to_queryable_ms: number | null; polls: number }
+/**
+ * A held-back probe cell's write-to-queryable probe (eval/runner/memory-qa/cost-speed-probes.ts): `bulk` during the bulk import
+ * (reported apart), `held-back` one at a time on an idle system (counted). A held-back miss is `late` when one search after
+ * the next idle check finds the session and `never` when it doesn't; `miss_idle` says whether that idle check saw the
+ * system idle or gave up at its limit.
+ */
+export interface WriteProbe extends WriteProbeRecord { realization_id: string; kind: 'bulk' | 'held-back'; miss: 'late' | 'never' | null; miss_idle: boolean | null; idle_waited_ms: number | null; poll_errors: string[] }
+/** The probe label's calibration window: searches on a drained system with their passages registered, closed by an idle check; any request not labelled probe names a route the label misses. */
+export interface ProbeCalibration { drained: boolean; started_idle: boolean; searches: number; errored: number; idle: boolean; waited_ms: number; requests: number | null; by_phase: Meter['byPhase'] | null; unlabelled_routes: string[] | null }
 export interface StagedRetrieval {
   key: string; question_id: string; policy: string; attempt: number; outcome: Outcome; error?: string; error_kind?: string;
   items: Item[]; applied_settings: Record<string, unknown>; truncated: boolean; latency_ms: number | null; harness_ms: number; query_time: string | null; at: string;
@@ -545,6 +593,10 @@ export interface Metering {
    * so far is written as a `background_tail` meter line first.
    */
   tail(slot: string, realization: { id: string; ns: string } | null): Promise<void>;
+  /** Label the slot's search requests whose every text is one of `queries` as probe (null clears). */
+  probe(slot: string, queries: string[] | null): Promise<void>;
+  /** The slot's requests in flight and when one last arrived or finished (epoch ms); null without a proxy or before the slot's first request. */
+  activity(slot: string): Promise<{ inflight: number; last_ms: number } | null>;
 }
 
 /** A run's proxy slots and meters (a no-op without a proxy); each finalized key's spend is written to `sink`. */
@@ -554,6 +606,8 @@ export function metering(proxy: string | null, sink: { meter(m: MeterLine): void
     async around(_slot, _key, _phase, fn) { try { return { value: await fn(), meter: null }; } catch (error) { return { error, meter: null }; } },
     async phase() {},
     async tail() {},
+    async probe() {},
+    async activity() { return null; },
   };
   const ctl = new ProxyControl(proxy);
   const compat = [...Object.entries(COMPAT_PROVIDERS), ...Object.entries(JUDGE_PROVIDERS)];
@@ -589,6 +643,8 @@ export function metering(proxy: string | null, sink: { meter(m: MeterLine): void
       await rebind(slot);
       if (prior) { const m = await ctl.finalize(prior.key); if (m.requests) record('background_tail', prior.key, m); }
     },
+    async probe(slot, queries) { await ctl.probeQueries(slot, queries); },
+    activity: slot => ctl.slotActivity(slot),
   };
 }
 
@@ -610,7 +666,7 @@ export function systemFor(def: CellDefinition, opts: CellOptions, sanitizer: San
     case 'baseline-recency': return new FullContextSystem('recency');
     case 'baseline-none': return new NoMemorySystem();
     case 'baseline-hybrid': return new PlainHybridSystem(opts.embed === 'hash' ? async texts => texts.map(t => hashEmbed(t, PG_EMBED_DIMS))
-      : cachedOpenAIEmbedder(join(process.env.GBRAIN_EVALS_EMBED_CACHE ?? join(homedir(), '.cache', 'gbrain-evals', 'embed-cache'), opts.keyless === true ? 'keyless' : 'paid', 'plain-hybrid-te3l-1536.json'), fetch, opts.providerProxy ? `${opts.providerProxy}/${def.system}/openai/v1` : undefined), opts.embed === 'hash' ? `hash@${PG_EMBED_DIMS} (keyless control)` : undefined);
+      : cachedOpenAIEmbedder(uncachedCell(def) ? null : join(process.env.GBRAIN_EVALS_EMBED_CACHE ?? join(homedir(), '.cache', 'gbrain-evals', 'embed-cache'), opts.keyless === true ? 'keyless' : 'paid', 'plain-hybrid-te3l-1536.json'), fetch, opts.providerProxy ? `${opts.providerProxy}/${def.system}/openai/v1` : undefined), opts.embed === 'hash' ? `hash@${PG_EMBED_DIMS} (keyless control)` : undefined);
     case 'baseline-file-agent': return new FileAgentSystem({ workDir: join(opts.out, 'runs', def.id, 'file-agent'), effort: def.effort });
     case 'gbrain-defaults':
       if (opts.providerProxy) throw refuse({ code: 'NOT_YET_AVAILABLE', message: `cell ${def.id} runs the gbrain agent in process, and a metering proxy was given`,
@@ -838,7 +894,7 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
         : runnable.length ? { next: 'run', argv: [...FRONT, 'run', '--cell', def.id, '--arms', runnable.join(',')], user_message: 'run the other arms now; the blocked arms wait for the system\'s answer route' } : { next: 'report', user_message: 'the cell waits for an answer route in the system\'s shim' } });
   }
   const readersOf = new Map(arms.map(a => [a.id, armReaders(a, capabilities)]));
-  const chat = deps.reader ?? deps.judge ?? new ChatClient(custody ? join(out, 'cache', 'qa') : join(env.GBRAIN_EVALS_QA_CACHE ?? join(homedir(), '.cache', 'gbrain-evals', 'qa-cache'), upstream.keyless ? 'keyless' : 'paid'));
+  const chat = deps.reader ?? deps.judge ?? new ChatClient(qaCacheRoot(def, out, env, custody, upstream.keyless), undefined, undefined, { noCache: uncachedCell(def) });
   const reader = onSlot(deps.reader ?? chat, meter, 'harness');
   const judge = onSlot(deps.judge ?? chat, meter, 'judge');
   const fitTokenizer = deps.fitTokenizer ?? readerFitTokenizer;
@@ -896,6 +952,8 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
 
   // ─── Phase 1: one realization per conversation ───
   const realizations = new Map<string, string>();
+  const hosting = def.hosting_samples ? new HostingSampler(join(staging.root, 'hosting.ndjson'), opts.hostingIntervalMs, deps.hostingRead,
+    def.system === 'baseline-file-agent' ? [join(opts.out, 'runs', def.id, 'file-agent')] : []) : null;
   try {
     for (const convId of convIds) {
       const prior = staging.latest(convId);
@@ -945,9 +1003,30 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
       const rid = realizations.get(convId);
       if (!rid || stopped) break;
       if (live.has(rid)) await meter.tail(slot, { id: rid, ns: sanitizer.ns(convId) });
+      await hosting?.stage(`questions:${convId}`);
       await runQuestions(rid, convId);
+      if (def.idle_window?.worlds.includes(convId) && live.has(rid)) {
+        await hosting?.stage(`idle:${convId}`);
+        // A job whose cadence is longer than the window runs once through its documented trigger first, metered on its own key.
+        const triggers = [];
+        for (const j of def.idle_window.jobs.filter(j => j.trigger)) {
+          const t1 = Date.now();
+          const run = await meter.around(slot, `tail:trigger:${rid}:${j.trigger}`, 'background_tail', async () => {
+            if (!system.trigger) throw new Error(`${def.system} has no trigger route`);
+            return system.trigger(sanitizer.ns(convId), j.trigger!, opts.triggerTimeoutS ?? 7200);
+          });
+          triggers.push({ job: j.job, trigger: j.trigger, cadence_minutes: j.cadence_minutes, ms: Date.now() - t1, usd: run.meter?.usd ?? null, requests: run.meter?.requests ?? null,
+            unpriced: run.meter?.unpriced ?? null, by_model: run.meter?.byModel ?? null, result: run.value ?? null, error: run.error ? String((run.error as Error).message ?? run.error).slice(0, 300) : null });
+        }
+        const ms = opts.idleWindowMs ?? def.idle_window.ms;
+        const t0 = Date.now();
+        const idle = await meter.around(slot, `tail:idle:${rid}`, 'background_tail', () => Bun.sleep(ms));
+        writeAtomic(join(staging.dir(rid), 'idle.json'), JSON.stringify({ realization_id: rid, conversation: convId, planned_ms: ms, ms: Date.now() - t0, usd: idle.meter?.usd ?? null,
+          requests: idle.meter?.requests ?? null, unpriced: idle.meter?.unpriced ?? null, by_model: idle.meter?.byModel ?? null, jobs: def.idle_window.jobs, ...(triggers.length ? { triggers } : {}) }) + '\n');
+      }
     }
   } finally {
+    await hosting?.stop();
     try { await meter.tail(slot, null); } catch { /* the proxy is gone; its own summary keeps the slot's spend */ }
     try { await system.close?.(); } catch { /* closing is best effort */ }
   }
@@ -975,12 +1054,18 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
     const ns = sanitizer.ns(convId);
     staging.event({ realization_id: rid, conversation: convId, attempt, event: 'started', at: new Date().toISOString() });
     const plan = ingestPlan(conv);
-    const sample = probedConversation(convId, [...byConv.keys()], def.probes) ? probeSample(plan, def.probes.sample, `${def.probes.seed}|${convId}`) : new Map<number, 'last' | 'sample'>();
-    const canProbe = probeable(capabilities);
-    const fixed = policyFor(identities.size ? [...identities.keys()][0] : 'fixed-evidence');
+    const heldBack = def.probes.held_back ?? 0;
+    const bulk = heldBack ? plan.slice(0, Math.max(0, plan.length - heldBack)) : plan;
+    const sample = probedConversation(convId, [...byConv.keys()], def.probes) ? probeSample(bulk, def.probes.sample, `${def.probes.seed}|${convId}`) : new Map<number, 'last' | 'sample'>();
+    const grep = heldBack && system instanceof FileAgentSystem ? system : null;
+    const canProbe = probeable(capabilities) || !!grep;
+    const fixed = heldBack ? policyFor('vendor-default') : policyFor(identities.size ? [...identities.keys()][0] : 'fixed-evidence');
     const errors: IngestSummary['errors'] = [];
     const writes: number[] = [];
-    let failed = 0, synthetic = 0, messages = 0, tokens = 0;
+    let failed = 0, synthetic = 0, messages = 0, tokens = 0, contentTokens = 0;
+    let bulkWallMs: number | null = null;
+    /** Held-back probe cells: each bulk write's wall-clock window and content tokens, so history growth can price the first and last quarter. */
+    const bulkWrites: Array<{ i: number; source_id: string; start_at: string; end_at: string; content_tokens: number }> = [];
     const probes: Array<Promise<ProbeRecord>> = [];
     /** Set once /finish has returned: the store is as queryable as it will get, so a probe whose next poll misses is missed. */
     let drained = false;
@@ -1001,16 +1086,73 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
         await Bun.sleep(opts.probeIntervalMs ?? 2000);
       }
     };
+    /** Held-back probe cells: passages being searched, registered with the proxy so their searches are labelled probe. */
+    const labelled = new Map<string, number>();
+    const label = async (passage: string, delta: 1 | -1) => {
+      const n = (labelled.get(passage) ?? 0) + delta;
+      if (n > 0) labelled.set(passage, n); else labelled.delete(passage);
+      await meter.probe(slot, labelled.size ? [...labelled.keys()] : null);
+    };
+    const horizonMs = opts.probeTimeoutMs ?? 600_000;
+    const idleCheck = () => awaitIdle({
+      pending: async () => null,
+      lastRequestAt: async () => { const a = await meter.activity(slot); return a ? (a.inflight > 0 ? Date.now() : a.last_ms) : null; },
+      quietMs: opts.idleQuietMs ?? 60_000, maxMs: opts.idleMaxMs ?? CS1_IDLE_MAX_MS,
+    });
+    const search = async (passage: string, sourceId: string): Promise<{ found: boolean; unattributed: number }> => {
+      if (grep) return { found: (await grep.grepSources(ns, passage)).includes(sourceId), unattributed: 0 };
+      const res = await system.retrieve(ns, { text: passage, query_time: null }, fixed);
+      return { found: res.items.some(i => i.source_ids.includes(sourceId)), unattributed: res.items.filter(i => !i.source_ids.length).length };
+    };
+    /** One write-to-queryable probe: search every second from the write's return until a returned poll names the session or returns at or after the horizon. */
+    const writeProbe = async (input: SessionInput, kind: WriteProbe['kind'], w0: number, startedIdle: boolean, idleWaited: number | null): Promise<WriteProbe> => {
+      const passage = probePassage(input.turns);
+      const polls: Poll[] = [];
+      const errors: string[] = [];
+      if (passage !== null) {
+        await label(passage, 1);
+        try {
+          while (true) {
+            let poll: Poll;
+            try { const r = await search(passage, input.source_id); poll = { at_ms: Math.round((performance.now() - w0) * 10) / 10, ...r }; }
+            catch (e) { poll = { at_ms: Math.round((performance.now() - w0) * 10) / 10, error: (e as Error).message.slice(0, 200) }; errors.push(poll.error); }
+            polls.push(poll);
+            if (('found' in poll && poll.found) || poll.at_ms >= horizonMs) break;
+            await Bun.sleep(opts.probeIntervalMs ?? 1000);
+          }
+        } finally { await label(passage, -1); }
+      }
+      const rec = probeRecord(input.source_id, polls, startedIdle, horizonMs);
+      let miss: WriteProbe['miss'] = null;
+      let missIdle: boolean | null = null;
+      if (rec.status === 'missed' && kind === 'held-back' && passage !== null) {
+        missIdle = (await idleCheck()).idle;
+        await label(passage, 1);
+        try { miss = (await search(passage, input.source_id)).found ? 'late' : 'never'; }
+        catch (e) { errors.push((e as Error).message.slice(0, 200)); }
+        finally { await label(passage, -1); }
+      }
+      return { ...rec, realization_id: rid, kind, miss, miss_idle: missIdle, idle_waited_ms: idleWaited, poll_errors: errors.slice(0, 20) };
+    };
+    /** A probe whose write threw or reported errors: errored, never polled, so a failed write is never a miss. */
+    const writeFailedProbe = (input: SessionInput, kind: WriteProbe['kind'], startedIdle: boolean, idleWaited: number | null): WriteProbe =>
+      ({ ...probeRecord(input.source_id, [], startedIdle, horizonMs), realization_id: rid, kind, miss: null, miss_idle: null, idle_waited_ms: idleWaited, poll_errors: [`write failed: ${errors.at(-1)?.message ?? 'unknown'}`.slice(0, 200)] });
+    const bulkProbes: Array<Promise<WriteProbe>> = [];
     const t0 = performance.now();
     let importError: string | null = null;
+    await hosting?.stage(null);
     await meter.tail(slot, { id: rid, ns });
     const ran = await meter.around(slot, `ingest:${ns}`, 'ingest', async () => {
       await system.reset(ns);
       await meter.phase(slot, 'commit');
-      for (const [i, step] of plan.entries()) {
+      for (const [i, step] of bulk.entries()) {
         if (step.synthetic_time) synthetic++;
         messages += step.input.turns.length;
         tokens += encodingCount('cl100k_base', step.input.turns.map(t => `${t.speaker}: ${t.content}`).join('\n'));
+        const sessionTokens = heldBack ? encodingCount('cl100k_base', step.input.turns.map(t => t.content).join('\n')) : 0;
+        contentTokens += sessionTokens;
+        const failedBefore = failed;
+        const startAt = new Date().toISOString();
         const w0 = performance.now();
         try {
           const res = await system.ingestSession(ns, step.input, step.event_time);
@@ -1022,8 +1164,10 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
           failed++;
           errors.push({ source_id: step.input.source_id, kind: (e as { kind?: string }).kind ?? 'product_error', message: (e as Error).message.slice(0, 300) });
         }
+        if (heldBack) bulkWrites.push({ i, source_id: step.input.source_id, start_at: startAt, end_at: new Date().toISOString(), content_tokens: sessionTokens });
         const kind = sample.get(i);
-        if (kind) probes.push(probe(step, kind, w0));
+        if (kind && heldBack && canProbe) bulkProbes.push(failed > failedBefore ? Promise.resolve(writeFailedProbe(step.input, 'bulk', false, null)) : writeProbe(step.input, 'bulk', w0, false, null));
+        else if (kind) probes.push(probe(step, kind, w0));
       }
       await meter.phase(slot, 'background');
       let finish: IngestSummary['finish'] = { ready: false, waited_ms: 0, completeness: 'not reached' };
@@ -1036,23 +1180,77 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
         } catch (e) { finish = { ready: false, waited_ms: 0, completeness: `error: ${(e as Error).message.slice(0, 200)}` }; }
       }
       if (finish.ready) drained = true;
+      bulkWallMs = Math.round(performance.now() - t0);
       const probeRecords = await Promise.all(probes);
+      const bulkRecords = await Promise.all(bulkProbes);
       await meter.phase(slot, null);
-      return { finish, probeRecords };
+      return { finish, probeRecords, bulkRecords };
     });
+    if (ran.value?.finish.ready) await hosting?.stage(`drained:${convId}`);
+    let calibration: ProbeCalibration | undefined;
+    const heldRecords: WriteProbe[] = [];
+    if (heldBack && canProbe && !importError && !ran.error && ran.value?.finish.ready) {
+      const f = ran.value.finish;
+      const finishedDrained = finishDrained({ ready: f.ready, raw: { background_liabilities: f.background_liabilities as { drained?: boolean } | undefined } });
+      await hosting?.stage(`probes:${convId}`);
+      const picks = bulk.map(s => ({ s, k: hashKey(`${def.probes.seed}|${convId}|calibration`, s.input.source_id) })).sort((a, b) => (a.k < b.k ? -1 : 1))
+        .map(x => ({ id: x.s.input.source_id, passage: probePassage(x.s.input.turns) })).filter((x): x is { id: string; passage: string } => x.passage !== null).slice(0, 10);
+      const before = await idleCheck();
+      const cal = await meter.around(slot, `calibration:${ns}`, 'ingest', async () => {
+        await meter.probe(slot, picks.map(p => p.passage));
+        let errored = 0;
+        try {
+          for (const p of picks) { try { await search(p.passage, p.id); } catch { errored++; } }
+          return { errored, started_idle: before.idle && finishedDrained, ...(await idleCheck()) };
+        } finally { await meter.probe(slot, null); }
+      });
+      calibration = { drained: finishedDrained, started_idle: cal.value?.started_idle ?? false, searches: picks.length, errored: cal.value?.errored ?? picks.length, idle: cal.value?.idle ?? false, waited_ms: cal.value?.waited_ms ?? 0,
+        requests: cal.meter?.requests ?? null, by_phase: cal.meter?.byPhase ?? null, unlabelled_routes: cal.meter?.byPhase ? unlabelledMeterRoutes(cal.meter.byPhase) : cal.meter?.requests === 0 ? [] : null };
+      const held = await meter.around(slot, `ingest:${ns}#held-back`, 'ingest', async () => {
+        for (const step of plan.slice(bulk.length)) {
+          const idle = await idleCheck();
+          if (step.synthetic_time) synthetic++;
+          messages += step.input.turns.length;
+          tokens += encodingCount('cl100k_base', step.input.turns.map(t => `${t.speaker}: ${t.content}`).join('\n'));
+          contentTokens += encodingCount('cl100k_base', step.input.turns.map(t => t.content).join('\n'));
+          const failedBefore = failed;
+          await meter.phase(slot, 'commit');
+          const w0 = performance.now();
+          try {
+            const res = await system.ingestSession(ns, step.input, step.event_time);
+            writes.push(res.service_ms ?? performance.now() - w0);
+            if (res.errors.length || res.completeness === 'degraded') { failed++; errors.push({ source_id: step.input.source_id, kind: res.errors.length ? 'reported' : 'degraded', message: (res.errors.map(String).join('; ') || `completeness ${res.completeness}`).slice(0, 300) }); }
+          } catch (e) {
+            if (e instanceof SanitizerLeakError) { importError = e.message; invalidReasons.push(`sanitizer tripwire during ingest: ${e.message}`); break; }
+            if (/budget|BudgetExceeded/i.test(String((e as Error).message))) { importError = `budget: ${(e as Error).message.slice(0, 200)}`; break; }
+            failed++;
+            errors.push({ source_id: step.input.source_id, kind: (e as { kind?: string }).kind ?? 'product_error', message: (e as Error).message.slice(0, 300) });
+          }
+          await meter.phase(slot, 'background');
+          const startedIdle = idle.idle && finishedDrained;
+          heldRecords.push(failed > failedBefore ? writeFailedProbe(step.input, 'held-back', startedIdle, idle.waited_ms) : await writeProbe(step.input, 'held-back', w0, startedIdle, idle.waited_ms));
+        }
+        await meter.phase(slot, null);
+      });
+      if (held.error) importError ??= (held.error as Error).message.slice(0, 300);
+    }
     if (ran.error) importError ??= (ran.error as Error).message.slice(0, 300);
     if (importError?.startsWith('budget:')) { stopped = importError; return 'stopped'; }
     const finish = ran.value?.finish ?? { ready: false, waited_ms: 0, completeness: `error: ${importError}` };
     const probeRecords = ran.value?.probeRecords ?? [];
-    const probed = canProbe && !importError && finish.ready ? await meter.around(slot, `probe:${ns}`, 'ingest', () => readinessProbe(system, ns, plan.at(-1)?.input, fixed, capabilities)) : null;
+    const writeProbes = [...(ran.value?.bulkRecords ?? []), ...heldRecords];
+    const probed = canProbe && !grep && !importError && finish.ready ? await meter.around(slot, `probe:${ns}`, 'ingest', () => readinessProbe(system, ns, plan.at(-1)?.input, fixed, capabilities)) : null;
     const barrier = !canProbe ? 'not-measurable' : probed ? probed.value ?? 'missed' : 'skipped';
     const ingest: IngestSummary = {
-      sessions: plan.length, failed_sessions: failed, synthetic_times: synthetic, messages, ingested_tokens: tokens, wall_ms: Math.round(performance.now() - t0),
+      sessions: plan.length, failed_sessions: failed, synthetic_times: synthetic, messages, ingested_tokens: tokens,
+      ...(heldBack ? { content_tokens: contentTokens, ...(bulkWallMs !== null ? { bulk_wall_ms: bulkWallMs } : {}) } : {}), wall_ms: Math.round(performance.now() - t0),
       write_ms: { p50: pct(writes, 50), p95: pct(writes, 95), total: Math.round(writes.reduce((s, x) => s + x, 0)) }, finish, readiness_probe: barrier,
       degraded: !!importError || failed / Math.max(1, plan.length) > 0.01 || !finish.ready || barrier === 'missed', errors: errors.slice(0, 200),
     };
     writeAtomic(join(staging.dir(rid), 'readiness.ndjson'), probeRecords.map(p => JSON.stringify(p) + '\n').join(''));
-    staging.event({ realization_id: rid, conversation: convId, attempt, event: 'ingested', at: new Date().toISOString(), ingest, probes: probeRecords });
+    if (heldBack) writeAtomic(join(staging.dir(rid), 'write-probes.ndjson'), writeProbes.map(p => JSON.stringify(p) + '\n').join(''));
+    if (heldBack) writeAtomic(join(staging.dir(rid), 'writes.ndjson'), bulkWrites.map(w => JSON.stringify(w) + '\n').join(''));
+    staging.event({ realization_id: rid, conversation: convId, attempt, event: 'ingested', at: new Date().toISOString(), ingest, probes: probeRecords, ...(heldBack ? { ns, write_probes: writeProbes, ...(calibration ? { calibration } : {}) } : {}) });
     return 'ok';
   }
 
@@ -1611,14 +1809,14 @@ const VM_VCPU = 4;
 /** The provider keys a cell's VM receives (ubi-runner --pass): only its metering proxy reads them; the cell sees dummy keys. */
 const PROVIDER_KEYS = { openai: 'OPENAI_API_KEY', anthropic: 'ANTHROPIC_API_KEY', voyage: 'VOYAGE_API_KEY', particle: COMPAT_PROVIDERS.particle.key_env } as const;
 /** Waves: T1 first (S1 shim shards packed under the overnight cap), then each T2 set after T1 settles, in the preregistered scope-reduction order reversed. */
-const T2_WAVES: Record<string, number> = { 'T2-S2b': 1, 'T2-S3': 2, 'T2-S2a': 3, 'T2-S4-S5': 4, 'F6-T2': 1, 'F6-D8': 2, 'F6-S4': 3, 'F6-dry': 1, 'F6-P1': 1, 'RS1-S1': 1, RS1: 1, 'BG1-S1': 1, BG1: 1, 'BG1C-smoke': 1, BG1C: 1, BGW: 1, 'BGW-pilot': 1, 'BGW-judge': 1 };
+const T2_WAVES: Record<string, number> = { 'T2-S2b': 1, 'T2-S3': 2, 'T2-S2a': 3, 'T2-S4-S5': 4, 'F6-T2': 1, 'F6-D8': 2, 'F6-S4': 3, 'F6-dry': 1, 'F6-P1': 1, 'RS1-S1': 1, RS1: 1, 'BG1-S1': 1, BG1: 1, 'BG1C-smoke': 1, BG1C: 1, BGW: 1, 'BGW-pilot': 1, 'BGW-judge': 1, CS1: 1, 'CS1-pilot': 1, 'CS1-capacity': 1 };
 
 /** In-process systems whose adapter drives the bundle's own container: the unit builds it at setup and brings it up around the run like a shim stack (A19). */
 const IN_PROCESS_STACKS = new Set(['ext-agent-runtime']);
 
 /** One launch unit per cell, or per conversation shard for an S1 shim cell, in the shootout campaign's cell format; `addons` adds the manifest's addon_cells (a unit selection's campaign). */
-export type CellManifestId = 'q1' | 'f6' | 'rs1' | 'bg1' | 'bg1c' | 'bn10' | 'weekly' | 'weekly-pilot';
-const CELL_MANIFESTS: readonly CellManifestId[] = ['q1', 'f6', 'rs1', 'bg1', 'bg1c', 'bn10', 'weekly', 'weekly-pilot'];
+export type CellManifestId = 'q1' | 'f6' | 'rs1' | 'bg1' | 'bg1c' | 'bn10' | 'weekly' | 'weekly-pilot' | 'cs1';
+const CELL_MANIFESTS: readonly CellManifestId[] = ['q1', 'f6', 'rs1', 'bg1', 'bg1c', 'bn10', 'weekly', 'weekly-pilot', 'cs1'];
 
 export function campaignCells(m: Manifest, opts: { smoke?: boolean; vcpuCapNight?: number; cellManifest?: CellManifestId; addons?: boolean; paidWindow?: { unit: string; cap_usd: number } } = {}): CellSpec[] {
   const perWave = Math.floor((opts.vcpuCapNight ?? 200) / VM_VCPU);
@@ -1632,8 +1830,8 @@ export function campaignCells(m: Manifest, opts: { smoke?: boolean; vcpuCapNight
     const launch = c.launch ?? shimLaunch(c.system, c.configuration);
     const providers: Array<keyof typeof PROVIDER_KEYS> = [...(c.system === 'gbrain-defaults' ? ['openai', 'anthropic', 'voyage'] as const : ['openai', 'anthropic'] as const), ...(c.arms.some(a => a.readers.some(r => r.startsWith('particle:'))) ? ['particle'] as const : [])];
     const stack = c.runner === 'shim' || IN_PROCESS_STACKS.has(c.system);
-    // A configuration with its own bundle directory (shipped-0.31) names it on down too, or down reaches the pinned stack.
-    const downConfig = launch.config === 'shipped-0.31' ? ` --config ${launch.config}` : '';
+    // A configuration with its own bundle directory (OWN_BUNDLE_CONFIGS) names it on down too, or down reaches the pinned stack.
+    const downConfig = OWN_BUNDLE_CONFIGS.includes(launch.config) ? ` --config ${launch.config}` : '';
     const command = stack ? `${launchPrefix(launch)}bash eval/systems/bootstrap.sh up --system ${c.system} --config ${launch.config} && ${run}; rc=$?; bash eval/systems/bootstrap.sh down --system ${c.system}${downConfig}; exit $rc` : run;
     /** A smoke measures what the estimate assumes, so its lease holds twice the estimate; a counted unit takes its cell's lease override (A20), else the estimate per shard (a Set W unit's share of its week's worlds). */
     const share = c.week && c.shards > 1 ? c.estimate.usd * weeklyUnitWorlds(c, i).length / c.week.worlds.length : c.estimate.usd / c.shards;
@@ -1736,14 +1934,18 @@ export const BG1_DATA_PATHS = ['eval/data/changing-facts-v1'];
  * bg1c-cells.json and its sealed units' filled manifest from GBRAIN_EVALS_BG1C_MANIFEST recorded as
  * bg1c_manifest_sha256. A unit whose cell has descriptive_view false (every BG1-C cell) never calls Gemini, so it gets
  * no Gemini provider, key or gemini_key_env.
+ * Cost and speed: a manifest whose campaign_id is CS1_CAMPAIGN (cs1-cells.json) plans the same way, every unit's run
+ * naming cs1-cells.json; its units read public dev worlds only and no model judges them, so none is sealed or given Gemini.
  */
 export function bg1CampaignManifest(m: Manifest, opts: { smoke?: boolean; sealed?: { cap_usd: number }; smokeOnly?: boolean; units?: Partial<Bg1UnitSelection>; worldEnd?: string; bg1Manifest?: string } = {}): Q1Campaign {
-  const bg1c = (m as { campaign_id?: string }).campaign_id === BG1C_SET.campaign;
+  const campaignId = (m as { campaign_id?: string }).campaign_id;
+  const bg1c = campaignId === BG1C_SET.campaign, cs1 = campaignId === CS1_CAMPAIGN;
   const set = bg1c ? BG1C_SET : BG1_SET;
-  const which: CellManifestId = bg1c ? 'bg1c' : 'bg1';
+  const which: CellManifestId = bg1c ? 'bg1c' : cs1 ? 'cs1' : 'bg1';
+  const label = cs1 ? 'cost-and-speed' : set.label;
   const u = opts.units;
-  if (!u?.paid_window || !/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(u.paid_window) || !(Number(u.cap_usd) > 0)) throw refuse({ code: 'PAID_FLAGS_MISSING', message: `a ${set.label} campaign needs a unit selection (--units) naming its granted paid window as paid_window, with the window cap as cap_usd`,
-    why: `every ${set.label} unit spends real keys, so its command carries the granted window and the unit refuses outside it`, fix: { next: 'run', argv: [...FRONT, 'plan', '--manifest', which, '--units', '<selection with paid_window and cap_usd>', '--campaign-out', '<file>'] } });
+  if (!u?.paid_window || !/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(u.paid_window) || !(Number(u.cap_usd) > 0)) throw refuse({ code: 'PAID_FLAGS_MISSING', message: `a ${label} campaign needs a unit selection (--units) naming its granted paid window as paid_window, with the window cap as cap_usd`,
+    why: `every ${label} unit spends real keys, so its command carries the granted window and the unit refuses outside it`, fix: { next: 'run', argv: [...FRONT, 'plan', '--manifest', which, '--units', '<selection with paid_window and cap_usd>', '--campaign-out', '<file>'] } });
   const { paid_window, ...units } = u as Bg1UnitSelection;
   const worldEnd = bg1WorldEnd({ worldEnd: opts.worldEnd });
   const campaign = campaignManifest(m, { ...opts, units: { ...units, cell_manifest: which } });
@@ -1758,7 +1960,7 @@ export function bg1CampaignManifest(m: Manifest, opts: { smoke?: boolean; sealed
   const held = campaign.cells.some(c => c.sealed) && filled && existsSync(filled) ? sha256File(filled) : null;
   const recorded = !held ? {} : bg1c ? { bg1c_manifest_sha256: held } : { bg1_manifest_sha256: held };
   return { ...campaign, executes: [...(campaign.executes ?? []), ...BG1_DATA_PATHS], ...recorded, cells: campaign.cells.map(cell => {
-    if (cell.command.split(out).length !== 2) throw new Error(`${set.label} unit ${cell.id} has no single${out} in its command to put the paid window before`);
+    if (cell.command.split(out).length !== 2) throw new Error(`${label} unit ${cell.id} has no single${out} in its command to put the paid window before`);
     const { def, index } = defOf(cell.id);
     const unit = cell.sealed && def?.kept_units ? { index, size: def.kept_units } : undefined;
     const gemini = def?.descriptive_view !== false ? { providers: [...(cell.providers ?? []), 'gemini' as const], pass: [...(cell.pass ?? []), BG1_GEMINI_KEY_ENV], gemini_key_env: BG1_GEMINI_KEY_ENV } : {};
@@ -1853,11 +2055,12 @@ export const loadBG1CManifest = (path = BG1C_MANIFEST_PATH) => JSON.parse(readFi
 
 /**
  * The cell manifest `--manifest` names: q1 (default), f6, rs1, bg1, bg1c, bn10, weekly (the running week's cells.json,
- * loadWeeklyCells) or weekly-pilot (the weekly line's pilot and judge check, loadWeeklyPilotManifest).
+ * loadWeeklyCells), weekly-pilot (the weekly line's pilot and judge check, loadWeeklyPilotManifest) or cs1 (cost and
+ * speed's, cs1-cells.json).
  */
 export function loadCellManifest(which?: string, env: Record<string, string | undefined> = process.env): Manifest {
-  if (which !== undefined && !(CELL_MANIFESTS as readonly string[]).includes(which)) throw refuse(usage(`--manifest takes q1 or f6 (or rs1 for RS1's cells, bg1 for BG1's, bg1c for BG1-C's, bn10 for the BEAM-10M re-measure's, weekly for the running week of the weekly line, weekly-pilot for its pilot and judge check), not ${which}`));
-  return which === 'f6' ? loadF6Manifest() : which === 'rs1' ? loadRS1Manifest() : which === 'bg1' ? loadBG1Manifest() : which === 'bg1c' ? loadBG1CManifest() : which === 'bn10' ? loadBN10Manifest() : which === 'weekly' ? weeklyManifest(loadWeeklyCells(env)) : which === 'weekly-pilot' ? loadWeeklyPilotManifest(env) : loadManifest();
+  if (which !== undefined && !(CELL_MANIFESTS as readonly string[]).includes(which)) throw refuse(usage(`--manifest takes q1 or f6 (or rs1 for RS1's cells, bg1 for BG1's, bg1c for BG1-C's, bn10 for the BEAM-10M re-measure's, weekly for the running week of the weekly line, weekly-pilot for its pilot and judge check, cs1 for cost and speed's), not ${which}`));
+  return which === 'cs1' ? loadCS1Manifest() : which === 'f6' ? loadF6Manifest() : which === 'rs1' ? loadRS1Manifest() : which === 'bg1' ? loadBG1Manifest() : which === 'bg1c' ? loadBG1CManifest() : which === 'bn10' ? loadBN10Manifest() : which === 'weekly' ? weeklyManifest(loadWeeklyCells(env)) : which === 'weekly-pilot' ? loadWeeklyPilotManifest(env) : loadManifest();
 }
 
 /**
@@ -1909,9 +2112,9 @@ function weeklyManifest(w: WeeklyCellsFile, capUsd = 0): Manifest {
     total_usd: usd, plan_total_usd: usd, cap_usd: capUsd, campaign_id: BGW_CAMPAIGN } as unknown as Manifest;
 }
 
-/** The cell manifest a BG1, BG1-C or weekly-line cell is defined in: weekly for the weekly line's block, weekly-pilot for its pilot and judge check, bg1c for BG1-C's blocks, else bg1. */
-export const bg1CellManifest = (def: Pick<CellDefinition, 'block'>): CellManifestId => (def.block === 'BGW' ? 'weekly' : (WEEKLY_PILOT_BLOCK_IDS as readonly string[]).includes(def.block) ? 'weekly-pilot' : (BG1C_BLOCK_IDS as readonly string[]).includes(def.block) ? 'bg1c' : 'bg1');
-const windowedLabel = (def: Pick<CellDefinition, 'block'>) => ({ weekly: 'Set W', 'weekly-pilot': 'weekly pilot', bg1c: 'BG1-C', bg1: 'BG1' } as Record<string, string>)[bg1CellManifest(def)];
+/** The cell manifest a BG1, BG1-C, weekly-line or cost-and-speed cell is defined in: weekly for the weekly line's block, weekly-pilot for its pilot and judge check, bg1c for BG1-C's blocks, cs1 for cost and speed's, else bg1. */
+export const bg1CellManifest = (def: Pick<CellDefinition, 'block'>): CellManifestId => ((CS1_BLOCK_IDS as readonly string[]).includes(def.block) ? 'cs1' : def.block === 'BGW' ? 'weekly' : (WEEKLY_PILOT_BLOCK_IDS as readonly string[]).includes(def.block) ? 'weekly-pilot' : (BG1C_BLOCK_IDS as readonly string[]).includes(def.block) ? 'bg1c' : 'bg1');
+const windowedLabel = (def: Pick<CellDefinition, 'block'>) => ({ weekly: 'Set W', 'weekly-pilot': 'weekly pilot', bg1c: 'BG1-C', bg1: 'BG1', cs1: 'cost-and-speed' } as Record<string, string>)[bg1CellManifest(def)];
 
 export function findCell(id: string, given?: Manifest, manifest?: string, env: Record<string, string | undefined> = process.env): CellDefinition {
   const m = given ?? loadCellManifest(manifest, env);
@@ -1963,6 +2166,8 @@ export async function bg1CellWindow(argv: string[], def: CellDefinition, env: Re
   const proxy = (one('--provider-proxy') ?? env.SHOOTOUT_PROXY ?? '').replace(/\/$/, '') || null;
   const status = proxy ? await cellProxyStatus(proxy) : null;
   const held = status?.mode === 'lease' && typeof status.lease_usd === 'number' && status.lease_usd > 0 ? status.lease_usd : null;
+  if (def.block === 'CS1-capacity' && status?.keyless !== true) throw refuse({ code: 'USAGE', message: `${def.id} is a keyless-only capacity unit: it runs by hand against the fake upstream, behind a lease proxy that reports a keyless upstream, and never in a paid window`,
+    why: 'the capacity block has no cap of its own to spend under; it measures the write-to-queryable path before any paid run', fix: { next: 'run', argv: [...FRONT, 'run', '--cell', def.id, '--manifest', 'cs1', '--provider-proxy', '<keyless lease proxy>'] } });
   const named = env.SHOOTOUT_LEASE_USD;
   const differs = !!named && held !== null && !(Math.abs(Number(named) - held) <= 1e-9);
   try {
@@ -2055,7 +2260,7 @@ export async function main(argv: string[]): Promise<number> {
     // --manifest f6: F6's manifest (eval/runner/q1/cells/f6-cells.json); --dry-run-only keeps its dry-run cells alone;
     // --manifest rs1: RS1's (rs1-cells.json), refused while its stage 1 estimate is above stage 1's cap;
     // --manifest bg1: BG1's (bg1-cells.json), refused the same way at BG1's stage 1 cap;
-    // --manifest bg1c: BG1-C's (bg1c-cells.json), planned as BG1's are (bg1CampaignManifest);
+    // --manifest bg1c: BG1-C's (bg1c-cells.json), planned as BG1's are (bg1CampaignManifest), and --manifest cs1 cost and speed's (cs1-cells.json);
     // --units <file>: a UnitSelection (JSON), the named units alone under its own campaign id and cap.
     if (one('--manifest') === 'weekly') throw refuse(usage('the weekly cells are planned by the weekly runner (bun eval/runner/weekly-line/runner.ts plan), which writes the week\'s cells.json, and launched by its launch, which writes the campaign'));
     if (one('--manifest') === 'weekly-pilot') throw refuse(usage('the weekly line\'s pilot and judge check are planned by bun eval/runner/weekly-line/pilot.ts plan, and their campaigns written by its campaigns command'));
@@ -2069,7 +2274,7 @@ export async function main(argv: string[]): Promise<number> {
     const unitsFile = one('--units');
     if (unitsFile && !campaignOut) throw refuse(usage('--units needs --campaign-out <file>'));
     const units = unitsFile ? JSON.parse(readFileSync(resolve(unitsFile), 'utf8')) as UnitSelection : undefined;
-    if (campaignOut) { writeAtomic(resolve(campaignOut), JSON.stringify((one('--manifest') === 'bg1' || one('--manifest') === 'bg1c' ? bg1CampaignManifest : campaignManifest)(m, { smoke: smokeOnly || argv.includes('--with-smoke'), smokeOnly, sealed: sealedCap ? { cap_usd: Number(sealedCap) } : undefined, units }), null, 2) + '\n'); console.error(`campaign manifest written to ${campaignOut}; next: bun run eval:scoreboard plan --campaign ${campaignOut}`); }
+    if (campaignOut) { writeAtomic(resolve(campaignOut), JSON.stringify((['bg1', 'bg1c', 'cs1'].includes(one('--manifest') ?? '') ? bg1CampaignManifest : campaignManifest)(m, { smoke: smokeOnly || argv.includes('--with-smoke'), smokeOnly, sealed: sealedCap ? { cap_usd: Number(sealedCap) } : undefined, units }), null, 2) + '\n'); console.error(`campaign manifest written to ${campaignOut}; next: bun run eval:scoreboard plan --campaign ${campaignOut}`); }
     console.log(json ? JSON.stringify({ ...m, waves: campaignCells(m).map(c => ({ id: c.id, wave: c.wave, lease_usd: c.lease_usd })) }, null, 2) : renderPlan(m));
     return 0;
   }

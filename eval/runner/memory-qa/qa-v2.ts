@@ -174,9 +174,11 @@ export class ChatClient extends BaseChatClient implements ChatLike {
    * `holdMayHaveBilled`: an OpenAI or Anthropic request whose error says it may have reached the provider
    * (`compatMayHaveBilled`: a 504, a timeout or a connection lost after sending) is not sent again, as an OpenAI-compatible
    * provider's never is. A lease proxy's own transport retries, and the 502 it answers after them, are outside this rule.
+   * `noCache`: every chat goes to the provider, and no reply is read from or written to `cacheRoot` (a cost-and-speed
+   * cell, where a cached reply would be an unmetered read with no real latency).
    */
   constructor(private cacheRoot: string, private retryDelayMs: (attempt: number) => number = attempt => 2000 * 2 ** attempt, private compatTimeoutMs?: number,
-    private options: { holdMayHaveBilled?: boolean } = {}) { super(cacheRoot, retryDelayMs); }
+    private options: { holdMayHaveBilled?: boolean; noCache?: boolean } = {}) { super(cacheRoot, retryDelayMs); }
 
   /**
    * A failure after retries throws the last error with `attempt_errors` (one message per attempt) attached, and for an
@@ -185,7 +187,7 @@ export class ChatClient extends BaseChatClient implements ChatLike {
   async chat(model: string, prompt: string, opts: ChatOptions): Promise<ChatResultV2> {
     const [provider, name] = model.includes(':') ? [model.slice(0, model.indexOf(':')), model.slice(model.indexOf(':') + 1)] : ['openai', model];
     const path = join(this.cacheRoot, `${chatCacheKey(model, prompt, opts)}.json`);
-    if (existsSync(path)) return { finish: null, usage: null, response_model: null, ...JSON.parse(readFileSync(path, 'utf8')), cached: true, attempt_errors: [] };
+    if (!this.options.noCache && existsSync(path)) return { finish: null, usage: null, response_model: null, ...JSON.parse(readFileSync(path, 'utf8')), cached: true, attempt_errors: [] };
     const compat = sentCompat(model) ? compatCall(model, prompt, opts) : null;
     let lastError: unknown = null;
     const attemptErrors: string[] = [];
@@ -193,7 +195,7 @@ export class ChatClient extends BaseChatClient implements ChatLike {
     for (let attempt = 0; attempt < 5; attempt++) {
       try {
         const r = compat ? await compatChat(compat, this.compatTimeoutMs) : provider === 'anthropic' ? await anthropicChat(name, prompt, opts) : await openaiChat(name, prompt, opts);
-        if (!opts.uncachedFinishes?.includes(String(r.finish)) && (opts.cacheIf?.(r) ?? true)) writeFileSync(path, JSON.stringify(r));
+        if (!this.options.noCache && !opts.uncachedFinishes?.includes(String(r.finish)) && (opts.cacheIf?.(r) ?? true)) writeFileSync(path, JSON.stringify(r));
         return { ...r, cached: false, attempt_errors: attemptErrors, ...(compat ? { compat_attempts: compatAttempts } : {}) };
       } catch (e) {
         lastError = e;

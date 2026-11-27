@@ -141,6 +141,8 @@ export interface MemorySystem {
   finishIngest(ns: string, timeoutS?: number): Promise<FinishResult>;
   retrieve(ns: string, question: PublicQuestion, policy: RetrievalPolicy): Promise<RetrieveResult>;
   deleteSource(ns: string, sourceId: string): Promise<DeleteResult>;
+  /** One run of a scheduled background job's documented trigger (gbrain-defaults `POST /trigger`), for pricing it per run. */
+  trigger?(ns: string, job: string, timeoutS?: number): Promise<Record<string, unknown>>;
   close?(): Promise<void>;
 }
 
