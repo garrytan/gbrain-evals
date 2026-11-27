@@ -310,6 +310,17 @@ describe('loader keys and hosting', () => {
     expect(none.input.systems.find(s => s.system === 'baseline-none')!.hosting).toBeNull();
     expect(none.problems.join('\n')).not.toContain('hosting samples');
     expect(unit('baseline-hybrid', 'cs1.baseline-hybrid.baseline.c0').input.systems.find(s => s.system === 'baseline-hybrid')!.hosting).not.toBeNull();
+    expect([none.unhosted, unit('baseline-hybrid', 'cs1.baseline-hybrid.baseline.c1').unhosted]).toEqual([[], []]);
+  });
+  test('a hosted system whose every hosting sample failed is named as unhosted, never priced as zero hosting', () => {
+    const dir = join(tmp, 'hosting-all-failed'), cell = 'cs1.baseline-hybrid.baseline.c0', rid = 'cd'.repeat(32);
+    mkdirSync(join(dir, 'runs', cell, 'r', rid), { recursive: true });
+    writeFileSync(join(dir, 'runs', cell, 'realizations.ndjson'), JSON.stringify({ realization_id: rid, conversation: 'w1', event: 'ingested', at: '2026-11-25T00:00:00Z', ingest: { content_tokens: 1000, ingested_tokens: 1100, sessions: 10 } }) + '\n');
+    writeFileSync(join(dir, 'runs', cell, 'hosting.ndjson'), ['2026-11-25T01:00:00Z', '2026-11-25T02:00:00Z'].map(at => JSON.stringify({ at, stage: 'questions:w1', harness_rss_bytes: 2 ** 30, containers: [], volumes: [], error: 'docker stats exited 1: daemon down' })).join('\n') + '\n');
+    const opts = { cells: new Map([[cell, 'baseline-hybrid']]), questions: new Map(), ladder: { provider: 'invented', instances: [{ name: 'small', memory_gib: 2, usd_per_hour: 0.02 }], storage_usd_per_gb_month: 0.1 } };
+    const loaded = cs1Load([{ dir, usage: [] }], opts);
+    expect(loaded.unhosted).toEqual(['baseline-hybrid']);
+    expect(loaded.problems.join('\n')).toContain("baseline-hybrid: no usable hosting sample in any cell, so its server can't be priced");
   });
   test("hosting counts only the system's own compose project, or the harness process and its files when in process", () => {
     const s = (at: string, rss: number, files = 0) => ({ at, stage: 'questions:w1', harness_rss_bytes: rss, containers: [{ name: 'stack-db-1', mem_bytes: 100 }, { name: 'other-db-1', mem_bytes: 900 }], volumes: [{ name: 'stack_data', bytes: 50 }, { name: 'other_data', bytes: 500 }], dirs: [{ path: '/x', bytes: files }] });

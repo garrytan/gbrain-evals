@@ -237,9 +237,11 @@ export function cs1Load(units: readonly Cs1Unit[], opts: Cs1LoadOptions) {
     + Object.values(full_context ?? {}).reduce((n, f) => n + f.worlds.reduce((m, w) => m + w.cached_usd + w.cache_write_usd + w.uncached_usd + w.output_usd, 0), 0);
   const dropped = billed - inWorlds - totals.unattributed;
   if (Math.abs(dropped) > 1e-6) problems.push(`${dropped.toFixed(6)} billed dollars are in no world's lines and not unattributed (an errored trigger, a replicate above 0, or a harness-slot line that isn't a reader's)`);
+  const unhosted = [...hosted].filter(([, h]) => !h).map(([s]) => s);
+  for (const s of unhosted) problems.push(`${s}: no usable hosting sample in any cell, so its server can't be priced`);
   const input: Cs1Input = { systems, ladder: opts.ladder, full_context, readers };
   return {
-    input, problems,
+    input, problems, unhosted,
     checks: { sum_back: { billed_usd: billed, attributed_usd: inWorlds, unattributed_usd: totals.unattributed, difference_usd: dropped }, by_bucket: totals, unattributed_keys: Object.fromEntries(unattributedKeys) },
   };
 }
@@ -307,6 +309,7 @@ if (import.meta.main) {
   const rowsFile = one('--rows'), table = one('--table');
   const rows: Record<string, { build: string; date: string; not_run?: string }> = rowsFile ? JSON.parse(readFileSync(rowsFile, 'utf8')) : {};
   const loaded = cs1Load(units, { cells, questions, ladder, stacks, fullContextFit });
+  if (loaded.unhosted.length) { console.error(`cs1-load: ${loaded.unhosted.join(', ')} had no usable hosting sample in any cell; a hosted row priced without its server would understate its cost`); process.exit(2); }
   const order = (s: string) => defs.findIndex(c => c.system === s);
   const result = cs1Aggregate({ ...loaded.input, systems: [...loaded.input.systems].sort((x, y) => order(x.system) - order(y.system)), not_run: Object.entries(rows).flatMap(([system, r]) => r.not_run ? [{ system, reason: r.not_run }] : []) });
   writeFileSync(out, JSON.stringify({ checks: loaded.checks, problems: loaded.problems, ladder, result }, null, 2) + '\n');
