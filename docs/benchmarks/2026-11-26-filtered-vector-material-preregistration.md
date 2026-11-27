@@ -359,3 +359,25 @@ arm, cell, metric, margin or outcome rule. Approved by the experiment's owner on
    `voyage-4` embeds the text again. The results report whether the new `vectors.f32` matches the recorded hash.
    If it doesn't, the re-run used re-embedded vectors of the same text, and the results say so beside those two cells.
 
+
+### 2026-11-27: PGLite at 375,000 chunks is left out, because its HNSW index never finished building
+
+Committed on the results branch after the PGLite 375,000-chunk runs were stopped. No cell of them ran, so no number is
+dropped. It changes no other arm, cell, metric or outcome rule. Approved by the experiment's owner on GST-4006, with a
+deadline of 20:00 UTC on 2026-11-27.
+
+The plan puts PGLite on L at 15,000, 75,000 and 375,000 chunks. At 375,000 chunks (53,324 pages), gbrain's default chunk
+index (`CREATE INDEX ... USING hnsw (embedding vector_cosine_ops)` from `chunkEmbeddingIndexSql` at the pin, PGLite
+0.4.3) never finished building:
+
+- Four `standard-8` machines (8 vCPU, 32 GB), one per mode and caller, loaded the corpus by about 09:15 UTC. The
+  index build then ran single-threaded at 100% of one core, with about 4.7 GB resident and a 7.5 GB data directory,
+  for about 10.8 hours with `maintenance_work_mem` at 1 GB (the harness's PGLite default). It didn't finish.
+- One of the four was restarted at 11:10 UTC with `maintenance_work_mem` at 2 GB. That build ran for about 8.8 hours
+  and didn't finish either.
+- For scale, the same index on PGLite at 75,000 chunks built in 70 s, and at 15,000 chunks in 14 s, both at 1 GB.
+
+All four machines were destroyed at 20:00 UTC. PGLite's results cover 15,000 and 75,000 chunks, and PGLite cells at
+375,000 chunks are reported as not run, with this reason. The results report this as a finding about gbrain in its
+own right: at the top of the size range gbrain's README gives for PGLite, its default index couldn't be built within a
+working day.
