@@ -1,0 +1,49 @@
+{
+  "schema": "engine-bench.gate-suite/1",
+  "suite": "cat22",
+  "gate": "E3",
+  "counted": true,
+  "amendment_text": "cat22 (E3, Cat 22 source isolation, cross-source leaks; eval/runner/cat22-source-isolation.ts): Rust passes every case of its own run.",
+  "gbrain": {
+    "overlay": {
+      "commit": "d8eb35769120cf0b60704478aaef96a412ee0009",
+      "ref": "d8eb35769120cf0b60704478aaef96a412ee0009",
+      "checkout_dirty": false
+    },
+    "rust_addon": {
+      "sha256": "d325d17502bda4dd3ebcd73ff73a45e15016e87823a0c50cd4bb9261d4748d74",
+      "target": "linux-x64-glibc"
+    }
+  },
+  "verdict": "FAIL",
+  "reason": "Rust run did not complete (error): This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran. | The Rust run refused 1 engine calls at: core/persistence/managed-mode.ts:74 (readManagedModeRows, persistence_journal, from core/persistence/ownership.ts:72) x1",
+  "rows": [
+    {
+      "id": "cat22",
+      "benchmark": "Cat 22 source isolation, cross-source leaks",
+      "verdict": "FAIL",
+      "measured": {
+        "pglite": {
+          "leaks": 0,
+          "controls_detect_leak": 1
+        },
+        "postgres": {
+          "leaks": 0,
+          "controls_detect_leak": 1
+        },
+        "rust": null
+      },
+      "reason": "Rust run did not complete (error): This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran. | The Rust run refused 1 engine calls at: core/persistence/managed-mode.ts:74 (readManagedModeRows, persistence_journal, from core/persistence/ownership.ts:72) x1"
+    }
+  ],
+  "losses": [
+    {
+      "id": "cat22",
+      "reason": "Rust run did not complete (error): This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+    },
+    {
+      "id": "cat22:refusal-sites",
+      "reason": "The Rust run refused 1 engine calls at: core/persistence/managed-mode.ts:74 (readManagedModeRows, persistence_journal, from core/persistence/ownership.ts:72) x1"
+    }
+  ]
+}

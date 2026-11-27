@@ -1,0 +1,27 @@
+# BrainBench N5: forgetting and withdrawal residue (gbrain 0.60.777.0, overlay d8eb357)
+[n5] start rust/cli
+[n5] start rust/mcp-stdio
+[n5] start rust/mcp-http
+[n5] done n5-rust-mcp-http in 1s FATAL Error: sources add vault failed: Error [engine_capability_missing]: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.
+[n5] done n5-rust-cli in 1s FATAL Error: sources add vault failed: Error [engine_capability_missing]: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.
+[n5] done n5-rust-mcp-stdio in 1s FATAL Error: sources add vault failed: Error [engine_capability_missing]: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.
+
+verdict: error (Error: sources add vault failed: Error [engine_capability_missing]: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.
+Fix: Run it on a pglite or postgres brain, or wait for a gbrain release whose Rust engine supports it.
+    at setup (/home/ubi/work/gbrain-evals/eval/runner/lifecycle/slice.ts:243:37)
+    at async runCell (/h)
+safety contracts (rust cells, 3 cells):
+  prohibited active outputs after forget: 0 (forgotten pairs with a witness: 0, without: 0)
+  reactivations: 0
+  collateral expirations: 0
+  unauthorized forgets applied: 0
+  private canaries in remote responses: 0
+quality metrics:
+  retained-neighbor recall: n/a (0 of 0 witnessed retained pairs over post-forget checkpoints)
+  reinstatement: n/a (0 of 0 corrected claims)
+  retained recall with the capped context_pack tier included (erratum, not gated): n/a
+  remote responses whose _meta hot memory carried a forgotten canary (not gated): 0
+  paraphrase still active after forget (documented gap): 0 of 0
+promotion rules: fail (retained-recall-floor, reinstatement-floor)
+gbrain findings: see docs/benchmarks/2026-10-01-wave-bugs.md (N5-*)
+receipt: /home/ubi/work/gbrain-evals/out/correctness-work/n5-rust/receipt.json

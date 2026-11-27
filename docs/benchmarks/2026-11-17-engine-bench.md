@@ -111,7 +111,7 @@ Postgres wrote 100,000 pages in 4,124 s (4,162 s including links, timeline entri
 
 ## Reproduce
 
-From the repository root, with Bun and Docker, and a gbrain checkout at the named tag (`--gbrain <checkout>@<ref>` loads a verified copy):
+The counted wave's commands, including the gate suites and `eval-gates.ts --suite`, are in the [counted wave's Reproduce section](2026-11-27-engine-bench.md#reproduce). From the repository root, with Bun and Docker, and a gbrain checkout at the named tag (`--gbrain <checkout>@<ref>` loads a verified copy):
 
 ```sh
 bun eval/runner/engine-bench/correctness.ts --dev --engines pglite,postgres --gbrain '<gbrain checkout>@v0.60.735.0'

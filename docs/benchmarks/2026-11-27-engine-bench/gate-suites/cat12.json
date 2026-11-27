@@ -1,0 +1,58 @@
+{
+  "schema": "engine-bench.gate-suite/1",
+  "suite": "cat12",
+  "gate": "E1",
+  "counted": true,
+  "amendment_text": "cat12 (E1, Cat 12 MCP operation contract, behavioural assertions; eval/runner/mcp-contract.ts): Rust passes every case of its own run and matches each TypeScript engine on operations and operations_missing. Our reading of RUST_ENGINE.md at gbrain 09b9ac5c, which Ember kept on 2026-11-23: RUST_ENGINE.md says 50/50; the runner has 24 behavioural assertions, so the gate reads 24/24, and the MCP handler walk must reach the same operation count, with the same number missing, on all three engines.",
+  "gbrain": {
+    "overlay": {
+      "commit": "d8eb35769120cf0b60704478aaef96a412ee0009",
+      "ref": "d8eb35769120cf0b60704478aaef96a412ee0009",
+      "checkout_dirty": false
+    },
+    "rust_addon": {
+      "sha256": "d325d17502bda4dd3ebcd73ff73a45e15016e87823a0c50cd4bb9261d4748d74",
+      "target": "linux-x64-glibc"
+    }
+  },
+  "verdict": "FAIL",
+  "reason": "18/24 on Rust (verdict fail). traverse_graph depth=1000 over a 16-node chain stops at the 10-hop cap: rejected: This brain's engine does not support traversePathsDetailed (option excludePrivate) yet (it needs the | traverse_graph depth=5 (under cap) is honored exactly: GraphPath frontier at 5 hops: unexpected error: This brain's engine does not support traversePathsDetailed (option excludePrivate) yet (it needs the | traverse_graph remote call with depth AND direction defaulted walks exactly 2 hops: unexpected error: This brain's engine does not support traversePathsDetailed (option excludePrivate) yet (it needs the | traverse_graph remote no-direction call defaults to direction=both (inbound edge into the start page is returned): unexpected error: This brain's engine does not support traversePathsDetailed (option excludePrivate) yet (it needs the | list_pages limit=1M from remote is clamped: errored: This brain's engine does not support listPages (option excludePrivate) yet (it needs the pages capab | list_pages limit=120: honored locally, clamped remotely: local: This brain's engine does not support listPages (option listC; remote: This brain's engine does not support listPages (option exclu | The Rust run refused 54 engine calls at: core/ops/links.ts:636 (traversePathsDetailed, graph, from core/guests/marker.ts:147) x3; core/ops/pages.ts:635 (listPages, pages, from core/guests/marker.ts:147) x3; core/ops/pages.ts:161 (readPageSnapshot, pages, from core/guests/marker.ts:147) x6; core/search/keyword-paging.ts:132 (countKeywordPages, keyword_search, from core/search/keyword",
+  "rows": [
+    {
+      "id": "cat12",
+      "benchmark": "Cat 12 MCP operation contract, behavioural assertions",
+      "verdict": "FAIL",
+      "measured": {
+        "pglite": {
+          "passed": 24,
+          "total": 24,
+          "operations": 224,
+          "operations_missing": 0
+        },
+        "postgres": {
+          "passed": 24,
+          "total": 24,
+          "operations": 224,
+          "operations_missing": 0
+        },
+        "rust": {
+          "passed": 18,
+          "total": 24,
+          "operations": 224,
+          "operations_missing": 0
+        }
+      },
+      "reason": "18/24 on Rust (verdict fail). traverse_graph depth=1000 over a 16-node chain stops at the 10-hop cap: rejected: This brain's engine does not support traversePathsDetailed (option excludePrivate) yet (it needs the | traverse_graph depth=5 (under cap) is honored exactly: GraphPath frontier at 5 hops: unexpected error: This brain's engine does not support traversePathsDetailed (option excludePrivate) yet (it needs the | traverse_graph remote call with depth AND direction defaulted walks exactly 2 hops: unexpected error: This brain's engine does not support traversePathsDetailed (option excludePrivate) yet (it needs the | traverse_graph remote no-direction call defaults to direction=both (inbound edge into the start page is returned): unexpected error: This brain's engine does not support traversePathsDetailed (option excludePrivate) yet (it needs the | list_pages limit=1M from remote is clamped: errored: This brain's engine does not support listPages (option excludePrivate) yet (it needs the pages capab | list_pages limit=120: honored locally, clamped remotely: local: This brain's engine does not support listPages (option listC; remote: This brain's engine does not support listPages (option exclu | The Rust run refused 54 engine calls at: core/ops/links.ts:636 (traversePathsDetailed, graph, from core/guests/marker.ts:147) x3; core/ops/pages.ts:635 (listPages, pages, from core/guests/marker.ts:147) x3; core/ops/pages.ts:161 (readPageSnapshot, pages, from core/guests/marker.ts:147) x6; core/search/keyword-paging.ts:132 (countKeywordPages, keyword_search, from core/search/keyword"
+    }
+  ],
+  "losses": [
+    {
+      "id": "cat12",
+      "reason": "18/24 on Rust (verdict fail). traverse_graph depth=1000 over a 16-node chain stops at the 10-hop cap: rejected: This brain's engine does not support traversePathsDetailed (option excludePrivate) yet (it needs the | traverse_graph depth=5 (under cap) is honored exactly: GraphPath frontier at 5 hops: unexpected error: This brain's engine does not support traversePathsDetailed (option excludePrivate) yet (it needs the | traverse_graph remote call with depth AND direction defaulted walks exactly 2 hops: unexpected error: This brain's engine does not support traversePathsDetailed (option excludePrivate) yet (it needs the | traverse_graph remote no-direction call defaults to direction=both (inbound edge into the start page is returned): unexpected error: This brain's engine does not support traversePathsDetailed (option excludePrivate) yet (it needs the | list_pages limit=1M from remote is clamped: errored: This brain's engine does not support listPages (option excludePrivate) yet (it needs the pages capab | list_pages limit=120: honored locally, clamped remotely: local: This brain's engine does not support listPages (option listC; remote: This brain's engine does not support listPages (option exclu"
+    },
+    {
+      "id": "cat12:refusal-sites",
+      "reason": "The Rust run refused 54 engine calls at: core/ops/links.ts:636 (traversePathsDetailed, graph, from core/guests/marker.ts:147) x3; core/ops/pages.ts:635 (listPages, pages, from core/guests/marker.ts:147) x3; core/ops/pages.ts:161 (readPageSnapshot, pages, from core/guests/marker.ts:147) x6; core/search/keyword-paging.ts:132 (countKeywordPages, keyword_search, from core/search/keyword-paging.ts:159) x6; core/ops/search.ts:258 (hasUnsealedPages, chunks, from core/ops/search.ts:407) x6; core/search/projection-readiness.ts:47 (executeRaw, raw_sql, from core/search/projection-readiness.ts:68) x6; core/persistence/held-reads.ts:103 (executeRaw, raw_sql, from core/persistence/held-reads.ts:73) x6; core/notifier/status.ts:95 (hasNotifierCoverage, persistence_journal, from core/notifier/status.ts:109) x6; core/search/projection-readiness.ts:106 (executeRaw, raw_sql, from core/search/projection-readiness.ts:69) x6; core/search/retrieval-coverage.ts:131 (executeRaw, raw_sql, from core/search/retrieval-coverage.ts:164) x6"
+    }
+  ]
+}

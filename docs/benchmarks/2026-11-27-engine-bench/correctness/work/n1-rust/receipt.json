@@ -1,0 +1,1593 @@
+{
+  "cost": {
+    "usd": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "basis": "hermetic: provider keys stripped, no embedding model, System One off; no model and no paid request"
+  },
+  "delivered_tokens": {
+    "tokens": 0,
+    "basis": "hermetic: provider keys stripped, no embedding model, System One off; no model and no paid request"
+  },
+  "schema_version": 2,
+  "benchmark_version": "0.5.0",
+  "category": "n1-knowledge-update",
+  "run_status": "error",
+  "n_total": 0,
+  "n_scored": 0,
+  "completion_rate": 0,
+  "errors": [
+    {
+      "probe_id": "n1-rust-cli",
+      "origin": "harness",
+      "message": "Error: sources add vault failed: Error [engine_capability_missing]: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.\nFix: Run it on a pglite or postgres brain, or wait for a gbrain release whose Rust engine supports it.\n    at setup (eval/runner/lifecycle/slice.ts:243:37)\n    at async runCell (eval/runner/n1-knowledge-update.ts:287:16)\n    at processTicksAndRejection"
+    },
+    {
+      "probe_id": "n1-rust-mcp-stdio",
+      "origin": "harness",
+      "message": "Error: sources add vault failed: Error [engine_capability_missing]: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.\nFix: Run it on a pglite or postgres brain, or wait for a gbrain release whose Rust engine supports it.\n    at setup (eval/runner/lifecycle/slice.ts:243:37)\n    at async runCell (eval/runner/n1-knowledge-update.ts:287:16)\n    at processTicksAndRejection"
+    },
+    {
+      "probe_id": "n1-rust-mcp-http",
+      "origin": "harness",
+      "message": "Error: sources add vault failed: Error [engine_capability_missing]: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.\nFix: Run it on a pglite or postgres brain, or wait for a gbrain release whose Rust engine supports it.\n    at setup (eval/runner/lifecycle/slice.ts:243:37)\n    at async runCell (eval/runner/n1-knowledge-update.ts:287:16)\n    at processTicksAndRejection"
+    }
+  ],
+  "publishable": false,
+  "gbrain_version": "0.60.777.0",
+  "gbrain_pin": "github:garrytan/gbrain#97ef356f574a66709ef1bf4ae1cad604727852d8",
+  "execution": {
+    "source_tree": {
+      "sha256": "561f127fe3e1c7428fd968d7532e77301e2de9f4f3cd606aaaedbd1545d9028b",
+      "scheme": "git-index-blob-v1",
+      "files": 17735,
+      "git_head": "8e36959c52cf4f327d1a20f634cde2e20b9069ae",
+      "dirty": true
+    },
+    "product": {
+      "package": "gbrain",
+      "declared_pin": "github:garrytan/gbrain#97ef356f574a66709ef1bf4ae1cad604727852d8",
+      "declared_sha": "97ef356f574a66709ef1bf4ae1cad604727852d8",
+      "version": "0.60.777.0",
+      "package_sha256": "ffa7a2a551ce24ffd8f71415aa1d196d2f68c46d22013727242a584c49884480",
+      "loaded_git_head": "d8eb35769120cf0b60704478aaef96a412ee0009"
+    }
+  },
+  "latency_ms": null,
+  "resolved_config": {
+    "decide": "off (no key, fresh GBRAIN_HOME)",
+    "decide_status_per_cell": {
+      "n1-rust-cli": {
+        "ok": false,
+        "slots": []
+      },
+      "n1-rust-mcp-stdio": {
+        "ok": false,
+        "slots": []
+      },
+      "n1-rust-mcp-http": {
+        "ok": false,
+        "slots": []
+      }
+    },
+    "engines": {
+      "requested": [
+        "rust"
+      ],
+      "run": [
+        "rust"
+      ],
+      "postgres_unreachable": null
+    },
+    "interfaces": [
+      "cli",
+      "mcp-stdio",
+      "mcp-http"
+    ],
+    "harness": "eval/runner/lifecycle/slice.ts (lifecycle drivers: trusted local CLI `gbrain call`, stdio `gbrain serve`, HTTP `gbrain serve --http` with an OAuth client_credentials client bound to the vault source)",
+    "init": "a CLI config written with cliEngineConfig(rust) plus embedding_disabled and schema_pack gbrain-base-v2, then `gbrain init --migrate-only --non-interactive` (gbrain init has no Rust flag); a git vault as the default source",
+    "seed": 11,
+    "generator_version": "n1-knowledge-update-gen@1",
+    "ledger_sha256": "6c176db0a8e4a53753d0c1a26b81f46d32779562abcd6a6542fb4fa7e4538d96",
+    "slice": null,
+    "checkpoints": [
+      "updated",
+      "restart",
+      "reimport",
+      "concurrent"
+    ],
+    "oracle": {
+      "fence": "the author's own fence: the active row is current, struck rows are history (eval/generators/n1-knowledge-update-gen.ts fenceRowsAt)",
+      "ontology": "valid time: latest valid_from on or before the as-of day, later recorded wins ties (ontologyValueAt, the N3 semantics)",
+      "trajectory": "every unstruck point charted in date order; struck (corrected) points are not"
+    },
+    "gating_scope": "data.metrics aggregates the rust cells (GBRAIN_EVAL_ENGINE=rust)",
+    "gbrain_overlay": {
+      "requested": "gbrain@v0.60.777.0",
+      "ref": "v0.60.777.0",
+      "commit": "d8eb35769120cf0b60704478aaef96a412ee0009",
+      "tree": "8656a204b93a149ff392c05b4b6713a76400e596",
+      "version": "0.60.777.0",
+      "checkout_dirty": false,
+      "verified": {
+        "copy_tree": "8656a204b93a149ff392c05b4b6713a76400e596",
+        "tree_matches": true,
+        "symlinks_under_src": 0,
+        "dir_is_realpath": true,
+        "cli_version": "0.60.777.0",
+        "cli_version_matches": true
+      },
+      "copied_not_symlinked": true
+    }
+  },
+  "hashes": {
+    "ledger_sha256": "6c176db0a8e4a53753d0c1a26b81f46d32779562abcd6a6542fb4fa7e4538d96"
+  },
+  "started_at": "2026-11-27T03:01:22.298Z",
+  "finished_at": "2026-11-27T03:01:28.015Z",
+  "data": {
+    "metrics": {
+      "current_value_probes": 0,
+      "current_value_correct": 0,
+      "current_value_accuracy": null,
+      "stale_served": 0,
+      "stale_served_rate": null,
+      "history_probes": 0,
+      "history_retained": 0,
+      "history_retained_rate": null,
+      "negative_controls": 0,
+      "negative_controls_passed": 0,
+      "private_value_leaks": 0,
+      "exposure_probes": 0,
+      "exposure_probes_with_signal": 0,
+      "acknowledged_writes_lost": 0,
+      "sut_errors": 0,
+      "cells": 3,
+      "void_cells": 3
+    },
+    "metrics_postgres": null,
+    "safety": {
+      "stale_served": true,
+      "private_value_leaks": true,
+      "acknowledged_writes_lost": true
+    },
+    "quality": {
+      "current_value_accuracy": {
+        "value": null,
+        "threshold": 1,
+        "pass": false
+      },
+      "history_retained_rate": {
+        "value": null,
+        "threshold": 1,
+        "pass": false
+      }
+    },
+    "promotion_rules": {
+      "preregistered": "2026-10-01",
+      "basis": "amendments 1, 2 and 5, frozen before the runner existed or ran: explicit supersession is a documented contract (struck fence rows expire, ontology_propose supersedes the prior value, find_trajectory charts unexpired rows), so serving a superseded value, losing an acknowledged write or exposing a private value to a remote caller are exact contracts; current-value accuracy and history retained are utility floors at 1 so an empty or refuse-everything system fails",
+      "safety_contracts": [
+        {
+          "id": "no-stale-served",
+          "path": "data.metrics.stale_served",
+          "op": "==",
+          "value": 0,
+          "description": "no surface serves a superseded value as current (a struck row inside a returned fence is history, not stale)"
+        },
+        {
+          "id": "no-private-value-exposed",
+          "path": "data.metrics.private_value_leaks",
+          "op": "==",
+          "value": 0,
+          "description": "no remote (stdio or HTTP) response carries a private fence row, private ontology observation or private trajectory point"
+        },
+        {
+          "id": "no-acknowledged-write-lost",
+          "path": "data.metrics.acknowledged_writes_lost",
+          "op": "==",
+          "value": 0,
+          "description": "every write gbrain acknowledged, including concurrent ones, is visible to the trusted caller afterwards"
+        }
+      ],
+      "quality_thresholds": [
+        {
+          "id": "current-value-floor",
+          "path": "data.metrics.current_value_accuracy",
+          "op": ">=",
+          "value": 1,
+          "description": "every current-value probe returns the ledger's current value (utility floor: an empty or stale system fails)"
+        },
+        {
+          "id": "history-retained-floor",
+          "path": "data.metrics.history_retained_rate",
+          "op": ">=",
+          "value": 1,
+          "description": "every superseded value stays readable as history: expired with recall include_expired, at its as-of date in ontology_get, and every unsuperseded trajectory point stays charted"
+        }
+      ],
+      "exploratory": [
+        "data.by_surface, data.by_depth and data.by_kind",
+        "data.metrics_postgres (report-only outside CI)",
+        "data.metrics.exposure_probes_with_signal",
+        "data.gaps (implicit supersession without an embedding key, natural-language change detection)",
+        "data.struck_history_in_search (superseded rows a search chunk carries by design)"
+      ]
+    },
+    "by_surface": {},
+    "by_depth": {},
+    "by_kind": {},
+    "by_checkpoint": {
+      "updated": null,
+      "restart": null,
+      "reimport": null,
+      "concurrent": null
+    },
+    "by_cell": [
+      {
+        "id": "n1-rust-cli",
+        "duration_ms": 1227,
+        "fatal": "Error: sources add vault failed: Error [engine_capability_missing]: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.",
+        "server_version": "",
+        "private_value_leaks": 0,
+        "calls": {
+          "primary": 0,
+          "trusted": 0
+        },
+        "checkpoints": {},
+        "writes": {
+          "total": 0,
+          "refused_first": 0,
+          "failed": []
+        }
+      },
+      {
+        "id": "n1-rust-mcp-stdio",
+        "duration_ms": 1314,
+        "fatal": "Error: sources add vault failed: Error [engine_capability_missing]: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.",
+        "server_version": "",
+        "private_value_leaks": 0,
+        "calls": {
+          "primary": 0,
+          "trusted": 0
+        },
+        "checkpoints": {},
+        "writes": {
+          "total": 0,
+          "refused_first": 0,
+          "failed": []
+        }
+      },
+      {
+        "id": "n1-rust-mcp-http",
+        "duration_ms": 1360,
+        "fatal": "Error: sources add vault failed: Error [engine_capability_missing]: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.",
+        "server_version": "",
+        "private_value_leaks": 0,
+        "calls": {
+          "primary": 0,
+          "trusted": 0
+        },
+        "checkpoints": {},
+        "writes": {
+          "total": 0,
+          "refused_first": 0,
+          "failed": []
+        }
+      }
+    ],
+    "struck_history_in_search": 0,
+    "leak_evidence": [],
+    "ontology_unmanaged": {
+      "scope": "exploratory: the ontology chains replayed through in-process handlers on an unmanaged in-memory PGLite engine (no persistence coordinator), trusted local writes, local and remote reads",
+      "metrics": {
+        "current_value_probes": 18,
+        "current_value_correct": 0,
+        "current_value_accuracy": 0,
+        "stale_served": 0,
+        "stale_served_rate": 0,
+        "history_probes": 41,
+        "history_retained": 0,
+        "history_retained_rate": 0,
+        "negative_controls": 18,
+        "negative_controls_passed": 18,
+        "private_value_leaks": 0,
+        "exposure_probes": 2,
+        "exposure_probes_with_signal": 0,
+        "acknowledged_writes_lost": 0,
+        "sut_errors": 0
+      },
+      "writes": [
+        {
+          "chain": "ont-1-location",
+          "action": "0:error",
+          "ok": false,
+          "error": "This brain's engine does not support executeRaw yet (it needs the raw_sql capability), so nothing ran."
+        },
+        {
+          "chain": "ont-2-employer",
+          "action": "0:error",
+          "ok": false,
+          "error": "This brain's engine does not support executeRaw yet (it needs the raw_sql capability), so nothing ran."
+        },
+        {
+          "chain": "ont-3-role",
+          "action": "0:error",
+          "ok": false,
+          "error": "This brain's engine does not support executeRaw yet (it needs the raw_sql capability), so nothing ran."
+        },
+        {
+          "chain": "ont-4-location",
+          "action": "0:error",
+          "ok": false,
+          "error": "This brain's engine does not support executeRaw yet (it needs the raw_sql capability), so nothing ran."
+        },
+        {
+          "chain": "ont-5-role",
+          "action": "0:error",
+          "ok": false,
+          "error": "This brain's engine does not support executeRaw yet (it needs the raw_sql capability), so nothing ran."
+        },
+        {
+          "chain": "ont-6-employer",
+          "action": "0:error",
+          "ok": false,
+          "error": "This brain's engine does not support executeRaw yet (it needs the raw_sql capability), so nothing ran."
+        },
+        {
+          "chain": "ont-1-role",
+          "action": "0:error",
+          "ok": false,
+          "error": "This brain's engine does not support executeRaw yet (it needs the raw_sql capability), so nothing ran."
+        },
+        {
+          "chain": "ont-2-risk",
+          "action": "0:error",
+          "ok": false,
+          "error": "This brain's engine does not support executeRaw yet (it needs the raw_sql capability), so nothing ran."
+        },
+        {
+          "chain": "ont-2-style",
+          "action": "0:error",
+          "ok": false,
+          "error": "This brain's engine does not support executeRaw yet (it needs the raw_sql capability), so nothing ran."
+        },
+        {
+          "chain": "ont-1-location",
+          "action": "1:error",
+          "ok": false,
+          "error": "This brain's engine does not support executeRaw yet (it needs the raw_sql capability), so nothing ran."
+        },
+        {
+          "chain": "ont-2-employer",
+          "action": "1:error",
+          "ok": false,
+          "error": "This brain's engine does not support executeRaw yet (it needs the raw_sql capability), so nothing ran."
+        },
+        {
+          "chain": "ont-3-role",
+          "action": "1:error",
+          "ok": false,
+          "error": "This brain's engine does not support executeRaw yet (it needs the raw_sql capability), so nothing ran."
+        },
+        {
+          "chain": "ont-4-location",
+          "action": "1:error",
+          "ok": false,
+          "error": "This brain's engine does not support executeRaw yet (it needs the raw_sql capability), so nothing ran."
+        },
+        {
+          "chain": "ont-5-role",
+          "action": "1:error",
+          "ok": false,
+          "error": "This brain's engine does not support executeRaw yet (it needs the raw_sql capability), so nothing ran."
+        },
+        {
+          "chain": "ont-6-employer",
+          "action": "1:error",
+          "ok": false,
+          "error": "This brain's engine does not support executeRaw yet (it needs the raw_sql capability), so nothing ran."
+        },
+        {
+          "chain": "ont-1-role",
+          "action": "1:error",
+          "ok": false,
+          "error": "This brain's engine does not support executeRaw yet (it needs the raw_sql capability), so nothing ran."
+        },
+        {
+          "chain": "ont-2-employer",
+          "action": "2:error",
+          "ok": false,
+          "error": "This brain's engine does not support executeRaw yet (it needs the raw_sql capability), so nothing ran."
+        },
+        {
+          "chain": "ont-3-role",
+          "action": "2:error",
+          "ok": false,
+          "error": "This brain's engine does not support executeRaw yet (it needs the raw_sql capability), so nothing ran."
+        },
+        {
+          "chain": "ont-4-location",
+          "action": "2:error",
+          "ok": false,
+          "error": "This brain's engine does not support executeRaw yet (it needs the raw_sql capability), so nothing ran."
+        },
+        {
+          "chain": "ont-5-role",
+          "action": "2:error",
+          "ok": false,
+          "error": "This brain's engine does not support executeRaw yet (it needs the raw_sql capability), so nothing ran."
+        },
+        {
+          "chain": "ont-6-employer",
+          "action": "2:error",
+          "ok": false,
+          "error": "This brain's engine does not support executeRaw yet (it needs the raw_sql capability), so nothing ran."
+        },
+        {
+          "chain": "ont-1-role",
+          "action": "2:error",
+          "ok": false,
+          "error": "This brain's engine does not support executeRaw yet (it needs the raw_sql capability), so nothing ran."
+        },
+        {
+          "chain": "ont-3-role",
+          "action": "3:error",
+          "ok": false,
+          "error": "This brain's engine does not support executeRaw yet (it needs the raw_sql capability), so nothing ran."
+        },
+        {
+          "chain": "ont-4-location",
+          "action": "3:error",
+          "ok": false,
+          "error": "This brain's engine does not support executeRaw yet (it needs the raw_sql capability), so nothing ran."
+        },
+        {
+          "chain": "ont-4-location",
+          "action": "4:error",
+          "ok": false,
+          "error": "This brain's engine does not support executeRaw yet (it needs the raw_sql capability), so nothing ran."
+        },
+        {
+          "chain": "ont-1-location",
+          "action": "C:error",
+          "ok": false,
+          "error": "This brain's engine does not support executeRaw yet (it needs the raw_sql capability), so nothing ran."
+        },
+        {
+          "chain": "ont-2-employer",
+          "action": "C:error",
+          "ok": false,
+          "error": "This brain's engine does not support executeRaw yet (it needs the raw_sql capability), so nothing ran."
+        },
+        {
+          "chain": "ont-3-role",
+          "action": "C:error",
+          "ok": false,
+          "error": "This brain's engine does not support executeRaw yet (it needs the raw_sql capability), so nothing ran."
+        },
+        {
+          "chain": "ont-4-location",
+          "action": "C:error",
+          "ok": false,
+          "error": "This brain's engine does not support executeRaw yet (it needs the raw_sql capability), so nothing ran."
+        },
+        {
+          "chain": "ont-5-role",
+          "action": "C:error",
+          "ok": false,
+          "error": "This brain's engine does not support executeRaw yet (it needs the raw_sql capability), so nothing ran."
+        },
+        {
+          "chain": "ont-6-employer",
+          "action": "C:error",
+          "ok": false,
+          "error": "This brain's engine does not support executeRaw yet (it needs the raw_sql capability), so nothing ran."
+        },
+        {
+          "chain": "ont-1-role",
+          "action": "C:error",
+          "ok": false,
+          "error": "This brain's engine does not support executeRaw yet (it needs the raw_sql capability), so nothing ran."
+        },
+        {
+          "chain": "ont-2-risk",
+          "action": "C:error",
+          "ok": false,
+          "error": "This brain's engine does not support executeRaw yet (it needs the raw_sql capability), so nothing ran."
+        },
+        {
+          "chain": "ont-2-style",
+          "action": "C:error",
+          "ok": false,
+          "error": "This brain's engine does not support executeRaw yet (it needs the raw_sql capability), so nothing ran."
+        }
+      ],
+      "failures": [
+        {
+          "probe_id": "sequential:ontology_current:ont-1-location",
+          "type": "ontology_current",
+          "surface": "ontology_get",
+          "class": "current",
+          "chain": "ont-1-location",
+          "depth": 1,
+          "kind": "forward",
+          "gold": "Viseu cnryrkoqrkcu",
+          "answer": {
+            "value": null
+          },
+          "pass": false,
+          "stale": false
+        },
+        {
+          "probe_id": "sequential:ontology_asof:ont-1-location:2019-11-01",
+          "type": "ontology_asof",
+          "surface": "ontology_get-asof",
+          "class": "history",
+          "chain": "ont-1-location",
+          "depth": 1,
+          "kind": "forward",
+          "gold": "Lisbon cnryjbzqccdi",
+          "answer": {
+            "value": null
+          },
+          "pass": false,
+          "stale": false
+        },
+        {
+          "probe_id": "sequential:ontology_current:ont-2-employer",
+          "type": "ontology_current",
+          "surface": "ontology_get",
+          "class": "current",
+          "chain": "ont-2-employer",
+          "depth": 2,
+          "kind": "forward",
+          "gold": "Orchard Labs cnryicbpdurt",
+          "answer": {
+            "value": null
+          },
+          "pass": false,
+          "stale": false
+        },
+        {
+          "probe_id": "sequential:ontology_asof:ont-2-employer:2019-08-28",
+          "type": "ontology_asof",
+          "surface": "ontology_get-asof",
+          "class": "history",
+          "chain": "ont-2-employer",
+          "depth": 2,
+          "kind": "forward",
+          "gold": "Summit Freight cnryoxfarrqy",
+          "answer": {
+            "value": null
+          },
+          "pass": false,
+          "stale": false
+        },
+        {
+          "probe_id": "sequential:ontology_asof:ont-2-employer:2020-05-05",
+          "type": "ontology_asof",
+          "surface": "ontology_get-asof",
+          "class": "history",
+          "chain": "ont-2-employer",
+          "depth": 2,
+          "kind": "forward",
+          "gold": "Lantern Media cnrydzqghsry",
+          "answer": {
+            "value": null
+          },
+          "pass": false,
+          "stale": false
+        },
+        {
+          "probe_id": "sequential:ontology_current:ont-3-role",
+          "type": "ontology_current",
+          "surface": "ontology_get",
+          "class": "current",
+          "chain": "ont-3-role",
+          "depth": 3,
+          "kind": "forward",
+          "gold": "director cnryefnqleai",
+          "answer": {
+            "value": null
+          },
+          "pass": false,
+          "stale": false
+        },
+        {
+          "probe_id": "sequential:ontology_asof:ont-3-role:2019-11-09",
+          "type": "ontology_asof",
+          "surface": "ontology_get-asof",
+          "class": "history",
+          "chain": "ont-3-role",
+          "depth": 3,
+          "kind": "forward",
+          "gold": "advisor cnryzzhvnmwc",
+          "answer": {
+            "value": null
+          },
+          "pass": false,
+          "stale": false
+        },
+        {
+          "probe_id": "sequential:ontology_asof:ont-3-role:2020-09-11",
+          "type": "ontology_asof",
+          "surface": "ontology_get-asof",
+          "class": "history",
+          "chain": "ont-3-role",
+          "depth": 3,
+          "kind": "forward",
+          "gold": "manager cnrypvhebsqz",
+          "answer": {
+            "value": null
+          },
+          "pass": false,
+          "stale": false
+        },
+        {
+          "probe_id": "sequential:ontology_asof:ont-3-role:2021-06-25",
+          "type": "ontology_asof",
+          "surface": "ontology_get-asof",
+          "class": "history",
+          "chain": "ont-3-role",
+          "depth": 3,
+          "kind": "forward",
+          "gold": "analyst cnrycmxoqwob",
+          "answer": {
+            "value": null
+          },
+          "pass": false,
+          "stale": false
+        },
+        {
+          "probe_id": "sequential:ontology_current:ont-4-location",
+          "type": "ontology_current",
+          "surface": "ontology_get",
+          "class": "current",
+          "chain": "ont-4-location",
+          "depth": 4,
+          "kind": "forward",
+          "gold": "Coimbra cnrygawnnorj",
+          "answer": {
+            "value": null
+          },
+          "pass": false,
+          "stale": false
+        },
+        {
+          "probe_id": "sequential:ontology_asof:ont-4-location:2019-08-09",
+          "type": "ontology_asof",
+          "surface": "ontology_get-asof",
+          "class": "history",
+          "chain": "ont-4-location",
+          "depth": 4,
+          "kind": "forward",
+          "gold": "Aveiro cnryvsrutzuf",
+          "answer": {
+            "value": null
+          },
+          "pass": false,
+          "stale": false
+        },
+        {
+          "probe_id": "sequential:ontology_asof:ont-4-location:2020-05-24",
+          "type": "ontology_asof",
+          "surface": "ontology_get-asof",
+          "class": "history",
+          "chain": "ont-4-location",
+          "depth": 4,
+          "kind": "forward",
+          "gold": "Faro cnryiwfasmgb",
+          "answer": {
+            "value": null
+          },
+          "pass": false,
+          "stale": false
+        },
+        {
+          "probe_id": "sequential:ontology_asof:ont-4-location:2021-02-11",
+          "type": "ontology_asof",
+          "surface": "ontology_get-asof",
+          "class": "history",
+          "chain": "ont-4-location",
+          "depth": 4,
+          "kind": "forward",
+          "gold": "Braga cnryrcxlbhex",
+          "answer": {
+            "value": null
+          },
+          "pass": false,
+          "stale": false
+        },
+        {
+          "probe_id": "sequential:ontology_asof:ont-4-location:2021-12-19",
+          "type": "ontology_asof",
+          "surface": "ontology_get-asof",
+          "class": "history",
+          "chain": "ont-4-location",
+          "depth": 4,
+          "kind": "forward",
+          "gold": "Leiria cnryplvwbzak",
+          "answer": {
+            "value": null
+          },
+          "pass": false,
+          "stale": false
+        },
+        {
+          "probe_id": "sequential:ontology_current:ont-5-role",
+          "type": "ontology_current",
+          "surface": "ontology_get",
+          "class": "current",
+          "chain": "ont-5-role",
+          "depth": 2,
+          "kind": "revert-same-source",
+          "gold": "analyst cnrymyabeksg",
+          "answer": {
+            "value": null
+          },
+          "pass": false,
+          "stale": false
+        },
+        {
+          "probe_id": "sequential:ontology_asof:ont-5-role:2020-02-29",
+          "type": "ontology_asof",
+          "surface": "ontology_get-asof",
+          "class": "history",
+          "chain": "ont-5-role",
+          "depth": 2,
+          "kind": "revert-same-source",
+          "gold": "analyst cnrymyabeksg",
+          "answer": {
+            "value": null
+          },
+          "pass": false,
+          "stale": false
+        },
+        {
+          "probe_id": "sequential:ontology_asof:ont-5-role:2021-06-20",
+          "type": "ontology_asof",
+          "surface": "ontology_get-asof",
+          "class": "history",
+          "chain": "ont-5-role",
+          "depth": 2,
+          "kind": "revert-same-source",
+          "gold": "manager cnrygrrylvax",
+          "answer": {
+            "value": null
+          },
+          "pass": false,
+          "stale": false
+        },
+        {
+          "probe_id": "sequential:ontology_current:ont-6-employer",
+          "type": "ontology_current",
+          "surface": "ontology_get",
+          "class": "current",
+          "chain": "ont-6-employer",
+          "depth": 2,
+          "kind": "revert-distinct-source",
+          "gold": "Willow Robotics cnryiqfvgzcc",
+          "answer": {
+            "value": null
+          },
+          "pass": false,
+          "stale": false
+        },
+        {
+          "probe_id": "sequential:ontology_asof:ont-6-employer:2020-02-12",
+          "type": "ontology_asof",
+          "surface": "ontology_get-asof",
+          "class": "history",
+          "chain": "ont-6-employer",
+          "depth": 2,
+          "kind": "revert-distinct-source",
+          "gold": "Willow Robotics cnryiqfvgzcc",
+          "answer": {
+            "value": null
+          },
+          "pass": false,
+          "stale": false
+        },
+        {
+          "probe_id": "sequential:ontology_asof:ont-6-employer:2021-03-23",
+          "type": "ontology_asof",
+          "surface": "ontology_get-asof",
+          "class": "history",
+          "chain": "ont-6-employer",
+          "depth": 2,
+          "kind": "revert-distinct-source",
+          "gold": "Lantern Media cnryndruuxmw",
+          "answer": {
+            "value": null
+          },
+          "pass": false,
+          "stale": false
+        },
+        {
+          "probe_id": "sequential:ontology_current:ont-1-role",
+          "type": "ontology_current",
+          "surface": "ontology_get",
+          "class": "current",
+          "chain": "ont-1-role",
+          "depth": 2,
+          "kind": "backdated",
+          "gold": "engineer cnryplfdydiu",
+          "answer": {
+            "value": null
+          },
+          "pass": false,
+          "stale": false
+        },
+        {
+          "probe_id": "sequential:ontology_asof:ont-1-role:2020-08-28",
+          "type": "ontology_asof",
+          "surface": "ontology_get-asof",
+          "class": "history",
+          "chain": "ont-1-role",
+          "depth": 2,
+          "kind": "backdated",
+          "gold": "founder cnryfhqklvhv",
+          "answer": {
+            "value": null
+          },
+          "pass": false,
+          "stale": false
+        },
+        {
+          "probe_id": "sequential:ontology_asof:ont-1-role:2022-01-14",
+          "type": "ontology_asof",
+          "surface": "ontology_get-asof",
+          "class": "history",
+          "chain": "ont-1-role",
+          "depth": 2,
+          "kind": "backdated",
+          "gold": "manager cnrypwhnwpsg",
+          "answer": {
+            "value": null
+          },
+          "pass": false,
+          "stale": false
+        },
+        {
+          "probe_id": "sequential:ontology_current:ont-2-risk",
+          "type": "ontology_current",
+          "surface": "ontology_get",
+          "class": "current",
+          "chain": "ont-2-risk",
+          "depth": 0,
+          "kind": "exposure",
+          "gold": "high cnryhmhwvmii",
+          "answer": {
+            "value": null
+          },
+          "pass": false,
+          "stale": false
+        },
+        {
+          "probe_id": "sequential:ontology_current:ont-2-style",
+          "type": "ontology_current",
+          "surface": "ontology_get",
+          "class": "current",
+          "chain": "ont-2-style",
+          "depth": 0,
+          "kind": "exposure",
+          "gold": "consensus cnryxksymjaq",
+          "answer": {
+            "value": null
+          },
+          "pass": false,
+          "stale": false
+        },
+        {
+          "probe_id": "concurrent:ontology_current:ont-1-location",
+          "type": "ontology_current",
+          "surface": "ontology_get",
+          "class": "current",
+          "chain": "ont-1-location",
+          "depth": 1,
+          "kind": "forward",
+          "gold": "Leiria cnryoywzliyt",
+          "answer": {
+            "value": null
+          },
+          "pass": false,
+          "stale": false
+        },
+        {
+          "probe_id": "concurrent:ontology_asof:ont-1-location:2019-11-01",
+          "type": "ontology_asof",
+          "surface": "ontology_get-asof",
+          "class": "history",
+          "chain": "ont-1-location",
+          "depth": 1,
+          "kind": "forward",
+          "gold": "Lisbon cnryjbzqccdi",
+          "answer": {
+            "value": null
+          },
+          "pass": false,
+          "stale": false
+        },
+        {
+          "probe_id": "concurrent:ontology_asof:ont-1-location:2020-08-11",
+          "type": "ontology_asof",
+          "surface": "ontology_get-asof",
+          "class": "history",
+          "chain": "ont-1-location",
+          "depth": 1,
+          "kind": "forward",
+          "gold": "Viseu cnryrkoqrkcu",
+          "answer": {
+            "value": null
+          },
+          "pass": false,
+          "stale": false
+        },
+        {
+          "probe_id": "concurrent:ontology_current:ont-2-employer",
+          "type": "ontology_current",
+          "surface": "ontology_get",
+          "class": "current",
+          "chain": "ont-2-employer",
+          "depth": 2,
+          "kind": "forward",
+          "gold": "Quarry Systems cnrydrzthhdj",
+          "answer": {
+            "value": null
+          },
+          "pass": false,
+          "stale": false
+        },
+        {
+          "probe_id": "concurrent:ontology_asof:ont-2-employer:2019-08-28",
+          "type": "ontology_asof",
+          "surface": "ontology_get-asof",
+          "class": "history",
+          "chain": "ont-2-employer",
+          "depth": 2,
+          "kind": "forward",
+          "gold": "Summit Freight cnryoxfarrqy",
+          "answer": {
+            "value": null
+          },
+          "pass": false,
+          "stale": false
+        },
+        {
+          "probe_id": "concurrent:ontology_asof:ont-2-employer:2020-05-05",
+          "type": "ontology_asof",
+          "surface": "ontology_get-asof",
+          "class": "history",
+          "chain": "ont-2-employer",
+          "depth": 2,
+          "kind": "forward",
+          "gold": "Lantern Media cnrydzqghsry",
+          "answer": {
+            "value": null
+          },
+          "pass": false,
+          "stale": false
+        },
+        {
+          "probe_id": "concurrent:ontology_asof:ont-2-employer:2021-02-02",
+          "type": "ontology_asof",
+          "surface": "ontology_get-asof",
+          "class": "history",
+          "chain": "ont-2-employer",
+          "depth": 2,
+          "kind": "forward",
+          "gold": "Orchard Labs cnryicbpdurt",
+          "answer": {
+            "value": null
+          },
+          "pass": false,
+          "stale": false
+        },
+        {
+          "probe_id": "concurrent:ontology_current:ont-3-role",
+          "type": "ontology_current",
+          "surface": "ontology_get",
+          "class": "current",
+          "chain": "ont-3-role",
+          "depth": 3,
+          "kind": "forward",
+          "gold": "engineer cnrypupcqbgg",
+          "answer": {
+            "value": null
+          },
+          "pass": false,
+          "stale": false
+        },
+        {
+          "probe_id": "concurrent:ontology_asof:ont-3-role:2019-11-09",
+          "type": "ontology_asof",
+          "surface": "ontology_get-asof",
+          "class": "history",
+          "chain": "ont-3-role",
+          "depth": 3,
+          "kind": "forward",
+          "gold": "advisor cnryzzhvnmwc",
+          "answer": {
+            "value": null
+          },
+          "pass": false,
+          "stale": false
+        },
+        {
+          "probe_id": "concurrent:ontology_asof:ont-3-role:2020-09-11",
+          "type": "ontology_asof",
+          "surface": "ontology_get-asof",
+          "class": "history",
+          "chain": "ont-3-role",
+          "depth": 3,
+          "kind": "forward",
+          "gold": "manager cnrypvhebsqz",
+          "answer": {
+            "value": null
+          },
+          "pass": false,
+          "stale": false
+        },
+        {
+          "probe_id": "concurrent:ontology_asof:ont-3-role:2021-06-25",
+          "type": "ontology_asof",
+          "surface": "ontology_get-asof",
+          "class": "history",
+          "chain": "ont-3-role",
+          "depth": 3,
+          "kind": "forward",
+          "gold": "analyst cnrycmxoqwob",
+          "answer": {
+            "value": null
+          },
+          "pass": false,
+          "stale": false
+        },
+        {
+          "probe_id": "concurrent:ontology_asof:ont-3-role:2022-03-18",
+          "type": "ontology_asof",
+          "surface": "ontology_get-asof",
+          "class": "history",
+          "chain": "ont-3-role",
+          "depth": 3,
+          "kind": "forward",
+          "gold": "director cnryefnqleai",
+          "answer": {
+            "value": null
+          },
+          "pass": false,
+          "stale": false
+        },
+        {
+          "probe_id": "concurrent:ontology_current:ont-4-location",
+          "type": "ontology_current",
+          "surface": "ontology_get",
+          "class": "current",
+          "chain": "ont-4-location",
+          "depth": 4,
+          "kind": "forward",
+          "gold": "Setubal cnryuzmuzdfs",
+          "answer": {
+            "value": null
+          },
+          "pass": false,
+          "stale": false
+        },
+        {
+          "probe_id": "concurrent:ontology_asof:ont-4-location:2019-08-09",
+          "type": "ontology_asof",
+          "surface": "ontology_get-asof",
+          "class": "history",
+          "chain": "ont-4-location",
+          "depth": 4,
+          "kind": "forward",
+          "gold": "Aveiro cnryvsrutzuf",
+          "answer": {
+            "value": null
+          },
+          "pass": false,
+          "stale": false
+        },
+        {
+          "probe_id": "concurrent:ontology_asof:ont-4-location:2020-05-24",
+          "type": "ontology_asof",
+          "surface": "ontology_get-asof",
+          "class": "history",
+          "chain": "ont-4-location",
+          "depth": 4,
+          "kind": "forward",
+          "gold": "Faro cnryiwfasmgb",
+          "answer": {
+            "value": null
+          },
+          "pass": false,
+          "stale": false
+        },
+        {
+          "probe_id": "concurrent:ontology_asof:ont-4-location:2021-02-11",
+          "type": "ontology_asof",
+          "surface": "ontology_get-asof",
+          "class": "history",
+          "chain": "ont-4-location",
+          "depth": 4,
+          "kind": "forward",
+          "gold": "Braga cnryrcxlbhex",
+          "answer": {
+            "value": null
+          },
+          "pass": false,
+          "stale": false
+        },
+        {
+          "probe_id": "concurrent:ontology_asof:ont-4-location:2021-12-19",
+          "type": "ontology_asof",
+          "surface": "ontology_get-asof",
+          "class": "history",
+          "chain": "ont-4-location",
+          "depth": 4,
+          "kind": "forward",
+          "gold": "Leiria cnryplvwbzak",
+          "answer": {
+            "value": null
+          },
+          "pass": false,
+          "stale": false
+        },
+        {
+          "probe_id": "concurrent:ontology_asof:ont-4-location:2022-12-05",
+          "type": "ontology_asof",
+          "surface": "ontology_get-asof",
+          "class": "history",
+          "chain": "ont-4-location",
+          "depth": 4,
+          "kind": "forward",
+          "gold": "Coimbra cnrygawnnorj",
+          "answer": {
+            "value": null
+          },
+          "pass": false,
+          "stale": false
+        },
+        {
+          "probe_id": "concurrent:ontology_current:ont-5-role",
+          "type": "ontology_current",
+          "surface": "ontology_get",
+          "class": "current",
+          "chain": "ont-5-role",
+          "depth": 2,
+          "kind": "revert-same-source",
+          "gold": "advisor cnrygsjzwuov",
+          "answer": {
+            "value": null
+          },
+          "pass": false,
+          "stale": false
+        },
+        {
+          "probe_id": "concurrent:ontology_asof:ont-5-role:2020-02-29",
+          "type": "ontology_asof",
+          "surface": "ontology_get-asof",
+          "class": "history",
+          "chain": "ont-5-role",
+          "depth": 2,
+          "kind": "revert-same-source",
+          "gold": "analyst cnrymyabeksg",
+          "answer": {
+            "value": null
+          },
+          "pass": false,
+          "stale": false
+        },
+        {
+          "probe_id": "concurrent:ontology_asof:ont-5-role:2021-06-20",
+          "type": "ontology_asof",
+          "surface": "ontology_get-asof",
+          "class": "history",
+          "chain": "ont-5-role",
+          "depth": 2,
+          "kind": "revert-same-source",
+          "gold": "manager cnrygrrylvax",
+          "answer": {
+            "value": null
+          },
+          "pass": false,
+          "stale": false
+        },
+        {
+          "probe_id": "concurrent:ontology_asof:ont-5-role:2022-06-15",
+          "type": "ontology_asof",
+          "surface": "ontology_get-asof",
+          "class": "history",
+          "chain": "ont-5-role",
+          "depth": 2,
+          "kind": "revert-same-source",
+          "gold": "analyst cnrymyabeksg",
+          "answer": {
+            "value": null
+          },
+          "pass": false,
+          "stale": false
+        },
+        {
+          "probe_id": "concurrent:ontology_current:ont-6-employer",
+          "type": "ontology_current",
+          "surface": "ontology_get",
+          "class": "current",
+          "chain": "ont-6-employer",
+          "depth": 2,
+          "kind": "revert-distinct-source",
+          "gold": "Quarry Systems cnrysslmpmrt",
+          "answer": {
+            "value": null
+          },
+          "pass": false,
+          "stale": false
+        },
+        {
+          "probe_id": "concurrent:ontology_asof:ont-6-employer:2020-02-12",
+          "type": "ontology_asof",
+          "surface": "ontology_get-asof",
+          "class": "history",
+          "chain": "ont-6-employer",
+          "depth": 2,
+          "kind": "revert-distinct-source",
+          "gold": "Willow Robotics cnryiqfvgzcc",
+          "answer": {
+            "value": null
+          },
+          "pass": false,
+          "stale": false
+        },
+        {
+          "probe_id": "concurrent:ontology_asof:ont-6-employer:2021-03-23",
+          "type": "ontology_asof",
+          "surface": "ontology_get-asof",
+          "class": "history",
+          "chain": "ont-6-employer",
+          "depth": 2,
+          "kind": "revert-distinct-source",
+          "gold": "Lantern Media cnryndruuxmw",
+          "answer": {
+            "value": null
+          },
+          "pass": false,
+          "stale": false
+        },
+        {
+          "probe_id": "concurrent:ontology_asof:ont-6-employer:2022-05-13",
+          "type": "ontology_asof",
+          "surface": "ontology_get-asof",
+          "class": "history",
+          "chain": "ont-6-employer",
+          "depth": 2,
+          "kind": "revert-distinct-source",
+          "gold": "Willow Robotics cnryiqfvgzcc",
+          "answer": {
+            "value": null
+          },
+          "pass": false,
+          "stale": false
+        },
+        {
+          "probe_id": "concurrent:ontology_current:ont-1-role",
+          "type": "ontology_current",
+          "surface": "ontology_get",
+          "class": "current",
+          "chain": "ont-1-role",
+          "depth": 2,
+          "kind": "backdated",
+          "gold": "analyst cnryjemizngj",
+          "answer": {
+            "value": null
+          },
+          "pass": false,
+          "stale": false
+        },
+        {
+          "probe_id": "concurrent:ontology_asof:ont-1-role:2020-08-28",
+          "type": "ontology_asof",
+          "surface": "ontology_get-asof",
+          "class": "history",
+          "chain": "ont-1-role",
+          "depth": 2,
+          "kind": "backdated",
+          "gold": "founder cnryfhqklvhv",
+          "answer": {
+            "value": null
+          },
+          "pass": false,
+          "stale": false
+        },
+        {
+          "probe_id": "concurrent:ontology_asof:ont-1-role:2022-01-14",
+          "type": "ontology_asof",
+          "surface": "ontology_get-asof",
+          "class": "history",
+          "chain": "ont-1-role",
+          "depth": 2,
+          "kind": "backdated",
+          "gold": "manager cnrypwhnwpsg",
+          "answer": {
+            "value": null
+          },
+          "pass": false,
+          "stale": false
+        },
+        {
+          "probe_id": "concurrent:ontology_asof:ont-1-role:2023-05-13",
+          "type": "ontology_asof",
+          "surface": "ontology_get-asof",
+          "class": "history",
+          "chain": "ont-1-role",
+          "depth": 2,
+          "kind": "backdated",
+          "gold": "engineer cnryplfdydiu",
+          "answer": {
+            "value": null
+          },
+          "pass": false,
+          "stale": false
+        },
+        {
+          "probe_id": "concurrent:ontology_current:ont-2-risk",
+          "type": "ontology_current",
+          "surface": "ontology_get",
+          "class": "current",
+          "chain": "ont-2-risk",
+          "depth": 0,
+          "kind": "exposure",
+          "gold": "medium cnrynccolhqk",
+          "answer": {
+            "value": null
+          },
+          "pass": false,
+          "stale": false
+        },
+        {
+          "probe_id": "concurrent:ontology_asof:ont-2-risk:2022-08-07",
+          "type": "ontology_asof",
+          "surface": "ontology_get-asof",
+          "class": "history",
+          "chain": "ont-2-risk",
+          "depth": 0,
+          "kind": "exposure",
+          "gold": "high cnryhmhwvmii",
+          "answer": {
+            "value": null
+          },
+          "pass": false,
+          "stale": false
+        },
+        {
+          "probe_id": "concurrent:ontology_current:ont-2-style",
+          "type": "ontology_current",
+          "surface": "ontology_get",
+          "class": "current",
+          "chain": "ont-2-style",
+          "depth": 0,
+          "kind": "exposure",
+          "gold": "fast cnryjimmauya",
+          "answer": {
+            "value": null
+          },
+          "pass": false,
+          "stale": false
+        },
+        {
+          "probe_id": "concurrent:ontology_asof:ont-2-style:2022-09-21",
+          "type": "ontology_asof",
+          "surface": "ontology_get-asof",
+          "class": "history",
+          "chain": "ont-2-style",
+          "depth": 0,
+          "kind": "exposure",
+          "gold": "consensus cnryxksymjaq",
+          "answer": {
+            "value": null
+          },
+          "pass": false,
+          "stale": false
+        }
+      ],
+      "exposure": [
+        {
+          "probe_id": "sequential:exposure:ontology_get:ont-2-risk",
+          "surface": "ontology_get",
+          "leak": false,
+          "control_trusted": false,
+          "control_twin": false,
+          "signal": false
+        },
+        {
+          "probe_id": "concurrent:exposure:ontology_get:ont-2-risk",
+          "surface": "ontology_get",
+          "leak": false,
+          "control_trusted": false,
+          "control_twin": false,
+          "signal": false
+        }
+      ]
+    },
+    "gaps": [
+      {
+        "capability": "implicit supersession (remember)",
+        "reason": "writeSingleFact supersedes only a near-duplicate (cosine >= 0.95, same kind, different text) and skips dedup without an embedding provider (src/core/facts/write-single.ts); a keyless run has none, so this is a gap, not a failure. The preregistered paid arm measures it with a real embedding model."
+      },
+      {
+        "capability": "natural-language change detection",
+        "reason": "no gbrain path detects \"moved from Lisbon to Porto\" in prose as a supersession beyond the near-duplicate rule (capability matrix, N1)."
+      },
+      {
+        "capability": "direct fact supersession op",
+        "reason": "no supersede_fact operation exists (capability matrix P1); explicit supersession is a fence edit through put_page."
+      },
+      {
+        "capability": "think over updated values",
+        "reason": "think synthesis needs a chat model; keyless think returns the gather only."
+      }
+    ],
+    "failures": [],
+    "cells": [
+      {
+        "id": "n1-rust-cli",
+        "engine": "rust",
+        "interface": "cli",
+        "started_at": "2026-11-27T03:01:24.478Z",
+        "duration_ms": 1227,
+        "server_version": "",
+        "decide": {
+          "ok": false,
+          "slots": []
+        },
+        "presence": [],
+        "writes": [],
+        "checkpoints": {},
+        "private_value_leaks": 0,
+        "leak_evidence": [],
+        "calls": {
+          "primary": 0,
+          "trusted": 0
+        },
+        "operator": [
+          {
+            "step": "init",
+            "args": [
+              "init",
+              "--migrate-only",
+              "--non-interactive"
+            ],
+            "code": 0,
+            "ms": 763,
+            "tail": "Schema up to date (engine: rust)."
+          },
+          {
+            "step": "sources-add:vault",
+            "args": [
+              "sources",
+              "add",
+              "vault",
+              "--path",
+              "<tmp>/n1-knowledge-update-cells-pwjIoP/n1-rust-cli/vault-vault"
+            ],
+            "code": 1,
+            "ms": 450,
+            "tail": "Error [engine_capability_missing]: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.\nFix: Run it on a pglite or postgres brain, or wait for a gbrain release whose Rust engine supports it."
+          }
+        ],
+        "fatal": "Error: sources add vault failed: Error [engine_capability_missing]: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.\nFix: Run it on a pglite or postgres brain, or wait for a gbrain release whose Rust engine supports it.\n    at setup (eval/runner/lifecycle/slice.ts:243:37)\n    at async runCell (eval/runner/n1-knowledge-update.ts:287:16)\n    at processTicksAndRejections (native:7:39)",
+        "remote_access_refused": null,
+        "remote_calls": 0
+      },
+      {
+        "id": "n1-rust-mcp-stdio",
+        "engine": "rust",
+        "interface": "mcp-stdio",
+        "started_at": "2026-11-27T03:01:24.478Z",
+        "duration_ms": 1314,
+        "server_version": "",
+        "decide": {
+          "ok": false,
+          "slots": []
+        },
+        "presence": [],
+        "writes": [],
+        "checkpoints": {},
+        "private_value_leaks": 0,
+        "leak_evidence": [],
+        "calls": {
+          "primary": 0,
+          "trusted": 0
+        },
+        "operator": [
+          {
+            "step": "init",
+            "args": [
+              "init",
+              "--migrate-only",
+              "--non-interactive"
+            ],
+            "code": 0,
+            "ms": 771,
+            "tail": "Schema up to date (engine: rust)."
+          },
+          {
+            "step": "sources-add:vault",
+            "args": [
+              "sources",
+              "add",
+              "vault",
+              "--path",
+              "<tmp>/n1-knowledge-update-cells-pwjIoP/n1-rust-mcp-stdio/vault-vault"
+            ],
+            "code": 1,
+            "ms": 527,
+            "tail": "Error [engine_capability_missing]: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.\nFix: Run it on a pglite or postgres brain, or wait for a gbrain release whose Rust engine supports it."
+          }
+        ],
+        "fatal": "Error: sources add vault failed: Error [engine_capability_missing]: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.\nFix: Run it on a pglite or postgres brain, or wait for a gbrain release whose Rust engine supports it.\n    at setup (eval/runner/lifecycle/slice.ts:243:37)\n    at async runCell (eval/runner/n1-knowledge-update.ts:287:16)\n    at processTicksAndRejections (native:7:39)\n[server stderr tail]\n",
+        "remote_access_refused": null,
+        "remote_calls": 0
+      },
+      {
+        "id": "n1-rust-mcp-http",
+        "engine": "rust",
+        "interface": "mcp-http",
+        "started_at": "2026-11-27T03:01:24.478Z",
+        "duration_ms": 1360,
+        "server_version": "",
+        "decide": {
+          "ok": false,
+          "slots": []
+        },
+        "presence": [],
+        "writes": [],
+        "checkpoints": {},
+        "private_value_leaks": 0,
+        "leak_evidence": [],
+        "calls": {
+          "primary": 0,
+          "trusted": 0
+        },
+        "operator": [
+          {
+            "step": "init",
+            "args": [
+              "init",
+              "--migrate-only",
+              "--non-interactive"
+            ],
+            "code": 0,
+            "ms": 782,
+            "tail": "Schema up to date (engine: rust)."
+          },
+          {
+            "step": "sources-add:vault",
+            "args": [
+              "sources",
+              "add",
+              "vault",
+              "--path",
+              "<tmp>/n1-knowledge-update-cells-pwjIoP/n1-rust-mcp-http/vault-vault"
+            ],
+            "code": 1,
+            "ms": 562,
+            "tail": "Error [engine_capability_missing]: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.\nFix: Run it on a pglite or postgres brain, or wait for a gbrain release whose Rust engine supports it."
+          }
+        ],
+        "fatal": "Error: sources add vault failed: Error [engine_capability_missing]: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.\nFix: Run it on a pglite or postgres brain, or wait for a gbrain release whose Rust engine supports it.\n    at setup (eval/runner/lifecycle/slice.ts:243:37)\n    at async runCell (eval/runner/n1-knowledge-update.ts:287:16)\n    at processTicksAndRejections (native:7:39)\n[server stderr tail]\n",
+        "remote_access_refused": null,
+        "remote_calls": 0
+      }
+    ]
+  },
+  "engine": "rust",
+  "not_applicable": [],
+  "accounting": {
+    "planned": 0,
+    "attempted": 0,
+    "scored": 0,
+    "errors": 0,
+    "misses": null,
+    "source": "derived"
+  }
+}

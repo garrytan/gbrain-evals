@@ -1,0 +1,44 @@
+
+== PGLite ==
+[pglite] dataset {"pages":10000,"base_pages":240,"filler_pages":9760,"links":20015,"timeline":31573,"quality_queries":71,"probes":400} fingerprint 779c5dc052cd
+[pglite] importing 10000 pages
+[pglite] imported 5000 in 183s; last 5000 at 27.3 pages/s, p50 36.9 ms
+[pglite] imported 10000 in 515s; last 5000 at 15.1 pages/s, p50 65.9 ms
+[pglite] rankings and steady-state reads
+[pglite] cold start x11
+
+== Postgres + pgvector ==
+[postgres] started container gbrain-engine-bench-2837-1795752040028 on 127.0.0.1:45515
+[postgres] dataset {"pages":10000,"base_pages":240,"filler_pages":9760,"links":20015,"timeline":31573,"quality_queries":71,"probes":400} fingerprint 779c5dc052cd
+[postgres] importing 10000 pages
+[postgres] imported 5000 in 173s; last 5000 at 28.9 pages/s, p50 33.5 ms
+[postgres] imported 10000 in 347s; last 5000 at 28.9 pages/s, p50 34.3 ms
+[postgres] rankings and steady-state reads
+[postgres] cold start x11
+
+== Rust ==
+[rust] dataset {"pages":10000,"base_pages":240,"filler_pages":9760,"links":20015,"timeline":31573,"quality_queries":71,"probes":400} fingerprint 779c5dc052cd
+[rust] importing 10000 pages
+[rust] unavailable at import: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.
+
+== Paired: PGLite vs Postgres + pgvector ==
+[paired pglite-vs-postgres] get_page                 median postgres 2.10 ms, pglite 2.05 ms (n=10000)
+[paired pglite-vs-postgres] put_page                 median postgres 36.11 ms, pglite 49.95 ms (n=10000)
+[paired pglite-vs-postgres] search_keyword           median postgres 12.93 ms, pglite 15.20 ms (n=10000)
+[paired pglite-vs-postgres] search_vector            median postgres 20.25 ms, pglite 30.90 ms (n=10000)
+[paired pglite-vs-postgres] search_hybrid            median postgres 89.07 ms, pglite 127.93 ms (n=10000)
+[paired pglite-vs-postgres] search_keyword_filtered  median postgres 9.51 ms, pglite 10.07 ms (n=2000)
+[paired pglite-vs-postgres] search_vector_filtered   median postgres 99.83 ms, pglite 77.69 ms (n=2000)
+[paired pglite-vs-postgres] graph_walk_d1            median postgres 2.13 ms, pglite 10.23 ms (n=2000)
+[paired pglite-vs-postgres] graph_walk_d2            median postgres 2.28 ms, pglite 10.42 ms (n=2000)
+[paired pglite-vs-postgres] graph_walk_d3            median postgres 2.56 ms, pglite 10.61 ms (n=2000)
+[paired pglite-vs-postgres] get_backlinks            median postgres 1.85 ms, pglite 10.12 ms (n=2000)
+[paired pglite-vs-postgres] get_timeline             median postgres 0.61 ms, pglite 0.35 ms (n=2000)
+[paired pglite-vs-postgres] list_pages               median postgres 1.90 ms, pglite 1.88 ms (n=2000)
+[paired pglite-vs-postgres] 1 clients: read 34 vs 25 ops/s; write 27 vs 54 pages/s
+[paired pglite-vs-postgres] 4 clients: read 118 vs 19 ops/s; write 100 vs 58 pages/s
+[paired pglite-vs-postgres] 16 clients: read 293 vs 16 ops/s; write 268 vs 58 pages/s
+[postgres] removed container gbrain-engine-bench-2837-1795752040028
+
+wrote out/speed/speed-2026-11-27T05-44-01-10000.json (6933s)
+/home/ubi/work/gbrain-evals/out/speed/speed-2026-11-27T05-44-01-10000.json

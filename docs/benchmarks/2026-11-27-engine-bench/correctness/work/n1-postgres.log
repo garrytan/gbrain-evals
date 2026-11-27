@@ -1,0 +1,37 @@
+# BrainBench N1: knowledge update and supersession (gbrain 0.60.777.0, overlay d8eb357)
+[n1] start postgres/cli
+[n1] start postgres/mcp-stdio
+[n1] start postgres/mcp-http
+[n1] n1-postgres-mcp-stdio updated: 70/70 probes pass, 0 stale
+[n1] n1-postgres-mcp-http updated: 70/70 probes pass, 0 stale
+[n1] n1-postgres-mcp-stdio restart: 70/70 probes pass, 0 stale
+[n1] n1-postgres-mcp-http restart: 70/70 probes pass, 0 stale
+[n1] n1-postgres-mcp-stdio reimport: 70/70 probes pass, 0 stale
+[n1] n1-postgres-mcp-http reimport: 70/70 probes pass, 0 stale
+[n1] n1-postgres-mcp-stdio concurrent: 78/78 probes pass, 0 stale
+[n1] done n1-postgres-mcp-stdio in 82s
+[n1] n1-postgres-mcp-http concurrent: 78/78 probes pass, 0 stale
+[n1] done n1-postgres-mcp-http in 85s
+[n1] n1-postgres-cli updated: 78/78 probes pass, 0 stale
+[n1] n1-postgres-cli restart: 78/78 probes pass, 0 stale
+[n1] n1-postgres-cli reimport: 78/78 probes pass, 0 stale
+[n1] n1-postgres-cli concurrent: 87/87 probes pass, 0 stale
+[n1] done n1-postgres-cli in 240s
+  Setting up brain schema (v338)...
+  v142: takes.embedding resized to vector(1024); existing take vectors cleared
+  333 migration(s) applied
+
+verdict: pass
+safety contracts (postgres cells, 3 cells):
+  stale values served as current: 0 of 773 current-value and history probes
+  private values in remote responses: 0 (exposure probes with signal: 32 of 32)
+  acknowledged writes lost: 0
+quality metrics:
+  current-value accuracy: 100.0% (388 of 388 current-value probes)
+  history retained: 100.0% (385 of 385 history probes)
+  negative controls: 124 of 124
+  postgres (report-only): current 100.0% of 388, stale 0, history 100.0%, leaks 0, lost 0
+  in-process ontology arm (unmanaged engine, exploratory): current 100.0% of 18, stale 0, as-of 100.0%, remote leaks 0
+promotion rules: pass (none failed)
+gbrain findings: see docs/benchmarks/2026-10-01-wave-bugs.md (N1-*)
+receipt: /home/ubi/work/gbrain-evals/out/correctness-work/n1-postgres/receipt.json

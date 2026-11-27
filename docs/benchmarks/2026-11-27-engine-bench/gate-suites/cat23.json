@@ -1,0 +1,51 @@
+{
+  "schema": "engine-bench.gate-suite/1",
+  "suite": "cat23",
+  "gate": "E3",
+  "counted": true,
+  "amendment_text": "cat23 (E3, Cat 23 phantom to canonical redirect (scored against PGLite's pg_trgm decisions); eval/runner/cat23-phantom-redirect.ts): Rust is within 0.5 points of, or equal in count to, each TypeScript engine.",
+  "gbrain": {
+    "overlay": {
+      "commit": "d8eb35769120cf0b60704478aaef96a412ee0009",
+      "ref": "d8eb35769120cf0b60704478aaef96a412ee0009",
+      "checkout_dirty": false
+    },
+    "rust_addon": {
+      "sha256": "d325d17502bda4dd3ebcd73ff73a45e15016e87823a0c50cd4bb9261d4748d74",
+      "target": "linux-x64-glibc"
+    }
+  },
+  "verdict": "FAIL",
+  "reason": "Rust run did not complete (error): This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran. | The Rust run refused 1 engine calls at: core/persistence/maintenance.ts:59 (readManagedModeRows, persistence_journal, from core/import-file.ts:347) x1",
+  "rows": [
+    {
+      "id": "cat23",
+      "benchmark": "Cat 23 phantom to canonical redirect (scored against PGLite's pg_trgm decisions)",
+      "verdict": "FAIL",
+      "measured": {
+        "pglite": {
+          "redirects_correct": 6,
+          "refusals_correct": 3,
+          "resolver_errors": 0
+        },
+        "postgres": {
+          "redirects_correct": 6,
+          "refusals_correct": 3,
+          "resolver_errors": 0
+        },
+        "rust": null
+      },
+      "reason": "Rust run did not complete (error): This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran. | The Rust run refused 1 engine calls at: core/persistence/maintenance.ts:59 (readManagedModeRows, persistence_journal, from core/import-file.ts:347) x1"
+    }
+  ],
+  "losses": [
+    {
+      "id": "cat23",
+      "reason": "Rust run did not complete (error): This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+    },
+    {
+      "id": "cat23:refusal-sites",
+      "reason": "The Rust run refused 1 engine calls at: core/persistence/maintenance.ts:59 (readManagedModeRows, persistence_journal, from core/import-file.ts:347) x1"
+    }
+  ]
+}

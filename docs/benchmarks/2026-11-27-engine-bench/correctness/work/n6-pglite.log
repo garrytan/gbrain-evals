@@ -1,0 +1,354 @@
+  Setting up brain schema (v338)...
+  v142: takes.embedding resized to vector(1024); existing take vectors cleared
+  333 migration(s) applied
+[n6] gbrain 0.60.777.0 (overlay d8eb35769120); 224 operations, 99 read ops fuzzed; presence ok
+[backup] checked 1 asset(s): 1 without a git remote (computed_by=serve)
+[n6] entity                       probes=162 signal=40 leaks=0 oracles=0
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[gbrain] vector search unavailable (no_gateway_config) — results are keyword-only. Run `gbrain doctor` to diagnose.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[n6] synthesize                   probes=54 signal=0 leaks=0 oracles=0
+[n6] get_page                     probes=972 signal=300 leaks=0 oracles=0
+[n6] list_pages                   probes=378 signal=372 leaks=0 oracles=0
+[n6] fetch                        probes=378 signal=64 leaks=0 oracles=0
+[n6] find_pages                   probes=0 signal=0 leaks=0 oracles=0 unsupported: no synthesis rule for required string param "pattern"
+[n6] list_write_conflicts         probes=18 signal=4 leaks=0 oracles=0
+[n6] search                       probes=1296 signal=808 leaks=0 oracles=0
+[n6] query                        probes=1404 signal=856 leaks=0 oracles=0
+[n6] assemble_evidence            probes=810 signal=192 leaks=0 oracles=0
+[n6] search_modes                 probes=6 signal=0 leaks=0 oracles=0
+[n6] search_exact                 probes=0 signal=0 leaks=0 oracles=0 unsupported: no synthesis rule for required string param "phrase"
+[n6] search_by_image              probes=162 signal=0 leaks=0 oracles=0
+[n6] get_tags                     probes=54 signal=4 leaks=0 oracles=0
+[n6] get_links                    probes=324 signal=48 leaks=0 oracles=0
+[n6] get_backlinks                probes=324 signal=30 leaks=0 oracles=0
+[n6] list_link_sources            probes=6 signal=0 leaks=0 oracles=0
+[n6] traverse_graph               probes=324 signal=114 leaks=0 oracles=0
+[n6] wanted_pages                 probes=18 signal=0 leaks=0 oracles=0
+[n6] get_timeline                 probes=486 signal=16 leaks=0 oracles=0
+[n6] get_brain_health             probes=6 signal=0 leaks=0 oracles=0
+[n6] get_versions                 probes=270 signal=48 leaks=0 oracles=0
+[n6] get_brain_identity           probes=6 signal=0 leaks=0 oracles=0
+[n6] list_skills                  probes=162 signal=0 leaks=0 oracles=0
+[n6] get_skill                    probes=162 signal=0 leaks=0 oracles=0
+[n6] list_brain_skillpack         probes=6 signal=0 leaks=0 oracles=0
+[n6] advisor                      probes=6 signal=0 leaks=0 oracles=0
+[n6] get_skill_asset              probes=0 signal=0 leaks=0 oracles=0 unsupported: no synthesis rule for required string param "revision"
+[n6] join_brain                   probes=0 signal=0 leaks=0 oracles=0 unsupported: no synthesis rule for required string param "adapter"
+[n6] sync_brain_skills            probes=0 signal=0 leaks=0 oracles=0 unsupported: no synthesis rule for required string param "installation_id"
+[n6] leave_brain                  probes=0 signal=0 leaks=0 oracles=0 unsupported: no synthesis rule for required string param "installation_id"
+[n6] get_raw_data                 probes=54 signal=4 leaks=0 oracles=0
+[n6] resolve_slugs                probes=162 signal=66 leaks=0 oracles=0
+[n6] get_chunks                   probes=378 signal=48 leaks=0 oracles=0
+[n6] whois                        probes=162 signal=0 leaks=0 oracles=0
+[n6] get_ingest_log               probes=6 signal=0 leaks=0 oracles=0
+[n6] storage_find                 probes=594 signal=0 leaks=0 oracles=0
+[n6] storage_get                  probes=54 signal=0 leaks=0 oracles=0
+[n6] storage_list                 probes=66 signal=0 leaks=0 oracles=0
+[n6] reveal_secret                probes=54 signal=0 leaks=0 oracles=0
+[n6] check_claims                 probes=0 signal=0 leaks=0 oracles=0 unsupported: no synthesis rule for required string param "text"
+[n6] policy_check                 probes=0 signal=0 leaks=0 oracles=0 unsupported: no synthesis rule for required string param "verb"
+[n6] agent_policy                 probes=6 signal=0 leaks=0 oracles=0
+[n6] capabilities                 probes=6 signal=0 leaks=0 oracles=0
+[n6] ledger                       probes=60 signal=0 leaks=0 oracles=0
+[orphans.scan] start
+[orphans.scan] done
+[orphans.scan] start
+[orphans.scan] done
+[orphans.scan] start
+[orphans.scan] done
+[orphans.scan] start
+[orphans.scan] done
+[orphans.scan] start
+[orphans.scan] done
+[orphans.scan] start
+[orphans.scan] done
+[orphans.scan] start
+[orphans.scan] done
+[n6] find_orphans                 probes=18 signal=8 leaks=0 oracles=0
+[n6] rank_entities                probes=36 signal=0 leaks=0 oracles=0
+[n6] get_calibration_profile      probes=54 signal=0 leaks=0 oracles=0
+[n6] takes_list                   probes=378 signal=48 leaks=0 oracles=0
+[n6] takes_search                 probes=378 signal=16 leaks=0 oracles=0
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[n6] think                        probes=54 signal=32 leaks=0 oracles=0
+[n6] takes_scorecard              probes=162 signal=0 leaks=0 oracles=0
+[n6] takes_calibration            probes=54 signal=0 leaks=0 oracles=0
+[n6] whoami                       probes=6 signal=0 leaks=0 oracles=0
+[n6] sources_list                 probes=6 signal=0 leaks=0 oracles=0
+[n6] sources_status               probes=54 signal=0 leaks=0 oracles=0
+[n6] sources_resolve_path         probes=0 signal=0 leaks=0 oracles=0 unsupported: no synthesis rule for required array param "paths"
+[n6] request_tools                probes=24 signal=0 leaks=0 oracles=0
+[n6] get_recent_salience          probes=162 signal=90 leaks=0 oracles=0
+[n6] find_anomalies               probes=6 signal=0 leaks=0 oracles=0
+[n6] chronicle_day                probes=54 signal=4 leaks=0 oracles=0
+[n6] chronicle_on_this_day        probes=54 signal=0 leaks=0 oracles=0
+[n6] chronicle_since              probes=54 signal=12 leaks=0 oracles=0
+[n6] chronicle_last_seen          probes=54 signal=20 leaks=0 oracles=0
+[n6] ontology_get                 probes=54 signal=4 leaks=0 oracles=0
+[n6] ontology_dimensions          probes=6 signal=0 leaks=0 oracles=0
+[n6] ontology_conflicts           probes=6 signal=0 leaks=0 oracles=0
+[n6] volunteer_chronicle          probes=54 signal=4 leaks=0 oracles=0
+[n6] volunteer_context            probes=378 signal=64 leaks=0 oracles=0
+[n6] extraction_pending           probes=6 signal=0 leaks=0 oracles=0
+[n6] entity_identity_list         probes=54 signal=0 leaks=0 oracles=0
+[n6] recall                       probes=918 signal=244 leaks=0 oracles=0
+[n6] context_pack                 probes=648 signal=348 leaks=0 oracles=0
+[n6] delta                        probes=432 signal=240 leaks=0 oracles=0
+[n6] memory_recall                probes=270 signal=0 leaks=0 oracles=0
+[n6] get_memory_settings          probes=6 signal=0 leaks=0 oracles=0
+[n6] find_contradictions          probes=540 signal=160 leaks=0 oracles=0
+[n6] find_experts                 probes=54 signal=0 leaks=0 oracles=0
+[n6] find_trajectory              probes=216 signal=16 leaks=0 oracles=0
+[n6] code_callers                 probes=162 signal=0 leaks=0 oracles=0
+[n6] code_callees                 probes=162 signal=0 leaks=0 oracles=0
+[n6] code_def                     probes=54 signal=0 leaks=0 oracles=0
+[n6] code_refs                    probes=54 signal=0 leaks=0 oracles=0
+[n6] code_blast                   probes=162 signal=0 leaks=0 oracles=0
+[n6] code_flow                    probes=162 signal=0 leaks=0 oracles=0
+[n6] get_active_schema_pack       probes=6 signal=0 leaks=0 oracles=0
+[n6] list_schema_packs            probes=6 signal=0 leaks=0 oracles=0
+[n6] schema_stats                 probes=6 signal=0 leaks=0 oracles=0
+[n6] schema_lint                  probes=6 signal=0 leaks=0 oracles=0
+[n6] schema_graph                 probes=6 signal=0 leaks=0 oracles=0
+[n6] schema_explain_type          probes=6 signal=0 leaks=0 oracles=0
+[n6] schema_review_orphans        probes=6 signal=0 leaks=0 oracles=0
+[n6] open_loops                   probes=810 signal=0 leaks=0 oracles=0
+[n6] household_due                probes=36 signal=0 leaks=0 oracles=0
+[n6] questions_list               probes=6 signal=0 leaks=0 oracles=0
+[n6] questions_status             probes=54 signal=0 leaks=0 oracles=0
+[n6] learned                      probes=6 signal=0 leaks=0 oracles=0
+[n6] onboarding_status            probes=6 signal=0 leaks=0 oracles=0
+[n6] propose_jobs                 probes=6 signal=0 leaks=0 oracles=0
+[n6] coverage 33/99 read ops; content leaks 0, existence 0, oracles 0, gate bypasses 0; receipt /home/ubi/work/gbrain-evals/out/correctness-work/n6-pglite/receipt.json
