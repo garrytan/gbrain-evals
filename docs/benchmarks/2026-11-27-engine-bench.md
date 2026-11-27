@@ -37,7 +37,7 @@ This build misses the preregistered trigger, which asks for a build that serves 
 
 **Remote callers.** Registering an OAuth client on a Rust brain (`gbrain auth register-client`) refuses with `engine_capability_missing` (raw_sql) at `oauth-provider.ts:1114`, so a Rust brain cannot serve remote MCP callers on this build. That is a named gap under item 7 of the 2026-11-20 amendment.
 
-**Speed, PGLite against Postgres.** The speed arm ran at 10,000 pages ([speed/](2026-11-27-engine-bench/speed/)). Postgres was faster on writes, graph walks and backlinks, and on reads with several clients: at 16 clients it served 293 reads per second against PGLite's 16. Single-page reads were about equal (median 2.10 ms on Postgres, 2.05 ms on PGLite).
+**Speed, PGLite against Postgres.** The speed arm ran at 10,000 pages ([speed/](2026-11-27-engine-bench/speed/)). Postgres had lower `put_page` latency (median 36.1 ms against 50.0 ms) and was faster on graph walks and backlinks. It also handled more reads and writes once several clients ran at once: at 16 clients, 293 reads per second against PGLite's 16, and 268 pages written per second against 58. With one client, PGLite wrote faster (54 pages per second against 27). Single-page reads were about equal (median 2.10 ms on Postgres, 2.05 ms on PGLite).
 
 ## Reproduce
 
