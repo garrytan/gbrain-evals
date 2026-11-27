@@ -7,7 +7,7 @@ import { dirname, join } from 'node:path';
 const policy = JSON.parse(readFileSync(new URL('../../.gstack/ship-policy.json', import.meta.url), 'utf8')) as { review_exclude_paths: string[] };
 const GLOBS = [
   'docs/benchmarks/*-engine-bench/correctness/work/*/receipt.json', 'docs/benchmarks/*-engine-bench/speed/*speed-*-10000.json',
-  'docs/benchmarks/*-engine-bench/lme-recall/lme-w*', 'docs/benchmarks/*-engine-bench/lme-recall/aggregate.json',
+  'docs/benchmarks/*-engine-bench/lme-recall/lme-w[0-9]*', 'docs/benchmarks/*-engine-bench/lme-recall/aggregate.json',
 ];
 const RUN = 'docs/benchmarks/2026-11-17-engine-bench';
 
@@ -34,6 +34,7 @@ const kept = [
   `${RUN}/lme-recall/cache.sha256`,
   'docs/benchmarks/2026-12-01-engine-bench/gate-suites/cat10.json',
   'docs/benchmarks/x/y-engine-bench/lme-recall/aggregate.json',
+  'docs/benchmarks/2026-12-01-engine-bench/lme-recall/lme-worker-notes.md',
   `${RUN}/surface-parity/surface-parity-2026-11-17T09-11-34-800Z.json`,
   'docs/benchmarks/2026-11-17-engine-bench-preregistration.md',
   'docs/benchmarks/x/y-engine-bench/correctness/work/n1-pglite/receipt.json',
@@ -45,7 +46,7 @@ describe('ship policy: reviewers leave out the bulky engine-bench receipts', () 
     for (const glob of GLOBS) expect(policy.review_exclude_paths).toContain(glob);
   });
 
-  test("git's glob dialect matches the per-runner correctness receipts and 10,000-page speed receipts only", () => {
+  test("git's glob dialect matches the per-runner correctness receipts, 10,000-page speed receipts, LongMemEval-S worker files and stage 3 aggregate only", () => {
     const repo = mkdtempSync(join(tmpdir(), 'review-exclude-'));
     try {
       const git = (...args: string[]) => execFileSync('git', ['-C', repo, ...args], { encoding: 'utf8' });
