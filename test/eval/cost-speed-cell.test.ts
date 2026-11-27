@@ -37,7 +37,7 @@ const LATE = new Set(['conv-a']);
 class EmbeddingFake extends FakeMemorySystem {
   private written = new Map<string, number>();
   private hidden: string | null = null;
-  constructor(private readonly provider: string, private readonly opts: { expand?: boolean; hide?: string; hideMs?: number; trigger?: boolean; fail?: string; undrained?: boolean } = {}) { super(); }
+  constructor(private readonly provider: string, private readonly opts: { expand?: boolean; hide?: string; hideMs?: number; trigger?: boolean; triggerExit?: number; fail?: string; undrained?: boolean } = {}) { super(); }
   async finishIngest() {
     const f = await super.finishIngest();
     return this.opts.undrained ? { ...f, raw: { ...(f.raw ?? {}), background_liabilities: { drained: false, pending_jobs: { facts: 2 } } } } : f;
@@ -46,7 +46,7 @@ class EmbeddingFake extends FakeMemorySystem {
   async trigger(ns: string, job: string) {
     this.triggered.push(`${ns}:${job}`);
     await this.post('chat/completions', { model: 'gpt-4.1-mini', max_tokens: 50, messages: [{ role: 'user', content: 'upkeep round' }] });
-    return { job, exit: 0 };
+    return { job, exit: this.opts.triggerExit ?? 0, ...(this.opts.triggerExit ? { stderr_tail: 'maintain: lock held' } : {}) };
   }
   private post(path: string, body: unknown) {
     return fetch(`${this.provider}/fake/openai/v1/${path}`, { method: 'POST', headers: { 'content-type': 'application/json', authorization: 'Bearer dummy' }, body: JSON.stringify(body) });
@@ -199,6 +199,16 @@ describe('held-back probes', () => {
     expect(idle.requests).toBe(usage.filter(l => l.key === `tail:idle:${rid}`).length);
     expect(usage.filter(l => l.key === `tail:idle:${rid}` && l.route === '/v1/chat/completions')).toHaveLength(0);
     for (const c of ['conv-a', 'conv-c']) expect(() => readFileSync(join(out, 'runs', def.id, 'r', realizationId(def.id, c, 0), 'idle.json'))).toThrow();
+  }, 60_000);
+
+  test('a trigger that exits nonzero is recorded as failed, and the loader names it so no idle cost is priced without it', async () => {
+    const { def, out, usage } = await run('trigger-exit', { trigger: true, triggerExit: 1 });
+    const rid = realizationId(def.id, 'conv-b', 0);
+    const idle = JSON.parse(readFileSync(join(out, 'runs', def.id, 'r', rid, 'idle.json'), 'utf8'));
+    expect(idle.triggers[0].error).toBe('trigger maintain exited 1: maintain: lock held');
+    const ladder = { provider: 'invented', instances: [{ name: 'small', memory_gib: 2, usd_per_hour: 0.02 }], storage_usd_per_gb_month: 0.1 };
+    const loaded = cs1Load([{ dir: out, usage }], { cells: new Map([[def.id, def.system]]), questions: new Map(), ladder, stacks: { [def.system]: 'stack' } });
+    expect(loaded.failed_triggers).toEqual([`${def.id} conv-b: daily upkeep round`]);
   }, 60_000);
 
   test('the loader puts every billed dollar in one bucket of one world, and the buckets sum back to the usage log', async () => {

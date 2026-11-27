@@ -128,6 +128,7 @@ export function cs1Load(units: readonly Cs1Unit[], opts: Cs1LoadOptions) {
   let billed = 0;
   const worlds = new Map<string, Cs1World[]>();
   const hosted = new Map<string, Cs1Hosted | null>();
+  const failedTriggers: string[] = [];
   const fc = new Map<string, Cs1FullContextWorld[]>();
   const unattributedKeys = new Map<string, number>();
 
@@ -185,7 +186,7 @@ export function cs1Load(units: readonly Cs1Unit[], opts: Cs1LoadOptions) {
         const q = writes.length >= 4 ? Math.floor(writes.length / 4) : 0;
         const end = Math.max(...ingestLines.map(l => Date.parse(l.at)), Date.parse(r.at)) + 1;
         const first = q ? quarterRate(writes, 0, q, end, ingestLines) : null, last = q ? quarterRate(writes, writes.length - q, writes.length, end, ingestLines) : null;
-        if (idle) for (const t of idle.triggers ?? []) if (t.error) problems.push(`${cell} ${r.conv}: trigger ${t.job} failed: ${t.error}`);
+        if (idle) for (const t of idle.triggers ?? []) if (t.error) { problems.push(`${cell} ${r.conv}: trigger ${t.job} failed: ${t.error}`); failedTriggers.push(`${cell} ${r.conv}: ${t.job}`); }
         const probes = (r.write_probes ?? []);
         const world: Cs1World = {
           world: r.conv, ingested_tokens: r.ingest.content_tokens ?? r.ingest.ingested_tokens, sessions: r.ingest.sessions, questions: rows.get(r.conv) ?? 0,
@@ -241,7 +242,7 @@ export function cs1Load(units: readonly Cs1Unit[], opts: Cs1LoadOptions) {
   for (const s of unhosted) problems.push(`${s}: no usable hosting sample in any cell, so its server can't be priced`);
   const input: Cs1Input = { systems, ladder: opts.ladder, full_context, readers };
   return {
-    input, problems, unhosted,
+    input, problems, unhosted, failed_triggers: failedTriggers,
     checks: { sum_back: { billed_usd: billed, attributed_usd: inWorlds, unattributed_usd: totals.unattributed, difference_usd: dropped }, by_bucket: totals, unattributed_keys: Object.fromEntries(unattributedKeys) },
   };
 }
@@ -309,6 +310,7 @@ if (import.meta.main) {
   const rowsFile = one('--rows'), table = one('--table');
   const rows: Record<string, { build: string; date: string; not_run?: string }> = rowsFile ? JSON.parse(readFileSync(rowsFile, 'utf8')) : {};
   const loaded = cs1Load(units, { cells, questions, ladder, stacks, fullContextFit });
+  if (loaded.failed_triggers.length) { console.error(`cs1-load: a scheduled job's trigger failed (${loaded.failed_triggers.join('; ')}); its world's monthly idle cost can't be priced without it`); process.exit(2); }
   if (loaded.unhosted.length) { console.error(`cs1-load: ${loaded.unhosted.join(', ')} had no usable hosting sample in any cell; a hosted row priced without its server would understate its cost`); process.exit(2); }
   const order = (s: string) => defs.findIndex(c => c.system === s);
   const result = cs1Aggregate({ ...loaded.input, systems: [...loaded.input.systems].sort((x, y) => order(x.system) - order(y.system)), not_run: Object.entries(rows).flatMap(([system, r]) => r.not_run ? [{ system, reason: r.not_run }] : []) });

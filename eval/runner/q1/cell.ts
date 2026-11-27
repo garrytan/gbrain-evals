@@ -1013,7 +1013,9 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
           const t1 = Date.now();
           const run = await meter.around(slot, `tail:trigger:${rid}:${j.trigger}`, 'background_tail', async () => {
             if (!system.trigger) throw new Error(`${def.system} has no trigger route`);
-            return system.trigger(sanitizer.ns(convId), j.trigger!, opts.triggerTimeoutS ?? 7200);
+            const result = await system.trigger(sanitizer.ns(convId), j.trigger!, opts.triggerTimeoutS ?? 7200);
+            if (typeof result.exit === 'number' && result.exit !== 0) throw new Error(`trigger ${j.trigger} exited ${result.exit}: ${String(result.stderr_tail ?? '').slice(-200)}`);
+            return result;
           });
           triggers.push({ job: j.job, trigger: j.trigger, cadence_minutes: j.cadence_minutes, ms: Date.now() - t1, usd: run.meter?.usd ?? null, requests: run.meter?.requests ?? null,
             unpriced: run.meter?.unpriced ?? null, by_model: run.meter?.byModel ?? null, result: run.value ?? null, error: run.error ? String((run.error as Error).message ?? run.error).slice(0, 300) : null });
