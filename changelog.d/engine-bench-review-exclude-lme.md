@@ -1,0 +1,1 @@
+- Code review of an engine-bench results pull request now leaves out the bulky LongMemEval-S worker files and the stage 3 aggregate, as it already did for the per-runner correctness receipts and the 10,000-page speed receipts. The files stay in the repository; only the review diff skips them.
