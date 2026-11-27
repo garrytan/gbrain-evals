@@ -52,7 +52,7 @@
     "docs/benchmarks/2026-11-17-readme-baselines/**/*.jsonl",
     "docs/benchmarks/*-engine-bench/correctness/work/*/receipt.json",
     "docs/benchmarks/*-engine-bench/speed/*speed-*-10000.json",
-    "docs/benchmarks/*-engine-bench/lme-recall/lme-w[0-9]*",
+    "docs/benchmarks/*-engine-bench/lme-recall/lme-w*",
     "docs/benchmarks/*-engine-bench/lme-recall/aggregate.json",
     "docs/benchmarks/2026-11-19-cat40-hard-newest/n[12]/*/**",
     "docs/benchmarks/2026-11-19-cat40-hard-old-build-control/n[12]/*/**",
