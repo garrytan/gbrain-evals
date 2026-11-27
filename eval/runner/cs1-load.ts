@@ -305,7 +305,7 @@ if (import.meta.main) {
   const loaded = cs1Load(units, { cells, questions, ladder, stacks, fullContextFit });
   const order = (s: string) => defs.findIndex(c => c.system === s);
   const result = cs1Aggregate({ ...loaded.input, systems: [...loaded.input.systems].sort((x, y) => order(x.system) - order(y.system)), not_run: Object.entries(rows).flatMap(([system, r]) => r.not_run ? [{ system, reason: r.not_run }] : []) });
-  writeFileSync(out, JSON.stringify({ checks: loaded.checks, problems: loaded.problems, ladder, stacks, result }, null, 2) + '\n');
+  writeFileSync(out, JSON.stringify({ checks: loaded.checks, problems: loaded.problems, ladder, result }, null, 2) + '\n');
   if (rowsFile && table) writeFileSync(table, renderCs1Table(result, rows, (one('--profile') ?? 'heavy') as Cs1Profile));
   console.log(JSON.stringify({ out, table: rowsFile && table ? table : null, sum_back: loaded.checks.sum_back, problems: loaded.problems.length }));
 }

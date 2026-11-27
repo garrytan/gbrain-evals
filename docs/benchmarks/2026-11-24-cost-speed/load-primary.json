@@ -55,12 +55,6 @@
     ],
     "storage_usd_per_gb_month": 0.08
   },
-  "stacks": {
-    "gbrain-defaults": "gbrain-defaults",
-    "ext-extract-first": "shootout-ext-extract-first-read-route",
-    "ext-memory-bank": "shootout-hindsight",
-    "ext-verbatim-session": "shootout-mempalace"
-  },
   "result": {
     "method": "paired cluster bootstrap over 10 worlds, 10000 resamples, seed cost-speed-1, 95% percentile intervals; hosting and the idle rate held fixed outside the resample; decisions at the heavy profile and claude-opus-5-5",
     "readers": [
