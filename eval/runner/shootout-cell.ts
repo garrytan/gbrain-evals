@@ -1286,13 +1286,13 @@ export function planWaves(m: CampaignManifest): Wave[] {
  * cell keeps writing while this walks (the file agent creates and deletes directories in its working tree), so a
  * directory or file that is gone by the time it is read is skipped; the next pass counts again.
  */
-export function attemptRows(out: string, list: (dir: string) => Dirent[] = dir => readdirSync(dir, { withFileTypes: true })): number {
+export function attemptRows(out: string, list: (dir: string) => Dirent[] = dir => readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name < b.name ? -1 : 1)): number {
   let n = 0;
   const gone = (e: unknown) => (e as NodeJS.ErrnoException)?.code === 'ENOENT';
   const walk = (dir: string) => {
     let entries: Dirent[];
     try { entries = list(dir); } catch (e) { if (gone(e)) return; throw e; }
-    for (const e of entries.sort((a, b) => a.name < b.name ? -1 : 1)) {
+    for (const e of entries) {
       if (e.isDirectory()) { if (!['checkpoint', '.checkpoint-tmp', 'realization'].includes(e.name)) walk(join(dir, e.name)); }
       else if (e.name === 'attempts.ndjson') {
         try { n += readFileSync(join(dir, e.name), 'utf8').split('\n').filter(Boolean).length; } catch (err) { if (!gone(err)) throw err; }
