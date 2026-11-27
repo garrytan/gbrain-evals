@@ -12,7 +12,7 @@ import { join } from 'node:path';
 import { loadFixture, type Conversation, type MemoryQuestion, type Session } from '../../eval/runner/memory-qa/corpus.ts';
 import { canonicalize, crossSystemExclusion, freezeManifest, outcomeOf, type Manifest } from '../../eval/runner/memory-qa/outcomes.ts';
 import { readerPrompt } from '../../eval/runner/memory-qa/qa.ts';
-import { parseRunArgs, PROBE_WINDOW_CHARS, readinessProbe, runArm } from '../../eval/runner/memory-qa/run-systems.ts';
+import { landingRead, parseRunArgs, PROBE_WINDOW_CHARS, readinessProbe, runArm } from '../../eval/runner/memory-qa/run-systems.ts';
 import { assertScorerRejectsFakeSystems } from '../../eval/runner/mutation-kit.ts';
 import { pairObservations } from '../../eval/runner/stats/paired.ts';
 import { toObservation } from '../../eval/runner/stats/rows.ts';
@@ -346,6 +346,21 @@ describe('memory-qa with a MemorySystem', () => {
     };
     expect(await readinessProbe(starter(['settings_not_on_surface:autocut,limit']), 'ns', last, { mode: 'vendor-default', settings: {} } as never, caps as never)).toBe('found');
     expect(await readinessProbe(starter(['settings_not_on_surface:autocut,limit', 'projection_not_ready']), 'ns', last, { mode: 'vendor-default', settings: {} } as never, caps as never)).toBe('missed');
+  });
+
+  test('landingRead (the Q1 write sampler\'s read): a system that declares on_degraded is asked to report, and only a read degraded by dropped settings passes; others keep their policy', async () => {
+    const sent: unknown[] = [];
+    const s = new FakeMemorySystem();
+    let reasons = ['settings_not_on_surface:autocut,limit'];
+    s.retrieve = async (_ns, _q, p) => { sent.push(p.settings); return { items: [], applied_settings: {}, truncated: false, raw: { classification: { outcome: 'harness_invalid', reasons } } }; };
+    const base = await new FakeMemorySystem().capabilities();
+    const gbrain = { ...base, retrieval_policies: { ...base.retrieval_policies, on_degraded: 'error' } };
+    const policy = { name: 'p', mode: 'fixed-evidence', settings: { limit: 50 } } as const;
+    await landingRead(s, 'ns', 'x', policy, gbrain as never);
+    reasons = ['projection_not_ready'];
+    await expect(landingRead(s, 'ns', 'x', policy, gbrain as never)).rejects.toThrow('degraded landing read: projection_not_ready');
+    await landingRead(s, 'ns', 'x', policy, base);
+    expect(sent).toEqual([{ limit: 50, on_degraded: 'report' }, { limit: 50, on_degraded: 'report' }, { limit: 50 }]);
   });
 
   test('readiness probe: a shim whose quiescence signal lies (indexes late) marks its conversations ingest-degraded; an honest one passes', async () => {

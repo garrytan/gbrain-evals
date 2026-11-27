@@ -111,7 +111,7 @@ import { HttpMemorySystem } from '../systems/http.ts';
 import { blocksToItems, packContext, packRecipe, renderItem, datedItems, pseudoSessions, RENDERER_VERSION, sessionDay, strictSources, TOKENIZER, validateSources, type ContextMode } from '../systems/render-v2.ts';
 import { renderHistory } from './qa.ts';
 import { Sanitizer, SanitizerLeakError } from '../systems/sanitize.ts';
-import { policyKnobs, SystemError, type CapabilityRecord, type Item, type MemorySystem, type RetrievalPolicy, type SessionInput } from '../systems/types.ts';
+import { policyKnobs, SystemError, type CapabilityRecord, type Item, type MemorySystem, type RetrievalPolicy, type RetrieveResult, type SessionInput } from '../systems/types.ts';
 
 export interface RunArgs {
   benchmark: string;
@@ -435,10 +435,7 @@ export const PROBE_WINDOW_CHARS = 800;
  * tokens (about 256) for its retrieval, and its misses were reported as ingest
  * failures with 0 failed sessions.
  *
- * A system that declares on_degraded (the gbrain shim) is asked to report a
- * degraded read instead of refusing it. A read degraded only because its
- * surface refused fixed-evidence settings still shows whether the session
- * landed; any other degraded read counts as a vendor error.
+ * The read goes through landingRead.
  */
 export async function readinessProbe(system: MemorySystem, ns: string, last: SessionInput | undefined, policy: RetrievalPolicy, capabilities: CapabilityRecord): Promise<ProbeResult> {
   if (!last) return 'skipped';
@@ -449,17 +446,26 @@ export async function readinessProbe(system: MemorySystem, ns: string, last: Ses
   if (!passage?.trim()) return 'skipped';
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      const f6 = !!policy.settings && 'op' in policy.settings;
-      const report = !f6 && 'on_degraded' in (capabilities.retrieval_policies ?? {});
-      const fixed = f6 ? policy.settings : policyKnobs(capabilities.retrieval_policies?.['fixed-evidence']).settings;
-      const settings = report ? { ...fixed, on_degraded: 'report' } : fixed;
-      const res = await system.retrieve(ns, { text: passage, query_time: null }, { ...policy, mode: 'fixed-evidence', settings });
-      const verdict = report ? (res.raw as { classification?: { outcome: string; reasons: string[] } } | undefined)?.classification : undefined;
-      if (verdict && verdict.outcome !== 'scored' && !(verdict.reasons.length && verdict.reasons.every(r => r.startsWith('settings_not_on_surface:')))) throw new Error(`degraded probe read: ${verdict.reasons.join(', ')}`);
+      const settings = policy.settings && 'op' in policy.settings ? policy.settings : policyKnobs(capabilities.retrieval_policies?.['fixed-evidence']).settings;
+      const res = await landingRead(system, ns, passage, { ...policy, mode: 'fixed-evidence', settings }, capabilities);
       return res.items.some(i => i.source_ids.includes(last.source_id)) ? 'found' : 'missed';
     } catch { /* a vendor error is retried once, then counts as a miss */ }
   }
   return 'missed';
+}
+
+/**
+ * A read that asks whether a session landed, not how well the system retrieves. A system that declares on_degraded
+ * (the gbrain shim) is asked to report a degraded read instead of refusing it: a read degraded only because its surface
+ * refused fixed-evidence settings still shows whether the session landed, and any other degraded read throws, as the
+ * refusal did.
+ */
+export async function landingRead(system: MemorySystem, ns: string, text: string, policy: RetrievalPolicy, capabilities: CapabilityRecord): Promise<RetrieveResult> {
+  const report = !('op' in policy.settings) && 'on_degraded' in (capabilities.retrieval_policies ?? {});
+  const res = await system.retrieve(ns, { text, query_time: null }, report ? { ...policy, settings: { ...policy.settings, on_degraded: 'report' } } : policy);
+  const verdict = report ? (res.raw as { classification?: { outcome: string; reasons: string[] } } | undefined)?.classification : undefined;
+  if (verdict && verdict.outcome !== 'scored' && !(verdict.reasons.length && verdict.reasons.every(r => r.startsWith('settings_not_on_surface:')))) throw new Error(`degraded landing read: ${verdict.reasons.join(', ')}`);
+  return res;
 }
 
 /** A system's retrieval failure as a row: its kind decides whether it is a product miss, a harness failure or a budget stop. */

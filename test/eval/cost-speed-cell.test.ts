@@ -332,6 +332,20 @@ describe('loader keys and hosting', () => {
     expect(loaded.unhosted).toEqual(['baseline-hybrid']);
     expect(loaded.problems.join('\n')).toContain("baseline-hybrid: no usable hosting sample in any cell, so its server can't be priced");
   });
+  test('a trigger an older cell recorded with a nonzero exit and no error is still a failed trigger', () => {
+    const dir = join(tmp, 'legacy-trigger-exit'), cell = 'cs1.baseline-hybrid.baseline.c0', rid = 'ef'.repeat(32);
+    mkdirSync(join(dir, 'runs', cell, 'r', rid), { recursive: true });
+    writeFileSync(join(dir, 'runs', cell, 'realizations.ndjson'), JSON.stringify({ realization_id: rid, conversation: 'w1', event: 'ingested', at: '2026-11-25T00:00:00Z', ingest: { content_tokens: 1000, ingested_tokens: 1100, sessions: 10 } }) + '\n');
+    writeFileSync(join(dir, 'runs', cell, 'r', rid, 'idle.json'), JSON.stringify({ ms: 1000, usd: null, triggers: [{ job: 'daily upkeep round', trigger: 'maintain', cadence_minutes: 1440, error: null, result: { job: 'maintain', exit: 1 } }] }) + '\n');
+    const opts = { cells: new Map([[cell, 'baseline-hybrid']]), questions: new Map(), ladder: { provider: 'invented', instances: [{ name: 'small', memory_gib: 2, usd_per_hour: 0.02 }], storage_usd_per_gb_month: 0.1 } };
+    const loaded = cs1Load([{ dir, usage: [] }], opts);
+    expect(loaded.failed_triggers).toEqual([`${cell} w1: daily upkeep round`]);
+    expect(loaded.problems.join('\n')).toContain('trigger daily upkeep round failed: exited 1');
+  });
+  test("a hosting sample that saw none of the system's own containers is not usable", () => {
+    const s = { at: '2026-11-25T01:00:00Z', stage: 'questions:w1', harness_rss_bytes: 7, containers: [{ name: 'other-db-1', mem_bytes: 900 }], volumes: [] };
+    expect(hostingOf([s], 'stack', [{ at: '2026-11-25T00:00:00Z', ingest: { content_tokens: 1000, ingested_tokens: 1100, sessions: 5 } }])).toBeNull();
+  });
   test("hosting counts only the system's own compose project, or the harness process and its files when in process", () => {
     const s = (at: string, rss: number, files = 0) => ({ at, stage: 'questions:w1', harness_rss_bytes: rss, containers: [{ name: 'stack-db-1', mem_bytes: 100 }, { name: 'other-db-1', mem_bytes: 900 }], volumes: [{ name: 'stack_data', bytes: 50 }, { name: 'other_data', bytes: 500 }], dirs: [{ path: '/x', bytes: files }] });
     const rs = [{ at: '2026-11-25T00:00:00Z', ingest: { content_tokens: 1000, ingested_tokens: 1100, sessions: 5 } }, { at: '2026-11-25T02:00:00Z', ingest: { content_tokens: 2000, ingested_tokens: 2200, sessions: 5 } }];

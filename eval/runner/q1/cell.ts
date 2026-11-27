@@ -90,7 +90,7 @@ import { instrumentFor, type Instrument } from '../memory-qa/instruments.ts';
 import { DEFAULT_MAX_ATTEMPTS, OUTCOMES, type Outcome } from '../memory-qa/outcomes.ts';
 import { ChatClient, chatWithReceipts, isCompatModel, judgeAnswer, READER_TEMPLATE, type ChatLike } from '../memory-qa/qa-v2.ts';
 import { answerId, answerRecord, judgmentKey, readerAttempts, readRecords, RecordLog, sha256, WEEKLY_CELLS_ENV, WEEKLY_CELLS_SHA256_ENV, WEEKLY_RUN_ENV, WEEKLY_RUN_ID, type AnswerPayload, type AnswerRecord, type JudgmentRecord, type Q1Row, type ReaderAttempt, type WeeklyRunStamp } from '../memory-qa/records.ts';
-import { failureRow, hashEmbed, readinessProbe, selectQuestions } from '../memory-qa/run-systems.ts';
+import { failureRow, hashEmbed, landingRead, readinessProbe, selectQuestions } from '../memory-qa/run-systems.ts';
 import { checkSealedDestinations, sealedPaths } from '../memory-qa/sealed-profile.ts';
 import { ledgerCaps, PaidArmRefusal, requirePaidArm, requireRs1Window, WindowRefusal } from '../paid-arm.ts';
 import { COMPAT_PROVIDERS, JUDGE_PROVIDERS, compatMayHaveBilled } from '../providers/openai-compatible.ts';
@@ -1081,7 +1081,7 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
         polls++;
         const last = drained;
         try {
-          const res = await system.retrieve(ns, { text: passage, query_time: null }, fixed);
+          const res = await landingRead(system, ns, passage, fixed, capabilities);
           if (res.items.some(i => i.source_ids.includes(step.input.source_id))) return { ...base, status: 'found', write_start_to_queryable_ms: Math.round((performance.now() - t0) * 10) / 10, polls };
         } catch { /* a vendor error is polled again until the deadline */ }
         if (last || performance.now() >= deadline) return { ...base, status: 'missed', write_start_to_queryable_ms: null, polls };
