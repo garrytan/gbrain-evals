@@ -7,6 +7,7 @@ import { attemptKind, boostedSlug, firstSentence, queryPlan } from './harness.ts
 import { ARM_PATCHES, applyPatch } from './patch-arm.ts';
 import { applyReruns, decide, recountDir, truthCheck, type CellResult } from './recount.ts';
 import { latencyState, outcome, recallAt, recallState, type CellVerdict } from './stats.ts';
+import { flipsUnderRule } from './tables.ts';
 
 const GBRAIN = resolve(import.meta.dir, '../../../node_modules/gbrain');
 
@@ -183,5 +184,18 @@ describe('truth check', () => {
     writeFileSync(join(dir, 'oracle-check.jsonl'), JSON.stringify({ cell: 'a', ok: true }) + '\n');
     writeFileSync(join(dir, 'truth-stops.jsonl'), JSON.stringify({ cell: 'c' }) + '\n');
     expect(truthCheck([dir], cells)).toMatchObject({ clean: false, stops: ['c'], unchecked: ['b'] });
+  });
+});
+
+describe('the stage 1b rule', () => {
+  test('flips date filters, alone or with a type filter, at 375,000 chunks or more, and nothing else', () => {
+    const cell = (kind: string, chunks: number) => ({ kind, chunks });
+    expect(flipsUnderRule(cell('date', 375_000))).toBe(true);
+    expect(flipsUnderRule(cell('date', 1_500_000))).toBe(true);
+    expect(flipsUnderRule(cell('combo', 375_000))).toBe(true);
+    expect(flipsUnderRule(cell('date', 75_000))).toBe(false);
+    expect(flipsUnderRule(cell('type', 375_000))).toBe(false);
+    expect(flipsUnderRule(cell('where', 375_000))).toBe(false);
+    expect(flipsUnderRule(cell('scope', 375_000))).toBe(false);
   });
 });
