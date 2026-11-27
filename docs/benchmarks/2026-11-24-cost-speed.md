@@ -156,11 +156,12 @@ The plan flags a system whose writing and background cost per million tokens in 
 sessions is over 1.25 times its first quarter's, as a sign a year-old history would cost more than this month shows.
 gbrain (9.8 times), memory-bank (8.1) and extract-first (9,258) are flagged. The rule takes the lines that arrive in each
 quarter's time window, and the last window runs until the import's background work ends, so it also holds work that runs
-once after the final write. A check after the run, not preregistered, split the windows: memory-bank's cost per million
-tokens was flat while the sessions were written (4.27, 4.13, 4.13 and 4.55 dollars by quarter) and its consolidation ran
-for about an hour after the last write in the two worlds checked; extract-first made almost no calls while the sessions were written and nearly all
-of them afterwards; gbrain's write-time embeddings were flat by quarter, and its background embedding step ran at the end
-of the import. So these flags show background work timed at the end of an import, and the run measured no growth in
+once after the final write. A check after the run, not preregistered, ended the last window when the last write returned
+(each other window runs from its quarter's first write to the next quarter's first, over all ten worlds). In those
+windows memory-bank's write and background cost per million tokens was 4.27, 4.13, 4.13 and 4.41 dollars by quarter,
+and gbrain's 0.033, 0.042, 0.034 and 0.042; memory-bank's consolidation ran for about an hour after the last write in
+the two worlds checked, gbrain's background embedding step ran at the end of the import, and extract-first made almost
+no calls while the sessions were written and nearly all of them afterwards. So these flags show background work timed at the end of an import, and the run measured no growth in
 cost per write as the history grew. That background work is in every monthly cost above.
 
 ### Server size
