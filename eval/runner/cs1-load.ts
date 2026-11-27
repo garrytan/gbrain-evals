@@ -128,6 +128,7 @@ export function cs1Load(units: readonly Cs1Unit[], opts: Cs1LoadOptions) {
   let billed = 0;
   const worlds = new Map<string, Cs1World[]>();
   const hosted = new Map<string, Cs1Hosted | null>();
+  const failedTriggers: string[] = [];
   const fc = new Map<string, Cs1FullContextWorld[]>();
   const unattributedKeys = new Map<string, number>();
 
@@ -179,19 +180,20 @@ export function cs1Load(units: readonly Cs1Unit[], opts: Cs1LoadOptions) {
           }
           continue;
         }
-        const idle = lines<{ ms: number; usd: number | null; triggers?: Array<{ job: string; trigger: string; cadence_minutes: number | null; error: string | null }> }>(join(dir, 'r', r.rid, 'idle.json'))[0];
+        const idle = lines<{ ms: number; usd: number | null; triggers?: Array<{ job: string; trigger: string; cadence_minutes: number | null; error: string | null; result?: { exit?: unknown } | null }> }>(join(dir, 'r', r.rid, 'idle.json'))[0];
         const writes = lines<{ start_at: string; content_tokens: number }>(join(dir, 'r', r.rid, 'writes.ndjson'));
         const ingestLines = r.ns ? [...(b?.write ?? []), ...(b?.background ?? [])].filter(l => l.key === `ingest:${r.ns}`) : [];
         const q = writes.length >= 4 ? Math.floor(writes.length / 4) : 0;
         const end = Math.max(...ingestLines.map(l => Date.parse(l.at)), Date.parse(r.at)) + 1;
         const first = q ? quarterRate(writes, 0, q, end, ingestLines) : null, last = q ? quarterRate(writes, writes.length - q, writes.length, end, ingestLines) : null;
-        if (idle) for (const t of idle.triggers ?? []) if (t.error) problems.push(`${cell} ${r.conv}: trigger ${t.job} failed: ${t.error}`);
+        const failure = (t: NonNullable<typeof idle.triggers>[number]) => t.error ?? (typeof t.result?.exit === 'number' && t.result.exit !== 0 ? `exited ${t.result.exit}` : null);
+        if (idle) for (const t of idle.triggers ?? []) { const f = failure(t); if (f) { problems.push(`${cell} ${r.conv}: trigger ${t.job} failed: ${f}`); failedTriggers.push(`${cell} ${r.conv}: ${t.job}`); } }
         const probes = (r.write_probes ?? []);
         const world: Cs1World = {
           world: r.conv, ingested_tokens: r.ingest.content_tokens ?? r.ingest.ingested_tokens, sessions: r.ingest.sessions, questions: rows.get(r.conv) ?? 0,
           usd: { write: sum(b?.write), background: sum(b?.background), read: sum(b?.read), probe: sum(b?.probe) },
           idle: idle ? { usd: sum(b?.idle), window_ms: idle.ms, triggers: (idle.triggers ?? []).flatMap(t => {
-            if (t.error || !t.cadence_minutes) return [];
+            if (failure(t) || !t.cadence_minutes) return [];
             return [{ job: t.job, usd: triggers.get(r.conv)?.get(t.trigger) ?? 0, cadence_minutes: t.cadence_minutes }];
           }) } : null,
           quarters: first !== null && last !== null ? { first_usd_per_mtok: first, last_usd_per_mtok: last } : null,
@@ -237,9 +239,11 @@ export function cs1Load(units: readonly Cs1Unit[], opts: Cs1LoadOptions) {
     + Object.values(full_context ?? {}).reduce((n, f) => n + f.worlds.reduce((m, w) => m + w.cached_usd + w.cache_write_usd + w.uncached_usd + w.output_usd, 0), 0);
   const dropped = billed - inWorlds - totals.unattributed;
   if (Math.abs(dropped) > 1e-6) problems.push(`${dropped.toFixed(6)} billed dollars are in no world's lines and not unattributed (an errored trigger, a replicate above 0, or a harness-slot line that isn't a reader's)`);
+  const unhosted = [...hosted].filter(([, h]) => !h).map(([s]) => s);
+  for (const s of unhosted) problems.push(`${s}: no usable hosting sample in any cell, so its server can't be priced`);
   const input: Cs1Input = { systems, ladder: opts.ladder, full_context, readers };
   return {
-    input, problems,
+    input, problems, unhosted, failed_triggers: failedTriggers,
     checks: { sum_back: { billed_usd: billed, attributed_usd: inWorlds, unattributed_usd: totals.unattributed, difference_usd: dropped }, by_bucket: totals, unattributed_keys: Object.fromEntries(unattributedKeys) },
   };
 }
@@ -247,12 +251,13 @@ export function cs1Load(units: readonly Cs1Unit[], opts: Cs1LoadOptions) {
 /**
  * A system's hosting from one unit's samples: the steady peak of the stack's resident memory (its compose project's
  * containers, or the harness process for an in-process system) and the last sample's disk (the project's volumes), with
- * the content tokens ingested by then as the projection's base. Null with no usable sample.
+ * the content tokens ingested by then as the projection's base. A sample that saw none of the project's containers is not
+ * usable. Null with no usable sample.
  */
 export function hostingOf(samples: readonly HostingSample[], stack: string | null, rs: ReadonlyArray<Pick<Realization, 'at' | 'ingest'>>): Cs1Hosted | null {
-  const ok = samples.filter(s => !s.error);
-  if (!ok.length) return null;
   const mine = <T extends { name: string }>(xs: readonly T[]) => stack ? xs.filter(x => x.name.startsWith(`${stack}-`) || x.name.startsWith(`${stack}_`)) : [];
+  const ok = samples.filter(s => !s.error && (!stack || mine(s.containers).length > 0));
+  if (!ok.length) return null;
   const resident = (s: HostingSample) => stack ? mine(s.containers).reduce((n, c) => n + c.mem_bytes, 0) : s.harness_rss_bytes;
   const last = ok[ok.length - 1];
   const tokens = rs.filter(r => Date.parse(r.at) <= Date.parse(last.at)).reduce((n, r) => n + (r.ingest.content_tokens ?? r.ingest.ingested_tokens), 0);
@@ -307,6 +312,8 @@ if (import.meta.main) {
   const rowsFile = one('--rows'), table = one('--table');
   const rows: Record<string, { build: string; date: string; not_run?: string }> = rowsFile ? JSON.parse(readFileSync(rowsFile, 'utf8')) : {};
   const loaded = cs1Load(units, { cells, questions, ladder, stacks, fullContextFit });
+  if (loaded.failed_triggers.length) { console.error(`cs1-load: a scheduled job's trigger failed (${loaded.failed_triggers.join('; ')}); its world's monthly idle cost can't be priced without it`); process.exit(2); }
+  if (loaded.unhosted.length) { console.error(`cs1-load: ${loaded.unhosted.join(', ')} had no usable hosting sample in any cell; a hosted row priced without its server would understate its cost`); process.exit(2); }
   const order = (s: string) => defs.findIndex(c => c.system === s);
   const result = cs1Aggregate({ ...loaded.input, systems: [...loaded.input.systems].sort((x, y) => order(x.system) - order(y.system)), not_run: Object.entries(rows).flatMap(([system, r]) => r.not_run ? [{ system, reason: r.not_run }] : []) });
   writeFileSync(out, JSON.stringify({ checks: loaded.checks, problems: loaded.problems, ladder, result }, null, 2) + '\n');

@@ -358,6 +358,49 @@ describe('starter-surface parameters', () => {
     expect(out.dropped.length).toBeGreaterThan(0);
     expect(out.calls).toBe(out.dropped.length + 1);
   });
+
+  test('a read that had to drop a fixed-evidence knob is not scored, and is refused when the caller asks for errors', () => {
+    const code = [
+      'import importlib.util, json, sys, threading',
+      `spec = importlib.util.spec_from_file_location("gbrain_defaults_shim", ${JSON.stringify(`${ROOT}/${BUNDLE}/shim.py`)})`,
+      'shim = importlib.util.module_from_spec(spec)',
+      'spec.loader.exec_module(shim)',
+      'def adapter(refused):',
+      '    a = shim.GbrainDefaultsAdapter.__new__(shim.GbrainDefaultsAdapter)',
+      '    a.record = json.load(open(sys.argv[1]))',
+      '    a.lock = threading.RLock()',
+      '    a.shipped_counts = {}',
+      '    a.serve_session = None',
+      '    a.activate = lambda ns: None',
+      '    a.state = lambda: {"sessions": {}}',
+      '    a.require_reference = lambda: {"resolved": {"search": {}}}',
+      '    a.receipt = lambda kind, **f: None',
+      '    def call(name, args):',
+      '        bad = [k for k in args if k in refused]',
+      '        if bad: raise shim.GbrainError("gbrain returned an error: query: parameter %s is not on this connection\'s starter tool surface; nothing was read." % bad[0])',
+      '        return [], {"retrieval": {}}, [], 1.0',
+      '    a.call = call',
+      '    return a',
+      'out = {}',
+      'for name, refused, policy in (("starter", {"limit", "autocut"}, {"mode": "fixed-evidence", "settings": {"on_degraded": "record"}}), ("full", set(), {"mode": "fixed-evidence", "settings": {"on_degraded": "record"}}), ("vendor", {"limit", "autocut"}, {"mode": "vendor-default", "settings": {"on_degraded": "record"}})):',
+      '    r = shim.GbrainDefaultsAdapter.retrieve(adapter(refused), "ns", "q?", None, policy)',
+      '    out[name] = r["raw"]["classification"]',
+      'try:',
+      '    shim.GbrainDefaultsAdapter.retrieve(adapter({"limit", "autocut"}), "ns", "q?", None, {"mode": "fixed-evidence", "settings": {"on_degraded": "error"}})',
+      '    out["error"] = None',
+      'except shim.ShimError as e:',
+      '    out["error"] = str(e)',
+      'print(json.dumps(out))',
+    ].join("\n");
+    const r = Bun.spawnSync(['python3', '-c', code, `${ROOT}/${BUNDLE}/capability.json`], { cwd: ROOT });
+    if (r.exitCode !== 0) throw new Error(r.stderr.toString());
+    const out = JSON.parse(r.stdout.toString()) as Record<string, { outcome: string; reasons: string[] }> & { error: string | null };
+    expect(out.starter.outcome).toBe('harness_invalid');
+    expect(out.starter.reasons).toContain('settings_not_on_surface:autocut,limit');
+    expect(out.full.outcome).toBe('scored');
+    expect(out.vendor.outcome).toBe('scored');
+    expect(out.error).toContain('degraded read');
+  });
 });
 
 describe('POST /trigger', () => {
