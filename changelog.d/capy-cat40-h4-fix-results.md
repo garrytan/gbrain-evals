@@ -1,1 +1,0 @@
-- Results: delivering long documents by section (`search.long_page_unit=section`) answers more questions where sources disagree on six unseen worlds, with no harm elsewhere ([section delivery confirmation](docs/benchmarks/2026-11-24-cat40-h4-fix-confirmation.md)).
