@@ -5,7 +5,7 @@
  * switch-on run passes only when the running engine proved multi-user mode.
  */
 import { describe, expect, test } from 'bun:test';
-import { combineStatus, isConflict, judgeSwitch, mergeTally, MOVED_UNDER_WRITE, normalizeForParity, outcomeClass, percentile, phaseStatus, recordReadFailure, tallyOps } from '../../eval/runner/multi-writer/classify.ts';
+import { combineStatus, isConflict, isOwnerOnlyRefusal, judgeSwitch, mergeTally, MOVED_UNDER_WRITE, normalizeForParity, outcomeClass, ownerGateFindings, percentile, phaseStatus, recordReadFailure, tallyOps } from '../../eval/runner/multi-writer/classify.ts';
 import { childEnv } from '../../eval/runner/multi-writer/brain.ts';
 import { errorCodeOf, type OpLine } from '../../eval/runner/multi-writer/worker.ts';
 import { asJson } from '../../eval/runner/multi-writer/scenarios.ts';
@@ -73,6 +73,27 @@ describe('tallyOps and phaseStatus', () => {
     expect(combineStatus(['not_supported', 'fail'])).toBe('fail');
     expect(combineStatus(['pass', 'pass'])).toBe('pass');
     expect(combineStatus(['pass'], true)).toBe('invalid');
+  });
+});
+
+describe('check 7 and the owner-only gate', () => {
+  const gate = { ok: false, code: 'permission_denied', message: "This credential cannot open a multi-user session on this brain (only the brain owner's own key is admitted for now)." };
+  test('only the gate\'s own sentence with permission_denied counts as the owner-only refusal', () => {
+    expect(isOwnerOnlyRefusal(gate)).toBe(true);
+    expect(isOwnerOnlyRefusal({ ...gate, code: 'invalid_params' })).toBe(false);
+    expect(isOwnerOnlyRefusal({ ok: false, code: 'permission_denied', message: 'This page is not readable by this member.' })).toBe(false);
+    expect(isOwnerOnlyRefusal({ ok: true, code: null, message: gate.message })).toBe(false);
+  });
+  test('a gate that refuses some member keys and accepts another is a finding, so the check fails', () => {
+    expect(ownerGateFindings([gate, gate])).toEqual([]);
+    expect(ownerGateFindings([{ ok: true }, { ok: false, code: 'page_not_found' }])).toEqual([]);
+    const f = ownerGateFindings([gate, { ok: true }]);
+    expect(f).toHaveLength(1);
+    const t = tallyOps([]);
+    t.refused.owner_only_gate = 2;
+    expect(phaseStatus(t, [])).toBe('not_supported');
+    expect(phaseStatus(t, f)).toBe('fail');
+    expect(phaseStatus(t, ["another member's keyword search returned a private page"])).toBe('fail');
   });
 });
 

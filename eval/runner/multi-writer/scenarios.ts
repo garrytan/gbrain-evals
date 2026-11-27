@@ -12,7 +12,7 @@ import { createServer } from 'node:net';
 import { join } from 'node:path';
 import type { GbrainUnderTest } from '../gbrain-under-test.ts';
 import { operatorCalls, runWriters, killGroup, type Brain, type WritersRun } from './brain.ts';
-import { combineStatus, isConflict, isHandoff, mergeTally, outcomeClass, percentile, phaseStatus, recordReadFailure, REFUSAL_CODES, tallyOps, type OpTally, type Status } from './classify.ts';
+import { combineStatus, isConflict, isHandoff, isOwnerOnlyRefusal, mergeTally, outcomeClass, ownerGateFindings, percentile, phaseStatus, recordReadFailure, REFUSAL_CODES, tallyOps, type OpTally, type Status } from './classify.ts';
 import { CAS_PUT, LEASE_FENCE_RE, type OpLine, type WorkerOp } from './worker.ts';
 
 export interface PhaseResult {
@@ -683,6 +683,8 @@ export async function checkAccess(ctx: Ctx): Promise<CheckResult> {
     const judge = (l: OpLine, label: string, expect: 'ok' | 'denied' | 'withdrawn' | 'typed') => {
       tally.total += 1;
       if (l.ok) { if (expect === 'ok' || expect === 'typed') tally.acked += 1; return; }
+      // The deliberate owner-only gate refuses before any access rule runs, so it proves nothing either way: not supported.
+      if (isOwnerOnlyRefusal(l)) { tally.refused.owner_only_gate = (tally.refused.owner_only_gate ?? 0) + 1; return; }
       if (expect === 'denied' && DENIED.test(l.code ?? '')) { tally.acked += 1; return; }
       if (expect === 'withdrawn' && /fact_withdrawn/.test(`${l.code} ${l.message}`)) { tally.acked += 1; return; }
       if (expect === 'typed' && /^[a-z]+(_[a-z]+)+$/.test(l.code ?? '') && !/^(internal_error|harness_exception|rpc_error|http_\d+)$/.test(l.code ?? '')) { tally.acked += 1; return; }
@@ -723,6 +725,9 @@ export async function checkAccess(ctx: Ctx): Promise<CheckResult> {
     } else notes.push(`the forget probe did not reach its last step (remember ${chain.first.code ?? 'ok'}, forget ${chain.forgot?.code ?? 'not run'})`);
     cross['forgotten_reremember'] = !chain.again ? 'not reached' : chain.again.ok ? 'accepted' : `refused:${chain.again.code}: ${(chain.again.message ?? '').replace(/\d{4}-\d{2}-\d{2}T[\d:.]+Z/g, '<ts>').replace(/"id":\s*"?\d+"?/g, '"id":<n>').slice(0, 200)}`;
     notes.push(`concurrent remote writes: ${writes.filter(w => w.ok).length} of ${writes.length} acknowledged`);
+    // Every remote call here uses a member key, never the owner's, so the gate must refuse all of them or none.
+    findings.push(...ownerGateFindings(all));
+    if (tally.refused.owner_only_gate) notes.push(`the server admits only the brain owner's key for now; ${tally.refused.owner_only_gate} member calls were refused by that gate, so the access rules were not reached`);
     return done(phaseStatus(tally, findings));
   } finally {
     await remote.stop();

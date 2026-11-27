@@ -50,6 +50,26 @@ export function isHandoff(code: string | undefined, message = ''): boolean {
 }
 
 /**
+ * The Rust multi-user server's deliberate owner-only gate: until per-member permissions land, it refuses every key but
+ * the brain owner's with this one fixed sentence. Matched by code and that sentence only, so any other
+ * permission_denied is still judged as an access answer.
+ */
+export const OWNER_ONLY_GATE = "only the brain owner's own key is admitted for now";
+export function isOwnerOnlyRefusal(l: { ok: boolean; code?: string | null; message?: string | null }): boolean {
+  return !l.ok && l.code === 'permission_denied' && (l.message ?? '').includes(OWNER_ONLY_GATE);
+}
+
+/**
+ * When the owner-only gate refused any non-owner call, an accepted call from a non-owner key means the gate let a
+ * caller through that it says it keeps out: a finding (wrong access), never a refusal.
+ */
+export function ownerGateFindings(nonOwnerLines: ReadonlyArray<{ ok: boolean; code?: string | null; message?: string | null }>): string[] {
+  const refused = nonOwnerLines.filter(isOwnerOnlyRefusal).length;
+  const accepted = nonOwnerLines.filter(l => l.ok).length;
+  return refused > 0 && accepted > 0 ? [`the owner-only gate refused ${refused} non-owner calls but accepted ${accepted} others from non-owner keys`] : [];
+}
+
+/**
  * gbrain's typed answers to a writer that lost a race; the write did nothing and the caller is told so. Judged by code,
  * never by free text, except gbrain's one fixed sentence for a write whose page moved under it, which arrives as
  * invalid_params (a concurrent remember on one entity gets it).
