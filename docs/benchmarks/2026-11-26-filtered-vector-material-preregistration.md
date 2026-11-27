@@ -333,3 +333,29 @@ margin or outcome rule. Approved by the experiment's owner on GST-4006.
    numbers count. It is never quietly re-run or dropped.
 4. **Harness only.** `exactSql` now runs on its own pool of connections, so several run at once on Postgres. This
    changes no timed search and no result.
+
+### 2026-11-27: stage 2 skipped, the order of the stage 1b look, and W's re-run corpus
+
+Committed on the results branch before any stage 1b result was read, and before the W re-runs finished. It changes no
+arm, cell, metric, margin or outcome rule. Approved by the experiment's owner on GST-4006.
+
+1. **Stage 2 doesn't run.** Its trigger fired. On L at 375,000 chunks, the untrusted caller's cold `where` 20% cell
+   ends *loss* on PostgreSQL 15, 16 and 18, and each re-run on seed 29819 agreed. The loss is not a different
+   nearest-neighbour ranking. After a restart, some arm-T searches on that filter run into the 8 s budget of gbrain's
+   vector pool (`const deadline = performance.now() + 8_000` in `src/core/search/vector-pool.ts` at the pin). gbrain
+   then reports them incomplete (`onVectorPoolMeta`) and returns fewer than k pages. Warm, the same queries finish in
+   about 0.9 s with every page, and arm C returns the same pages cold and warm. The candidate rule from stage 1 keeps
+   today's plan on these cells, so measuring answer accuracy there would not change what ships. Stage 2 is skipped,
+   and the cold-cache timeout is reported as a finding about gbrain in its own right: how many queries hit the budget,
+   how many pages they returned, and whether gbrain's callers see the incomplete flag. A rule broadened to flip any
+   untrusted `where` 20% cell reopens stage 2.
+2. **Stage 1b's order.** Stage 1b's runs (L at 75,000 and 375,000 chunks, seeds 19817, 19818 and 19819, primary
+   engine, every filter, both modes, both callers, limits 20 and 50, warm and cold) started before the last stage 1
+   re-runs finished, so the confirmation would finish the same day. The rule is fixed from stage 1 data alone and
+   committed on this branch before any stage 1b result is read. Stage 1b is recounted on its own, apart from stage 1.
+3. **W's re-run corpus.** Two W cells came out *regresses* and need re-runs. W's vectors weren't kept after its run
+   machines were destroyed, so the re-runs rebuild the corpus. The same prep script at the pin cuts the same shards,
+   and the run stops before embedding unless `pages.tsv` and `chunks.txt` match the hashes the W runs recorded. Then
+   `voyage-4` embeds the text again. The results report whether the new `vectors.f32` matches the recorded hash.
+   If it doesn't, the re-run used re-embedded vectors of the same text, and the results say so beside those two cells.
+
