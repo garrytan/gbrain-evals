@@ -332,6 +332,18 @@ describe('loader keys and hosting', () => {
     expect(loaded.unhosted).toEqual(['baseline-hybrid']);
     expect(loaded.problems.join('\n')).toContain("baseline-hybrid: no usable hosting sample in any cell, so its server can't be priced");
   });
+  test('a world its cell declared an idle window for, with no idle record, is named so its idle cost is never priced from the other worlds', () => {
+    const dir = join(tmp, 'idle-missing'), cell = 'cs1.baseline-hybrid.baseline.c0', [r1, r2] = ['ab'.repeat(32), 'ba'.repeat(32)];
+    for (const rid of [r1, r2]) mkdirSync(join(dir, 'runs', cell, 'r', rid), { recursive: true });
+    mkdirSync(join(dir, 'cells', `${cell}.whole-default`), { recursive: true });
+    writeFileSync(join(dir, 'cells', `${cell}.whole-default`, 'run-config.json'), JSON.stringify({ cell: { idle_window: { worlds: ['w1', 'w2'], ms: 1000, jobs: [] } } }));
+    writeFileSync(join(dir, 'runs', cell, 'realizations.ndjson'), [[r1, 'w1'], [r2, 'w2']].map(([rid, conv]) => JSON.stringify({ realization_id: rid, conversation: conv, event: 'ingested', at: '2026-11-25T00:00:00Z', ingest: { content_tokens: 1000, ingested_tokens: 1100, sessions: 10 } })).join('\n') + '\n');
+    writeFileSync(join(dir, 'runs', cell, 'r', r2, 'idle.json'), JSON.stringify({ ms: 1000, usd: null, triggers: [] }) + '\n');
+    const opts = { cells: new Map([[cell, 'baseline-hybrid']]), questions: new Map(), ladder: { provider: 'invented', instances: [{ name: 'small', memory_gib: 2, usd_per_hour: 0.02 }], storage_usd_per_gb_month: 0.1 } };
+    const loaded = cs1Load([{ dir, usage: [] }], opts);
+    expect(loaded.missing_idle).toEqual([`${cell} w1`]);
+    expect(loaded.problems.join('\n')).toContain('w1: its cell declares an idle window but wrote no idle record');
+  });
   test('a trigger an older cell recorded with a nonzero exit and no error is still a failed trigger', () => {
     const dir = join(tmp, 'legacy-trigger-exit'), cell = 'cs1.baseline-hybrid.baseline.c0', rid = 'ef'.repeat(32);
     mkdirSync(join(dir, 'runs', cell, 'r', rid), { recursive: true });
