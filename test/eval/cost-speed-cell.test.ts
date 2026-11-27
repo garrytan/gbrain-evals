@@ -267,6 +267,23 @@ describe('loader keys and hosting', () => {
     expect(lost.checks.sum_back.difference_usd).toBeCloseTo(0.5, 12);
     expect(lost.problems.join('\n')).toContain('billed dollars are in no world');
   });
+  // Value: protects=the no-memory floor, which stores nothing, loads without problems about ingest it never does; fails_when=the loader
+  // asks the floor's realizations for a namespace and content tokens, so every counted load lists 20 false problems (CS1-COUNTED 2026-11-27).
+  test('a system that writes nothing is not asked for an ingest namespace or content tokens, and a writing system still is', () => {
+    const unit = (system: string, cell: string) => {
+      const dir = join(tmp, 'writes-nothing-' + system), rid = 'cd'.repeat(32);
+      mkdirSync(join(dir, 'runs', cell, 'r', rid), { recursive: true });
+      writeFileSync(join(dir, 'runs', cell, 'realizations.ndjson'), JSON.stringify({ realization_id: rid, conversation: 'w1', event: 'ingested', at: '2026-11-25T00:00:00Z', ingest: { ingested_tokens: 900, sessions: 10 } }) + '\n');
+      const opts = { cells: new Map([[cell, system]]), questions: new Map(), ladder: { provider: 'invented', instances: [{ name: 'small', memory_gib: 2, usd_per_hour: 0.02 }], storage_usd_per_gb_month: 0.1 } };
+      return cs1Load([{ dir, usage: [] }], opts).problems.join('\n');
+    };
+    const none = unit('baseline-none', 'cs1.baseline-none.baseline');
+    expect(none).not.toContain('names no namespace');
+    expect(none).not.toContain('no content_tokens');
+    const hybrid = unit('baseline-hybrid', 'cs1.baseline-hybrid.baseline.c0');
+    expect(hybrid).toContain('names no namespace');
+    expect(hybrid).toContain('no content_tokens');
+  });
   test("hosting counts only the system's own compose project, or the harness process and its files when in process", () => {
     const s = (at: string, rss: number, files = 0) => ({ at, stage: 'questions:w1', harness_rss_bytes: rss, containers: [{ name: 'stack-db-1', mem_bytes: 100 }, { name: 'other-db-1', mem_bytes: 900 }], volumes: [{ name: 'stack_data', bytes: 50 }, { name: 'other_data', bytes: 500 }], dirs: [{ path: '/x', bytes: files }] });
     const rs = [{ at: '2026-11-25T00:00:00Z', ingest: { content_tokens: 1000, ingested_tokens: 1100, sessions: 5 } }, { at: '2026-11-25T02:00:00Z', ingest: { content_tokens: 2000, ingested_tokens: 2200, sessions: 5 } }];

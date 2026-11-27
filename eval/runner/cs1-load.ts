@@ -27,6 +27,7 @@ import type { MemoryQuestion } from './memory-qa/corpus.ts';
 import type { ProbeRecord } from './memory-qa/cost-speed-probes.ts';
 import type { HostingSample } from './memory-qa/hosting-samples.ts';
 import { priceOf } from './q1/cells/definitions.ts';
+import { CS1_WRITES_NOTHING } from './q1/cells/cs1.ts';
 
 export type Cs1Bucket = 'write' | 'background' | 'probe' | 'read' | 'idle' | 'trigger' | 'reader' | 'unattributed';
 
@@ -144,7 +145,7 @@ export function cs1Load(units: readonly Cs1Unit[], opts: Cs1LoadOptions) {
       const rid = new Map(rs.map(r => [r.rid, r.conv] as const));
       const mine = all.filter(a => rid.has(a.realization_id));
       const answer = new Map(mine.map(a => [a.answer_id.slice(0, 16), a.conversation] as const));
-      for (const r of rs) if (!r.ns && system !== fcSystem && r.ingest.sessions > 0) problems.push(`${cell} ${r.conv}: the ingested event names no namespace, so its ingest lines can't be found`);
+      for (const r of rs) if (!r.ns && !CS1_WRITES_NOTHING.includes(system) && system !== fcSystem && r.ingest.sessions > 0) problems.push(`${cell} ${r.conv}: the ingested event names no namespace, so its ingest lines can't be found`);
       const by = new Map<string, Record<Cs1Bucket, UsageLine[]>>();
       const triggers = new Map<string, Map<string, number>>();
       const readerLines = new Map<string, UsageLine[]>();
@@ -201,7 +202,7 @@ export function cs1Load(units: readonly Cs1Unit[], opts: Cs1LoadOptions) {
           probes: probes.filter(p => p.kind === 'held-back'),
           bulk_probes: probes.filter(p => p.kind === 'bulk'),
         };
-        if (!r.ingest.content_tokens) problems.push(`${cell} ${r.conv}: no content_tokens in the ingested event; priced on ingested_tokens`);
+        if (!r.ingest.content_tokens && !CS1_WRITES_NOTHING.includes(system)) problems.push(`${cell} ${r.conv}: no content_tokens in the ingested event; priced on ingested_tokens`);
         worlds.set(system, [...(worlds.get(system) ?? []), world]);
       }
       if (system !== fcSystem) {
