@@ -284,6 +284,22 @@ describe('loader keys and hosting', () => {
     expect(hybrid).toContain('names no namespace');
     expect(hybrid).toContain('no content_tokens');
   });
+  // Value: protects=the preregistration's "system cost is zero by construction" for the no-memory floor; fails_when=the loader prices the
+  // floor's harness process as a hosted memory system, so its row carries a server bill for a system that holds nothing (CS1-COUNTED 2026-11-27).
+  test('a system that writes nothing gets no hosting, and a writing system in process still does', () => {
+    const unit = (system: string, cell: string) => {
+      const dir = join(tmp, 'hosting-floor-' + system), rid = 'ef'.repeat(32);
+      mkdirSync(join(dir, 'runs', cell, 'r', rid), { recursive: true });
+      writeFileSync(join(dir, 'runs', cell, 'realizations.ndjson'), JSON.stringify({ realization_id: rid, conversation: 'w1', event: 'ingested', at: '2026-11-25T00:00:00Z', ingest: { content_tokens: 1000, ingested_tokens: 1100, sessions: 10 } }) + '\n');
+      writeFileSync(join(dir, 'runs', cell, 'hosting.ndjson'), ['2026-11-25T01:00:00Z', '2026-11-25T02:00:00Z'].map(at => JSON.stringify({ at, stage: 'questions:w1', harness_rss_bytes: 2 ** 30, containers: [], volumes: [], dirs: [] })).join('\n') + '\n');
+      const opts = { cells: new Map([[cell, system]]), questions: new Map(), ladder: { provider: 'invented', instances: [{ name: 'small', memory_gib: 2, usd_per_hour: 0.02 }], storage_usd_per_gb_month: 0.1 } };
+      return cs1Load([{ dir, usage: [] }], opts);
+    };
+    const none = unit('baseline-none', 'cs1.baseline-none.baseline');
+    expect(none.input.systems.find(s => s.system === 'baseline-none')!.hosting).toBeNull();
+    expect(none.problems.join('\n')).not.toContain('hosting samples');
+    expect(unit('baseline-hybrid', 'cs1.baseline-hybrid.baseline.c0').input.systems.find(s => s.system === 'baseline-hybrid')!.hosting).not.toBeNull();
+  });
   test("hosting counts only the system's own compose project, or the harness process and its files when in process", () => {
     const s = (at: string, rss: number, files = 0) => ({ at, stage: 'questions:w1', harness_rss_bytes: rss, containers: [{ name: 'stack-db-1', mem_bytes: 100 }, { name: 'other-db-1', mem_bytes: 900 }], volumes: [{ name: 'stack_data', bytes: 50 }, { name: 'other_data', bytes: 500 }], dirs: [{ path: '/x', bytes: files }] });
     const rs = [{ at: '2026-11-25T00:00:00Z', ingest: { content_tokens: 1000, ingested_tokens: 1100, sessions: 5 } }, { at: '2026-11-25T02:00:00Z', ingest: { content_tokens: 2000, ingested_tokens: 2200, sessions: 5 } }];

@@ -205,7 +205,7 @@ export function cs1Load(units: readonly Cs1Unit[], opts: Cs1LoadOptions) {
         if (!r.ingest.content_tokens && !CS1_WRITES_NOTHING.includes(system)) problems.push(`${cell} ${r.conv}: no content_tokens in the ingested event; priced on ingested_tokens`);
         worlds.set(system, [...(worlds.get(system) ?? []), world]);
       }
-      if (system !== fcSystem) {
+      if (system !== fcSystem && !CS1_WRITES_NOTHING.includes(system)) {
         const samples = lines<HostingSample>(join(dir, 'hosting.ndjson')), failed = samples.filter(s => s.error);
         if (!samples.length) problems.push(`${cell}: no hosting samples`);
         if (failed.length) problems.push(`${cell}: ${failed.length} of ${samples.length} hosting samples failed (${failed[0].error})`);
@@ -263,7 +263,7 @@ export function hostingOf(samples: readonly HostingSample[], stack: string | nul
  * CLI: bun eval/runner/cs1-load.ts --unit <cell --out dir>:<proxy usage.ndjson> [--unit ...] --out <result.json>
  *   [--ladder primary|sensitivity] [--rows <rows.json> --table <table.md> [--profile heavy|light]] [--keyless]
  * Loads the units, aggregates them (cs1Aggregate) and writes { checks, problems, ladder, result }; with --rows (each
- * system's build and date) it also renders README's table. Reads only local files: no provider is called.
+ * system's build and date, and a `not_run` reason for a row that didn't run) it also renders README's table. Reads only local files: no provider is called.
  */
 if (import.meta.main) {
   const argv = process.argv.slice(2);
@@ -300,10 +300,12 @@ if (import.meta.main) {
   const which = (one('--ladder') ?? 'primary') as keyof typeof CS1_PRICE_LADDERS;
   const ladder = CS1_PRICE_LADDERS[which];
   if (!ladder) { console.error(`--ladder must be one of ${Object.keys(CS1_PRICE_LADDERS).join(', ')}`); process.exit(2); }
-  const loaded = cs1Load(units, { cells, questions, ladder, stacks, fullContextFit });
-  const result = cs1Aggregate(loaded.input);
-  writeFileSync(out, JSON.stringify({ checks: loaded.checks, problems: loaded.problems, ladder, stacks, result }, null, 2) + '\n');
   const rowsFile = one('--rows'), table = one('--table');
-  if (rowsFile && table) writeFileSync(table, renderCs1Table(result, JSON.parse(readFileSync(rowsFile, 'utf8')), (one('--profile') ?? 'heavy') as Cs1Profile));
+  const rows: Record<string, { build: string; date: string; not_run?: string }> = rowsFile ? JSON.parse(readFileSync(rowsFile, 'utf8')) : {};
+  const loaded = cs1Load(units, { cells, questions, ladder, stacks, fullContextFit });
+  const order = (s: string) => defs.findIndex(c => c.system === s);
+  const result = cs1Aggregate({ ...loaded.input, systems: [...loaded.input.systems].sort((x, y) => order(x.system) - order(y.system)), not_run: Object.entries(rows).flatMap(([system, r]) => r.not_run ? [{ system, reason: r.not_run }] : []) });
+  writeFileSync(out, JSON.stringify({ checks: loaded.checks, problems: loaded.problems, ladder, stacks, result }, null, 2) + '\n');
+  if (rowsFile && table) writeFileSync(table, renderCs1Table(result, rows, (one('--profile') ?? 'heavy') as Cs1Profile));
   console.log(JSON.stringify({ out, table: rowsFile && table ? table : null, sum_back: loaded.checks.sum_back, problems: loaded.problems.length }));
 }
