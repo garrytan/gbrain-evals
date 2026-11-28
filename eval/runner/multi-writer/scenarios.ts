@@ -382,6 +382,58 @@ async function timelineTakeover(ctx: Ctx): Promise<PhaseResult> {
   return { phase: 'takeover', status: phaseStatus(tally, findings), tally, findings, notes };
 }
 
+// ─── 8 (draft). A confirmed save survives a crash of its owner ───────────────────────────────────────────────
+
+/**
+ * Findings for check 8: each confirmed save must read back with its own text after its process was killed. A save
+ * that was never confirmed (refused, pending, or cut off by the kill) proves nothing and is not judged here.
+ */
+export function failoverFindings(saves: ReadonlyArray<{ slug: string; text: string; confirmed: boolean; readOk: boolean; readCode?: string | null; body: string }>): string[] {
+  const out: string[] = [];
+  for (const s of saves) {
+    if (!s.confirmed) continue;
+    if (!s.readOk) out.push(`confirmed save ${s.slug} is gone after its owner was killed (${s.readCode ?? 'read failed'})`);
+    else if (!s.body.includes(s.text)) out.push(`confirmed save ${s.slug} reads back without its text after its owner was killed`);
+  }
+  return out;
+}
+
+/**
+ * Draft. Each round, one process saves a page and is killed the moment it reports the save confirmed; a new process
+ * then opens the brain (on Rust it takes the store over) and reads the page. One machine only: this cannot model a
+ * backup machine that never received the save, so it covers a local takeover, not a cross-machine failover.
+ */
+export async function checkFailover(ctx: Ctx): Promise<CheckResult> {
+  const lines: OpLine[] = [];
+  const saves: Array<{ slug: string; text: string; confirmed: boolean; readOk: boolean; readCode?: string | null; body: string }> = [];
+  const roles: string[] = [];
+  for (let r = 0; r < ctx.rounds; r++) {
+    const slug = `mw/c8-failover-${r}`;
+    const text = `c8 failover save ${r} ${crypto.randomUUID()}`;
+    const tag = `save:${r}`;
+    let killed = false;
+    const run = await runWriters(ctx.brain, ctx.gut, [{ mode: 'engine', lanes: [[{ op: 'put_page', params: { slug, content: text }, tag }]], hold: true, probe: true }], {
+      onOp: (_w, l, all) => { if (l.tag === tag && !killed) { killed = true; killGroup(all[0]!.child); } },
+      timeoutMs: 60_000,
+    });
+    if (!killed) killGroup(run.workers[0]!.child);
+    roles.push(String((run.ready[0]?.probe as Record<string, unknown> | undefined)?.role ?? 'none'));
+    const line = run.ops.find(o => o.tag === tag);
+    if (line) lines.push(line);
+    const got = (await read(ctx, [{ op: 'get_page', params: { slug }, tag: 'get' }], undefined)).get('get');
+    const page = asJson(got?.result) as Record<string, unknown> | null;
+    saves.push({ slug, text, confirmed: line?.ok === true, readOk: got?.ok === true, readCode: got?.code ?? null, body: JSON.stringify(page ?? '') });
+  }
+  const tally = tallyOps(lines);
+  const findings = failoverFindings(saves);
+  const confirmed = saves.filter(s => s.confirmed).length;
+  const notes = [`${confirmed} of ${saves.length} saves confirmed before the kill`, `saver roles: ${roles.join(', ')}`, 'one machine: a local takeover, not a cross-machine failover'];
+  if (ctx.brain.kind !== 'rust') notes.push(`${ctx.brain.kind} has no store owner; this checks the save survives its writer being killed`);
+  if (confirmed === 0) notes.push('no save was confirmed, so nothing was tested');
+  const status = findings.length ? 'fail' : confirmed === 0 && Object.keys(tally.refused).length === 0 && Object.keys(tally.errors).length === 0 ? 'invalid' : phaseStatus(tally, findings);
+  return { id: 'c8_failover', title: 'Draft: a confirmed save survives a crash of the process that made it', status, phases: [{ phase: 'takeover', status, tally, findings, notes }] };
+}
+
 // ─── 5. Deletion leaves nothing ───────────────────────────────────────────────────────────────────────────────────
 
 export async function checkDeletion(ctx: Ctx): Promise<CheckResult> {

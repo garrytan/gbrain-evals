@@ -17,7 +17,9 @@
  *                          write an unlabelled page, a private page never shows in another member's keyword search, a
  *                          hidden page answers like a missing one, out-of-range numbers (compared across engines), and
  *                          the refusal for re-remembering a forgotten fact
- *   c8 latency             p50/p95 put latency, reported and never judged
+ *   c8 failover (draft)    a process is killed right after a confirmed save; a new process must read the save back
+ *                          (one machine: a local takeover, not a cross-machine failover). Runs only with --checks c8
+ *   latency                p50/p95 put latency, reported and never judged
  *
  * Verdicts are pass, fail (wrong data, or an error that is not a typed refusal), not_supported (the engine refused the
  * step by name: the expected fail-closed answer on Rust until its multi-user lanes land) and invalid (classify.ts).
@@ -50,7 +52,7 @@ import { evalEngineKind, rustAddonIdentity, type EvalEngineKind } from './eval-e
 import { gbrainSpecFrom, overlaySummary, resolveGbrainUnderTest, OVERLAY_ROOT, type GbrainUnderTest } from './gbrain-under-test.ts';
 import { createBrain, operatorCalls, runWriters, type SwitchSetting } from './multi-writer/brain.ts';
 import { judgeSwitch, normalizeForParity, type Status, type SwitchProof } from './multi-writer/classify.ts';
-import { checkAccess, checkDeletion, checkDuplicates, checkFacts, checkLinks, checkLostUpdates, checkTimeline, measureLatency, SERIAL_SCRIPT, type CheckResult, type Ctx } from './multi-writer/scenarios.ts';
+import { checkAccess, checkDeletion, checkDuplicates, checkFailover, checkFacts, checkLinks, checkLostUpdates, checkTimeline, measureLatency, SERIAL_SCRIPT, type CheckResult, type Ctx } from './multi-writer/scenarios.ts';
 
 const REPO = resolve(import.meta.dir, '../..');
 export const SCHEMA = 'gbrain-evals.multi-writer-behavior.v1';
@@ -58,6 +60,9 @@ export const SCHEMA = 'gbrain-evals.multi-writer-behavior.v1';
 const CHECKS: Record<string, (ctx: Ctx) => Promise<CheckResult>> = {
   c1: checkLostUpdates, c2: checkDuplicates, c3: checkLinks, c4: checkTimeline, c5: checkDeletion, c6: checkFacts, c7: checkAccess,
 };
+/** Draft checks run only when named in --checks; the default run stays c1 to c7. */
+const DRAFT_CHECKS: Record<string, (ctx: Ctx) => Promise<CheckResult>> = { c8: checkFailover };
+const DEFAULT_CHECKS = Object.keys(CHECKS).join(',');
 
 function flag(argv: readonly string[], name: string): string | undefined {
   const at = argv.indexOf(name);
@@ -110,7 +115,7 @@ export async function runArm(o: { gut: GbrainUnderTest; kind: EvalEngineKind; sw
     const ctx: Ctx = { gut: o.gut, brain, writers: o.writers, rounds: o.rounds, log: o.log };
     let putMs: number[] = [];
     for (const id of o.checks) {
-      const fn = CHECKS[id];
+      const fn = CHECKS[id] ?? DRAFT_CHECKS[id];
       if (!fn) continue;
       o.log(`[mw] ${o.kind}${o.kind === 'rust' ? ` switch=${o.switchSetting}` : ''}: ${id}`);
       const mark = brain.stderrLog.length;
@@ -256,7 +261,7 @@ async function matrix(argv: string[], log: (s: string) => void): Promise<void> {
     const gut = resolveGbrainUnderTest(`${clone}@${arm.sha}`);
     const env = { ...process.env };
     if (arm.kind === 'rust') process.env.GBRAIN_RUST_ENGINE_ADDON = buildAddon(gut, cargoTarget, log);
-    const r = await runArm({ gut, kind: arm.kind, switchSetting: arm.sw, pgAdminUrl, writers: Number(flag(argv, '--writers') ?? 4), rounds: Number(flag(argv, '--rounds') ?? 4), checks: (flag(argv, '--checks') ?? Object.keys(CHECKS).join(',')).split(','), log });
+    const r = await runArm({ gut, kind: arm.kind, switchSetting: arm.sw, pgAdminUrl, writers: Number(flag(argv, '--writers') ?? 4), rounds: Number(flag(argv, '--rounds') ?? 4), checks: (flag(argv, '--checks') ?? DEFAULT_CHECKS).split(','), log });
     process.env.GBRAIN_RUST_ENGINE_ADDON = env.GBRAIN_RUST_ENGINE_ADDON;
     if (env.GBRAIN_RUST_ENGINE_ADDON === undefined) delete process.env.GBRAIN_RUST_ENGINE_ADDON;
     receipts[arm.name] = r;
@@ -294,7 +299,7 @@ async function main(): Promise<void> {
   const kind = evalEngineKind();
   const sw = (flag(argv, '--switch') ?? (process.env.GBRAIN_RUST_MULTIUSER === '1' ? 'on' : 'off')) as SwitchSetting;
   if (sw !== 'on' && sw !== 'off') throw new Error('--switch is on or off');
-  const r = await runArm({ gut, kind, switchSetting: sw, pgAdminUrl: flag(argv, '--pg-url') ?? process.env.LIFECYCLE_PG_URL, writers: Number(flag(argv, '--writers') ?? 4), rounds: Number(flag(argv, '--rounds') ?? 4), checks: (flag(argv, '--checks') ?? Object.keys(CHECKS).join(',')).split(','), log });
+  const r = await runArm({ gut, kind, switchSetting: sw, pgAdminUrl: flag(argv, '--pg-url') ?? process.env.LIFECYCLE_PG_URL, writers: Number(flag(argv, '--writers') ?? 4), rounds: Number(flag(argv, '--rounds') ?? 4), checks: (flag(argv, '--checks') ?? DEFAULT_CHECKS).split(','), log });
   const out = resolve(flag(argv, '--out') ?? join(REPO, 'eval/reports/multi-writer', `engine-${kind}${kind === 'rust' ? `-${sw}` : ''}`));
   mkdirSync(out, { recursive: true });
   writeFileSync(join(out, 'receipt.json'), `${JSON.stringify(r, null, 2)}\n`);

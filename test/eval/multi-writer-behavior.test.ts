@@ -8,7 +8,7 @@ import { describe, expect, test } from 'bun:test';
 import { combineStatus, isConflict, isOwnerOnlyRefusal, judgeSwitch, mergeTally, MOVED_UNDER_WRITE, normalizeForParity, outcomeClass, ownerGateFindings, percentile, phaseStatus, recordReadFailure, tallyOps } from '../../eval/runner/multi-writer/classify.ts';
 import { childEnv } from '../../eval/runner/multi-writer/brain.ts';
 import { errorCodeOf, type OpLine } from '../../eval/runner/multi-writer/worker.ts';
-import { asJson } from '../../eval/runner/multi-writer/scenarios.ts';
+import { asJson, failoverFindings } from '../../eval/runner/multi-writer/scenarios.ts';
 import { firstDifference, renderReport, type Receipt } from '../../eval/runner/multi-writer-behavior.ts';
 
 const line = (o: Partial<OpLine>): OpLine => ({ kind: 'op', lane: 0, i: 0, op: 'put_page', tag: 't', ok: true, t0: 0, t1: 1, ms: 1, ...o });
@@ -94,6 +94,18 @@ describe('check 7 and the owner-only gate', () => {
     expect(phaseStatus(t, [])).toBe('not_supported');
     expect(phaseStatus(t, f)).toBe('fail');
     expect(phaseStatus(t, ["another member's keyword search returned a private page"])).toBe('fail');
+  });
+});
+
+describe('check 8 (draft): a confirmed save survives a crash', () => {
+  const base = { slug: 'mw/c8-failover-0', text: 'c8 failover save 0 abc', confirmed: true, readOk: true, body: '{"compiled_truth":"c8 failover save 0 abc"}' };
+  test('a confirmed save that reads back with its text is no finding; an unconfirmed one is never judged', () => {
+    expect(failoverFindings([base])).toEqual([]);
+    expect(failoverFindings([{ ...base, confirmed: false, readOk: false, body: '' }])).toEqual([]);
+  });
+  test('a confirmed save that is gone or lost its text is a finding', () => {
+    expect(failoverFindings([{ ...base, readOk: false, readCode: 'page_not_found', body: '' }])[0]).toContain('page_not_found');
+    expect(failoverFindings([{ ...base, body: '{"compiled_truth":"older text"}' }])).toHaveLength(1);
   });
 });
 
