@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { afterDateFor, attributeRanks, dateFor, filters, pageAttributes, SHARES } from './attributes.ts';
@@ -226,5 +226,32 @@ describe('published manifests', () => {
     expect(manifest).toEqual({ label: 'pglite', db: '~/pgl/data-15000', chunks: 15000 });
     expect(MACHINE_LOCAL_PATH.test(JSON.stringify(manifest))).toBe(false);
     expect(MACHINE_LOCAL_PATH.test(JSON.stringify({ db: '/home/ubi/pgl/data-15000' }))).toBe(true);
+  });
+});
+
+describe('embed-wiki', () => {
+  test('a failed batch waits for its siblings, so every request settles before the guard comes off', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'fv-embed-'));
+    writeFileSync(join(dir, 'pages.tsv'), 'a\tx\t128\nb\tx\t128\n');
+    writeFileSync(join(dir, 'chunks.txt'), Array.from({ length: 256 }, (_, i) => 'chunk ' + i + '\n').join(''));
+    writeFileSync(join(dir, 'fake-fetch.ts'), [
+      "import { appendFileSync, existsSync } from 'node:fs';",
+      "const dir = process.env.FAKE_DIR!;",
+      "globalThis.fetch = (async (_url: string, init: RequestInit) => {",
+      "  const first = (JSON.parse(String(init.body)) as { input: string[] }).input[0];",
+      "  if (first === 'chunk 0') return new Response('bad request', { status: 400 });",
+      "  await Bun.sleep(300);",
+      "  appendFileSync(dir + '/responses.log', first + (existsSync(dir + '/embed-receipt.json') ? ' after' : ' before') + ' the receipt\\n');",
+      "  return new Response('slow down', { status: 429 });",
+      "}) as typeof fetch;",
+    ].join('\n'));
+    const run = Bun.spawnSync([process.execPath, '--preload', join(dir, 'fake-fetch.ts'), resolve(import.meta.dir, 'embed-wiki.ts'),
+      '--corpus-dir', dir, '--chunks', '256', '--concurrency', '2', '--budget-usd', '1', '--program-cap-usd', '1', '--budget-ledger', join(dir, 'ledger.sqlite')], {
+      env: { PATH: process.env.PATH, HOME: dir, FAKE_DIR: dir, VOYAGE_API_KEY: 'keyless-test' },
+    });
+    expect(run.exitCode).not.toBe(0);
+    expect(run.stderr.toString()).toContain('voyage 400');
+    expect(existsSync(join(dir, 'responses.log')) ? readFileSync(join(dir, 'responses.log'), 'utf8') : '').toBe('chunk 128 before the receipt\n');
+    expect(JSON.parse(readFileSync(join(dir, 'embed-receipt.json'), 'utf8')).ledger.requests).toBe(2);
   });
 });

@@ -5,7 +5,8 @@
  * the budget ledger: every request is reserved against --budget-usd before it is sent and settled to Voyage's reported
  * tokens. Reads <dir>/pages.tsv and <dir>/chunks.txt from gbrain's scripts/bench/hnsw-real-corpus-prep.py at the pin and
  * appends unit-normalized vectors to <dir>/vectors.f32 in chunk order, so a stopped run resumes where it stopped. A cap
- * stop throws at a batch boundary; nothing is retried past it.
+ * stop throws at a batch boundary; nothing is retried past it. A failed batch stops its siblings' retries, and every batch
+ * settles before the guard comes off and the ledger closes.
  *
  *   VOYAGE_API_KEY=... bun eval/runner/filtered-vector/embed-wiki.ts --corpus-dir ~/wiki --chunks 375000 --budget-usd 15
  */
@@ -46,9 +47,11 @@ if (!process.env.VOYAGE_API_KEY) throw new Error('VOYAGE_API_KEY is not set');
 
 const { run, guard } = startPaidRun('filtered-vector-embed-wiki', { ...budgetOptionsFrom(process.argv), estimateUsd: estimateUsd * (1 - have / total), log });
 let tokens = 0, requests = 0;
+let failure: unknown = null;
 
 async function voyage(batch: string[]): Promise<Float32Array[]> {
   for (let attempt = 0; ; attempt++) {
+    if (failure !== null) throw new Error('a sibling batch failed; not retrying');
     const res = await fetch('https://api.voyageai.com/v1/embeddings', {
       method: 'POST', headers: { 'content-type': 'application/json', authorization: 'Bearer ' + process.env.VOYAGE_API_KEY },
       body: JSON.stringify({ model: 'voyage-4', input: batch, input_type: 'document', output_dimension: DIMS }),
@@ -67,7 +70,7 @@ async function voyage(batch: string[]): Promise<Float32Array[]> {
       });
     }
     const retry = res.status === 429 || res.status >= 500;
-    if (!retry || attempt >= 6 || guard.exhausted) throw new Error('voyage ' + res.status + ': ' + (await res.text()).slice(0, 200));
+    if (!retry || attempt >= 6 || guard.exhausted || failure !== null) throw new Error('voyage ' + res.status + ': ' + (await res.text()).slice(0, 200));
     await Bun.sleep(Math.min(60_000, 1000 * 2 ** attempt));
   }
 }
@@ -84,8 +87,9 @@ try {
       while (i < total && batch.length < 128 && chars < 90_000) { const t = text(i++); batch.push(t); chars += t.length; }
       batches.push(batch);
     }
-    const results = await Promise.all(batches.map(voyage));
-    for (const vectors of results) writeSync(fd, Buffer.concat(vectors.map(v => Buffer.from(v.buffer, v.byteOffset, v.byteLength))));
+    const results = await Promise.allSettled(batches.map(b => voyage(b).catch(e => { failure ??= e; throw e; })));
+    if (failure !== null) throw failure;
+    for (const r of results) writeSync(fd, Buffer.concat((r as PromiseFulfilledResult<Float32Array[]>).value.map(v => Buffer.from(v.buffer, v.byteOffset, v.byteLength))));
     have = i;
     if ((have - start) % 20_000 < 1024) log('embedded ' + have + '/' + total + ', ' + tokens + ' tokens, ' + Math.round((have - start) / ((performance.now() - t0) / 60_000)) + ' chunks/min');
   }
