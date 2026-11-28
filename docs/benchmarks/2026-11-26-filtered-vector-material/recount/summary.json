@@ -1,0 +1,3973 @@
+{
+ "cells": 1490,
+ "decision": {
+  "pooled_cells": 1118,
+  "pooled": {
+   "p50": {
+    "est": 0.7419581101649936,
+    "lo": 0.740839207330761,
+    "hi": 0.742734796711708
+   },
+   "p95": {
+    "est": 0.800222132117657,
+    "lo": 0.796873011403204,
+    "hi": 0.8019438583779435
+   }
+  },
+  "outcome": "limited-flip",
+  "latencyImproves": true,
+  "blocking": 81,
+  "invalid_cells": []
+ },
+ "truth_check": {
+  "cells_checked": 1490,
+  "cells": 1490,
+  "unchecked": [],
+  "disagreements": [],
+  "stops": [],
+  "clean": true
+ },
+ "sanity": [
+  {
+   "label": "pg17-v074",
+   "cells": 16,
+   "identical_sql_settings": true,
+   "mismatches": [],
+   "same_pages_min": 0.998,
+   "same_pages_ok": true,
+   "pooled_p50": {
+    "est": 1.012631158300258,
+    "lo": 1.006357463941933,
+    "hi": 1.0198812974982339
+   },
+   "pooled_ok": true,
+   "single_cells_missing_1": [
+    "pg17-v074|latent|375000|independent|untrusted|scope-50|k20|warm|qs9819"
+   ]
+  },
+  {
+   "label": "pg17-v087",
+   "cells": 60,
+   "identical_sql_settings": true,
+   "mismatches": [],
+   "same_pages_min": 1,
+   "same_pages_ok": true,
+   "pooled_p50": {
+    "est": 1.0057991097625842,
+    "lo": 1.0017499943688377,
+    "hi": 1.011418687203818
+   },
+   "pooled_ok": true,
+   "single_cells_missing_1": [
+    "pg17-v087|latent|15000|independent|trusted|scope-50|k50|warm|qs9819",
+    "pg17-v087|latent|15000|independent|untrusted|none|k20|warm|qs9819",
+    "pg17-v087|latent|15000|independent|untrusted|scope-50|k50|warm|qs9819",
+    "pg17-v087|latent|15000|clustered|trusted|none|k20|warm|qs9819",
+    "pg17-v087|latent|75000|independent|trusted|none|k50|warm|qs9819",
+    "pg17-v087|latent|75000|independent|untrusted|none|k50|warm|qs9819",
+    "pg17-v087|latent|75000|independent|untrusted|scope-50|k50|warm|qs9819",
+    "pg17-v087|latent|1500000|clustered|trusted|none|k20|warm|qs9819",
+    "pg17-v087|latent|1500000|independent|trusted|none|k20|warm|qs9819",
+    "pg17-v087|latent|1500000|independent|trusted|none|k50|warm|qs9819",
+    "pg17-v087|latent|1500000|independent|trusted|scope-50|k20|warm|qs9819",
+    "pg17-v087|latent|1500000|independent|trusted|scope-50|k50|warm|qs9819",
+    "pg17-v087|latent|1500000|independent|untrusted|none|k20|warm|qs9819",
+    "pg17-v087|latent|1500000|independent|untrusted|none|k50|warm|qs9819",
+    "pg17-v087|latent|1500000|independent|untrusted|scope-50|k20|warm|qs9819",
+    "pg17-v087|latent|375000|clustered|untrusted|scope-50|k20|warm|qs9819",
+    "pg17-v087|latent|375000|independent|trusted|none|k20|warm|qs9819",
+    "pg17-v087|latent|375000|independent|trusted|scope-50|k50|warm|qs9819",
+    "pg17-v087|latent|375000|independent|untrusted|scope-50|k20|warm|qs9819",
+    "pg17-v087|latent|375000|independent|untrusted|scope-50|k50|warm|qs9819",
+    "pg17-v087|wiki|375000|clustered|untrusted|scope-50|k20|warm|qs9819",
+    "pg17-v087|wiki|375000|independent|trusted|none|k20|warm|qs9819",
+    "pg17-v087|wiki|375000|independent|trusted|none|k50|warm|qs9819",
+    "pg17-v087|wiki|375000|independent|untrusted|scope-50|k20|warm|qs9819"
+   ]
+  },
+  {
+   "label": "pg15-v087",
+   "cells": 16,
+   "identical_sql_settings": true,
+   "mismatches": [],
+   "same_pages_min": 1,
+   "same_pages_ok": true,
+   "pooled_p50": {
+    "est": 1.0030462873570325,
+    "lo": 0.9993329603082326,
+    "hi": 1.0065433471685648
+   },
+   "pooled_ok": true,
+   "single_cells_missing_1": [
+    "pg15-v087|latent|75000|independent|trusted|none|k20|warm|qs9819",
+    "pg15-v087|latent|75000|independent|trusted|scope-50|k20|warm|qs9819"
+   ]
+  },
+  {
+   "label": "pg16-v087",
+   "cells": 16,
+   "identical_sql_settings": true,
+   "mismatches": [],
+   "same_pages_min": 1,
+   "same_pages_ok": true,
+   "pooled_p50": {
+    "est": 1.0017098878195443,
+    "lo": 0.9989040214527056,
+    "hi": 1.0037038332494672
+   },
+   "pooled_ok": true,
+   "single_cells_missing_1": [
+    "pg16-v087|latent|375000|independent|trusted|scope-50|k20|warm|qs9819",
+    "pg16-v087|latent|375000|clustered|trusted|none|k20|warm|qs9819"
+   ]
+  },
+  {
+   "label": "pg18-v087",
+   "cells": 16,
+   "identical_sql_settings": true,
+   "mismatches": [],
+   "same_pages_min": 1,
+   "same_pages_ok": true,
+   "pooled_p50": {
+    "est": 0.9684690020211417,
+    "lo": 0.9604638777334136,
+    "hi": 0.9750296855915803
+   },
+   "pooled_ok": true,
+   "single_cells_missing_1": [
+    "pg18-v087|latent|375000|independent|untrusted|scope-50|k20|warm|qs9819",
+    "pg18-v087|latent|75000|independent|untrusted|none|k20|warm|qs9819",
+    "pg18-v087|latent|75000|independent|untrusted|scope-50|k20|warm|qs9819"
+   ]
+  },
+  {
+   "label": "pglite",
+   "cells": 16,
+   "identical_sql_settings": true,
+   "mismatches": [],
+   "same_pages_min": 1,
+   "same_pages_ok": true,
+   "pooled_p50": {
+    "est": 1.0004226275610042,
+    "lo": 0.9945511174527439,
+    "hi": 1.0124697594335947
+   },
+   "pooled_ok": true,
+   "single_cells_missing_1": []
+  }
+ ],
+ "manifests": [
+  {
+   "db": "fv_latent_375000_246744f6",
+   "label": "pg17-v074",
+   "engine": "postgres",
+   "image": "pgvector/pgvector@sha256:31b23c4cc6ab27df7e4c876a17f4f37824a951910125459b480e1ccd56af3e6e",
+   "corpus": "latent",
+   "corpus_files": null,
+   "chunks": 375000,
+   "dims": 1024,
+   "seed": 9817,
+   "attr_seed": 9818,
+   "query_seed": 9819,
+   "latent": {
+    "rank": 16,
+    "mean": 0.25,
+    "superTopic": 0.2,
+    "topic": 0.25,
+    "page": 0.35,
+    "chunk": 0.25,
+    "noise": 0.15,
+    "queryShift": 0.25,
+    "queryNoise": 0.3,
+    "sourceShares": [
+     0.1,
+     0.4
+    ],
+    "chunks": 375000,
+    "dims": 1024,
+    "seed": 9817
+   },
+   "pages": 53324,
+   "gbrain_commit": "3a360389f152e62ccb627ab96eccfad8a9204e75",
+   "harness_commit": "8f674b620f4b4fead935869d859e44fb3eb71bb5",
+   "arm_files": [
+    {
+     "file": "src/core/postgres-engine.ts",
+     "control_sha256": "d1630815488f028ca39fee22a928b72bd02735a795ace3c799953e3d386105ce",
+     "treatment_sha256": "6c0463f0dfab254bac2ba01517931192393ecc926ab3dd8a7cf4eaf9520b0afd"
+    },
+    {
+     "file": "src/core/pglite-engine.ts",
+     "control_sha256": "cb262c5b69ec47f2ce8bc2590cf14b124040f7d2469b8d2ef58cdee1b1c32bfd",
+     "treatment_sha256": "ef2c0687fa1a4eaddbb40fa37b560682e686b60b7f325059e6f1b6e396814cf3"
+    }
+   ],
+   "index_sql": "CREATE INDEX IF NOT EXISTS idx_chunks_embedding ON content_chunks USING hnsw (embedding vector_cosine_ops);",
+   "load_seconds": 56.776872986,
+   "index_build_seconds": 40.278555946000004,
+   "maintenance_work_mem": "7GB",
+   "env": {
+    "server": "PostgreSQL 17.0 (Debian 17.0-1.pgdg120+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14) 12.2.0, 64-bit",
+    "server_num": "170000",
+    "pgvector": "0.7.4",
+    "shared_buffers": "8022MB",
+    "effective_cache_size": "24068MB",
+    "work_mem": "4MB",
+    "random_page_cost": "1.1",
+    "effective_io_concurrency": "200",
+    "synchronous_commit": "on",
+    "max_parallel_workers_per_gather": "2",
+    "jit": "on",
+    "index_bytes": 3072008192,
+    "chunks": 375000,
+    "pages": 53324
+   },
+   "machine": {
+    "cpus": 8,
+    "mem_gb": 31
+   },
+   "boost_map": {
+    "originals/": 1.5,
+    "concepts/": 1.3,
+    "writing/": 1.4,
+    "people/": 1.2,
+    "companies/": 1.2,
+    "deals/": 1.2,
+    "meetings/": 1.1,
+    "media/articles/": 1.1,
+    "media/repos/": 1.1,
+    "yc/": 1,
+    "civic/": 1,
+    "daily/": 0.8,
+    "media/x/": 0.7,
+    "openclaw/chat/": 0.5,
+    "archive/": 0.5,
+    "extracts/": 0.3,
+    "actions/": 0.3
+   },
+   "hard_excludes": [
+    "test/",
+    "attachments/",
+    ".raw/"
+   ],
+   "queries": 200,
+   "queries_untrusted": 500,
+   "truth": "brute",
+   "exact_check": 20,
+   "repeats": 3,
+   "capture": 5,
+   "started": "2026-11-27T13:16:59.547Z"
+  },
+  {
+   "db": "fv_latent_375000_f2615aa2",
+   "label": "pg17-v074",
+   "engine": "postgres",
+   "image": "pgvector/pgvector@sha256:31b23c4cc6ab27df7e4c876a17f4f37824a951910125459b480e1ccd56af3e6e",
+   "corpus": "latent",
+   "corpus_files": null,
+   "chunks": 375000,
+   "dims": 1024,
+   "seed": 9817,
+   "attr_seed": 9818,
+   "query_seed": 9819,
+   "latent": {
+    "rank": 16,
+    "mean": 0.25,
+    "superTopic": 0.2,
+    "topic": 0.25,
+    "page": 0.35,
+    "chunk": 0.25,
+    "noise": 0.15,
+    "queryShift": 0.25,
+    "queryNoise": 0.3,
+    "sourceShares": [
+     0.1,
+     0.4
+    ],
+    "chunks": 375000,
+    "dims": 1024,
+    "seed": 9817
+   },
+   "pages": 53324,
+   "gbrain_commit": "3a360389f152e62ccb627ab96eccfad8a9204e75",
+   "harness_commit": "8f674b620f4b4fead935869d859e44fb3eb71bb5",
+   "arm_files": [
+    {
+     "file": "src/core/postgres-engine.ts",
+     "control_sha256": "d1630815488f028ca39fee22a928b72bd02735a795ace3c799953e3d386105ce",
+     "treatment_sha256": "6c0463f0dfab254bac2ba01517931192393ecc926ab3dd8a7cf4eaf9520b0afd"
+    },
+    {
+     "file": "src/core/pglite-engine.ts",
+     "control_sha256": "cb262c5b69ec47f2ce8bc2590cf14b124040f7d2469b8d2ef58cdee1b1c32bfd",
+     "treatment_sha256": "ef2c0687fa1a4eaddbb40fa37b560682e686b60b7f325059e6f1b6e396814cf3"
+    }
+   ],
+   "index_sql": "CREATE INDEX IF NOT EXISTS idx_chunks_embedding ON content_chunks USING hnsw (embedding vector_cosine_ops);",
+   "load_seconds": 64.253347441,
+   "index_build_seconds": 44.733852237,
+   "maintenance_work_mem": "7GB",
+   "env": {
+    "server": "PostgreSQL 17.0 (Debian 17.0-1.pgdg120+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14) 12.2.0, 64-bit",
+    "server_num": "170000",
+    "pgvector": "0.7.4",
+    "shared_buffers": "8022MB",
+    "effective_cache_size": "24068MB",
+    "work_mem": "4MB",
+    "random_page_cost": "1.1",
+    "effective_io_concurrency": "200",
+    "synchronous_commit": "on",
+    "max_parallel_workers_per_gather": "2",
+    "jit": "on",
+    "index_bytes": 3072008192,
+    "chunks": 375000,
+    "pages": 53324
+   },
+   "machine": {
+    "cpus": 8,
+    "mem_gb": 31
+   },
+   "boost_map": {
+    "originals/": 1.5,
+    "concepts/": 1.3,
+    "writing/": 1.4,
+    "people/": 1.2,
+    "companies/": 1.2,
+    "deals/": 1.2,
+    "meetings/": 1.1,
+    "media/articles/": 1.1,
+    "media/repos/": 1.1,
+    "yc/": 1,
+    "civic/": 1,
+    "daily/": 0.8,
+    "media/x/": 0.7,
+    "openclaw/chat/": 0.5,
+    "archive/": 0.5,
+    "extracts/": 0.3,
+    "actions/": 0.3
+   },
+   "hard_excludes": [
+    "test/",
+    "attachments/",
+    ".raw/"
+   ],
+   "queries": 200,
+   "queries_untrusted": 500,
+   "truth": "brute",
+   "exact_check": 20,
+   "repeats": 3,
+   "capture": 5,
+   "started": "2026-11-27T13:17:36.203Z"
+  },
+  {
+   "db": "fv_latent_375000_eeba8b4d",
+   "label": "pg17-v074",
+   "engine": "postgres",
+   "image": "pgvector/pgvector@sha256:31b23c4cc6ab27df7e4c876a17f4f37824a951910125459b480e1ccd56af3e6e",
+   "corpus": "latent",
+   "corpus_files": null,
+   "chunks": 375000,
+   "dims": 1024,
+   "seed": 9817,
+   "attr_seed": 9818,
+   "query_seed": 9819,
+   "latent": {
+    "rank": 16,
+    "mean": 0.25,
+    "superTopic": 0.2,
+    "topic": 0.25,
+    "page": 0.35,
+    "chunk": 0.25,
+    "noise": 0.15,
+    "queryShift": 0.25,
+    "queryNoise": 0.3,
+    "sourceShares": [
+     0.1,
+     0.4
+    ],
+    "chunks": 375000,
+    "dims": 1024,
+    "seed": 9817
+   },
+   "pages": 53324,
+   "gbrain_commit": "3a360389f152e62ccb627ab96eccfad8a9204e75",
+   "harness_commit": "8f674b620f4b4fead935869d859e44fb3eb71bb5",
+   "arm_files": [
+    {
+     "file": "src/core/postgres-engine.ts",
+     "control_sha256": "d1630815488f028ca39fee22a928b72bd02735a795ace3c799953e3d386105ce",
+     "treatment_sha256": "6c0463f0dfab254bac2ba01517931192393ecc926ab3dd8a7cf4eaf9520b0afd"
+    },
+    {
+     "file": "src/core/pglite-engine.ts",
+     "control_sha256": "cb262c5b69ec47f2ce8bc2590cf14b124040f7d2469b8d2ef58cdee1b1c32bfd",
+     "treatment_sha256": "ef2c0687fa1a4eaddbb40fa37b560682e686b60b7f325059e6f1b6e396814cf3"
+    }
+   ],
+   "index_sql": "CREATE INDEX IF NOT EXISTS idx_chunks_embedding ON content_chunks USING hnsw (embedding vector_cosine_ops);",
+   "load_seconds": 58.325347058,
+   "index_build_seconds": 40.018868184,
+   "maintenance_work_mem": "7GB",
+   "env": {
+    "server": "PostgreSQL 17.0 (Debian 17.0-1.pgdg120+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14) 12.2.0, 64-bit",
+    "server_num": "170000",
+    "pgvector": "0.7.4",
+    "shared_buffers": "8022MB",
+    "effective_cache_size": "24068MB",
+    "work_mem": "4MB",
+    "random_page_cost": "1.1",
+    "effective_io_concurrency": "200",
+    "synchronous_commit": "on",
+    "max_parallel_workers_per_gather": "2",
+    "jit": "on",
+    "index_bytes": 3072008192,
+    "chunks": 375000,
+    "pages": 53324
+   },
+   "machine": {
+    "cpus": 8,
+    "mem_gb": 31
+   },
+   "boost_map": {
+    "originals/": 1.5,
+    "concepts/": 1.3,
+    "writing/": 1.4,
+    "people/": 1.2,
+    "companies/": 1.2,
+    "deals/": 1.2,
+    "meetings/": 1.1,
+    "media/articles/": 1.1,
+    "media/repos/": 1.1,
+    "yc/": 1,
+    "civic/": 1,
+    "daily/": 0.8,
+    "media/x/": 0.7,
+    "openclaw/chat/": 0.5,
+    "archive/": 0.5,
+    "extracts/": 0.3,
+    "actions/": 0.3
+   },
+   "hard_excludes": [
+    "test/",
+    "attachments/",
+    ".raw/"
+   ],
+   "queries": 200,
+   "queries_untrusted": 500,
+   "truth": "brute",
+   "exact_check": 20,
+   "repeats": 3,
+   "capture": 5,
+   "started": "2026-11-27T13:17:08.295Z"
+  },
+  {
+   "db": "fv_latent_375000_f31cf668",
+   "label": "pg17-v074",
+   "engine": "postgres",
+   "image": "pgvector/pgvector@sha256:31b23c4cc6ab27df7e4c876a17f4f37824a951910125459b480e1ccd56af3e6e",
+   "corpus": "latent",
+   "corpus_files": null,
+   "chunks": 375000,
+   "dims": 1024,
+   "seed": 9817,
+   "attr_seed": 9818,
+   "query_seed": 9819,
+   "latent": {
+    "rank": 16,
+    "mean": 0.25,
+    "superTopic": 0.2,
+    "topic": 0.25,
+    "page": 0.35,
+    "chunk": 0.25,
+    "noise": 0.15,
+    "queryShift": 0.25,
+    "queryNoise": 0.3,
+    "sourceShares": [
+     0.1,
+     0.4
+    ],
+    "chunks": 375000,
+    "dims": 1024,
+    "seed": 9817
+   },
+   "pages": 53324,
+   "gbrain_commit": "3a360389f152e62ccb627ab96eccfad8a9204e75",
+   "harness_commit": "8f674b620f4b4fead935869d859e44fb3eb71bb5",
+   "arm_files": [
+    {
+     "file": "src/core/postgres-engine.ts",
+     "control_sha256": "d1630815488f028ca39fee22a928b72bd02735a795ace3c799953e3d386105ce",
+     "treatment_sha256": "6c0463f0dfab254bac2ba01517931192393ecc926ab3dd8a7cf4eaf9520b0afd"
+    },
+    {
+     "file": "src/core/pglite-engine.ts",
+     "control_sha256": "cb262c5b69ec47f2ce8bc2590cf14b124040f7d2469b8d2ef58cdee1b1c32bfd",
+     "treatment_sha256": "ef2c0687fa1a4eaddbb40fa37b560682e686b60b7f325059e6f1b6e396814cf3"
+    }
+   ],
+   "index_sql": "CREATE INDEX IF NOT EXISTS idx_chunks_embedding ON content_chunks USING hnsw (embedding vector_cosine_ops);",
+   "load_seconds": 58.561429757999996,
+   "index_build_seconds": 39.534914969000006,
+   "maintenance_work_mem": "7GB",
+   "env": {
+    "server": "PostgreSQL 17.0 (Debian 17.0-1.pgdg120+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14) 12.2.0, 64-bit",
+    "server_num": "170000",
+    "pgvector": "0.7.4",
+    "shared_buffers": "8022MB",
+    "effective_cache_size": "24068MB",
+    "work_mem": "4MB",
+    "random_page_cost": "1.1",
+    "effective_io_concurrency": "200",
+    "synchronous_commit": "on",
+    "max_parallel_workers_per_gather": "2",
+    "jit": "on",
+    "index_bytes": 3072008192,
+    "chunks": 375000,
+    "pages": 53324
+   },
+   "machine": {
+    "cpus": 8,
+    "mem_gb": 31
+   },
+   "boost_map": {
+    "originals/": 1.5,
+    "concepts/": 1.3,
+    "writing/": 1.4,
+    "people/": 1.2,
+    "companies/": 1.2,
+    "deals/": 1.2,
+    "meetings/": 1.1,
+    "media/articles/": 1.1,
+    "media/repos/": 1.1,
+    "yc/": 1,
+    "civic/": 1,
+    "daily/": 0.8,
+    "media/x/": 0.7,
+    "openclaw/chat/": 0.5,
+    "archive/": 0.5,
+    "extracts/": 0.3,
+    "actions/": 0.3
+   },
+   "hard_excludes": [
+    "test/",
+    "attachments/",
+    ".raw/"
+   ],
+   "queries": 200,
+   "queries_untrusted": 500,
+   "truth": "brute",
+   "exact_check": 20,
+   "repeats": 3,
+   "capture": 5,
+   "started": "2026-11-27T13:17:17.328Z"
+  },
+  {
+   "db": "fv_latent_375000_e8c586a4",
+   "label": "pg17-v074",
+   "engine": "postgres",
+   "image": "pgvector/pgvector@sha256:31b23c4cc6ab27df7e4c876a17f4f37824a951910125459b480e1ccd56af3e6e",
+   "corpus": "latent",
+   "corpus_files": null,
+   "chunks": 375000,
+   "dims": 1024,
+   "seed": 9817,
+   "attr_seed": 9818,
+   "query_seed": 9819,
+   "latent": {
+    "rank": 16,
+    "mean": 0.25,
+    "superTopic": 0.2,
+    "topic": 0.25,
+    "page": 0.35,
+    "chunk": 0.25,
+    "noise": 0.15,
+    "queryShift": 0.25,
+    "queryNoise": 0.3,
+    "sourceShares": [
+     0.1,
+     0.4
+    ],
+    "chunks": 375000,
+    "dims": 1024,
+    "seed": 9817
+   },
+   "pages": 53324,
+   "gbrain_commit": "3a360389f152e62ccb627ab96eccfad8a9204e75",
+   "harness_commit": "8f674b620f4b4fead935869d859e44fb3eb71bb5",
+   "arm_files": [
+    {
+     "file": "src/core/postgres-engine.ts",
+     "control_sha256": "d1630815488f028ca39fee22a928b72bd02735a795ace3c799953e3d386105ce",
+     "treatment_sha256": "6c0463f0dfab254bac2ba01517931192393ecc926ab3dd8a7cf4eaf9520b0afd"
+    },
+    {
+     "file": "src/core/pglite-engine.ts",
+     "control_sha256": "cb262c5b69ec47f2ce8bc2590cf14b124040f7d2469b8d2ef58cdee1b1c32bfd",
+     "treatment_sha256": "ef2c0687fa1a4eaddbb40fa37b560682e686b60b7f325059e6f1b6e396814cf3"
+    }
+   ],
+   "index_sql": "CREATE INDEX IF NOT EXISTS idx_chunks_embedding ON content_chunks USING hnsw (embedding vector_cosine_ops);",
+   "load_seconds": 55.700486772,
+   "index_build_seconds": 38.979828854999994,
+   "maintenance_work_mem": "7GB",
+   "env": {
+    "server": "PostgreSQL 17.0 (Debian 17.0-1.pgdg120+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14) 12.2.0, 64-bit",
+    "server_num": "170000",
+    "pgvector": "0.7.4",
+    "shared_buffers": "8022MB",
+    "effective_cache_size": "24068MB",
+    "work_mem": "4MB",
+    "random_page_cost": "1.1",
+    "effective_io_concurrency": "200",
+    "synchronous_commit": "on",
+    "max_parallel_workers_per_gather": "2",
+    "jit": "on",
+    "index_bytes": 3072008192,
+    "chunks": 375000,
+    "pages": 53324
+   },
+   "machine": {
+    "cpus": 8,
+    "mem_gb": 31
+   },
+   "boost_map": {
+    "originals/": 1.5,
+    "concepts/": 1.3,
+    "writing/": 1.4,
+    "people/": 1.2,
+    "companies/": 1.2,
+    "deals/": 1.2,
+    "meetings/": 1.1,
+    "media/articles/": 1.1,
+    "media/repos/": 1.1,
+    "yc/": 1,
+    "civic/": 1,
+    "daily/": 0.8,
+    "media/x/": 0.7,
+    "openclaw/chat/": 0.5,
+    "archive/": 0.5,
+    "extracts/": 0.3,
+    "actions/": 0.3
+   },
+   "hard_excludes": [
+    "test/",
+    "attachments/",
+    ".raw/"
+   ],
+   "queries": 200,
+   "queries_untrusted": 500,
+   "truth": "brute",
+   "exact_check": 20,
+   "repeats": 3,
+   "capture": 5,
+   "started": "2026-11-27T13:16:57.119Z"
+  },
+  {
+   "db": "fv_latent_375000_530007e0",
+   "label": "pg17-v074",
+   "engine": "postgres",
+   "image": "pgvector/pgvector@sha256:31b23c4cc6ab27df7e4c876a17f4f37824a951910125459b480e1ccd56af3e6e",
+   "corpus": "latent",
+   "corpus_files": null,
+   "chunks": 375000,
+   "dims": 1024,
+   "seed": 9817,
+   "attr_seed": 9818,
+   "query_seed": 9819,
+   "latent": {
+    "rank": 16,
+    "mean": 0.25,
+    "superTopic": 0.2,
+    "topic": 0.25,
+    "page": 0.35,
+    "chunk": 0.25,
+    "noise": 0.15,
+    "queryShift": 0.25,
+    "queryNoise": 0.3,
+    "sourceShares": [
+     0.1,
+     0.4
+    ],
+    "chunks": 375000,
+    "dims": 1024,
+    "seed": 9817
+   },
+   "pages": 53324,
+   "gbrain_commit": "3a360389f152e62ccb627ab96eccfad8a9204e75",
+   "harness_commit": "8f674b620f4b4fead935869d859e44fb3eb71bb5",
+   "arm_files": [
+    {
+     "file": "src/core/postgres-engine.ts",
+     "control_sha256": "d1630815488f028ca39fee22a928b72bd02735a795ace3c799953e3d386105ce",
+     "treatment_sha256": "6c0463f0dfab254bac2ba01517931192393ecc926ab3dd8a7cf4eaf9520b0afd"
+    },
+    {
+     "file": "src/core/pglite-engine.ts",
+     "control_sha256": "cb262c5b69ec47f2ce8bc2590cf14b124040f7d2469b8d2ef58cdee1b1c32bfd",
+     "treatment_sha256": "ef2c0687fa1a4eaddbb40fa37b560682e686b60b7f325059e6f1b6e396814cf3"
+    }
+   ],
+   "index_sql": "CREATE INDEX IF NOT EXISTS idx_chunks_embedding ON content_chunks USING hnsw (embedding vector_cosine_ops);",
+   "load_seconds": 59.285424122,
+   "index_build_seconds": 41.55820458,
+   "maintenance_work_mem": "7GB",
+   "env": {
+    "server": "PostgreSQL 17.0 (Debian 17.0-1.pgdg120+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14) 12.2.0, 64-bit",
+    "server_num": "170000",
+    "pgvector": "0.7.4",
+    "shared_buffers": "8022MB",
+    "effective_cache_size": "24068MB",
+    "work_mem": "4MB",
+    "random_page_cost": "1.1",
+    "effective_io_concurrency": "200",
+    "synchronous_commit": "on",
+    "max_parallel_workers_per_gather": "2",
+    "jit": "on",
+    "index_bytes": 3072008192,
+    "chunks": 375000,
+    "pages": 53324
+   },
+   "machine": {
+    "cpus": 8,
+    "mem_gb": 31
+   },
+   "boost_map": {
+    "originals/": 1.5,
+    "concepts/": 1.3,
+    "writing/": 1.4,
+    "people/": 1.2,
+    "companies/": 1.2,
+    "deals/": 1.2,
+    "meetings/": 1.1,
+    "media/articles/": 1.1,
+    "media/repos/": 1.1,
+    "yc/": 1,
+    "civic/": 1,
+    "daily/": 0.8,
+    "media/x/": 0.7,
+    "openclaw/chat/": 0.5,
+    "archive/": 0.5,
+    "extracts/": 0.3,
+    "actions/": 0.3
+   },
+   "hard_excludes": [
+    "test/",
+    "attachments/",
+    ".raw/"
+   ],
+   "queries": 200,
+   "queries_untrusted": 500,
+   "truth": "brute",
+   "exact_check": 20,
+   "repeats": 3,
+   "capture": 5,
+   "started": "2026-11-27T13:17:32.125Z"
+  },
+  {
+   "db": "fv_latent_375000_d2d63730",
+   "label": "pg17-v074",
+   "engine": "postgres",
+   "image": "pgvector/pgvector@sha256:31b23c4cc6ab27df7e4c876a17f4f37824a951910125459b480e1ccd56af3e6e",
+   "corpus": "latent",
+   "corpus_files": null,
+   "chunks": 375000,
+   "dims": 1024,
+   "seed": 9817,
+   "attr_seed": 9818,
+   "query_seed": 9819,
+   "latent": {
+    "rank": 16,
+    "mean": 0.25,
+    "superTopic": 0.2,
+    "topic": 0.25,
+    "page": 0.35,
+    "chunk": 0.25,
+    "noise": 0.15,
+    "queryShift": 0.25,
+    "queryNoise": 0.3,
+    "sourceShares": [
+     0.1,
+     0.4
+    ],
+    "chunks": 375000,
+    "dims": 1024,
+    "seed": 9817
+   },
+   "pages": 53324,
+   "gbrain_commit": "3a360389f152e62ccb627ab96eccfad8a9204e75",
+   "harness_commit": "8f674b620f4b4fead935869d859e44fb3eb71bb5",
+   "arm_files": [
+    {
+     "file": "src/core/postgres-engine.ts",
+     "control_sha256": "d1630815488f028ca39fee22a928b72bd02735a795ace3c799953e3d386105ce",
+     "treatment_sha256": "6c0463f0dfab254bac2ba01517931192393ecc926ab3dd8a7cf4eaf9520b0afd"
+    },
+    {
+     "file": "src/core/pglite-engine.ts",
+     "control_sha256": "cb262c5b69ec47f2ce8bc2590cf14b124040f7d2469b8d2ef58cdee1b1c32bfd",
+     "treatment_sha256": "ef2c0687fa1a4eaddbb40fa37b560682e686b60b7f325059e6f1b6e396814cf3"
+    }
+   ],
+   "index_sql": "CREATE INDEX IF NOT EXISTS idx_chunks_embedding ON content_chunks USING hnsw (embedding vector_cosine_ops);",
+   "load_seconds": 55.989305206000004,
+   "index_build_seconds": 38.947472903,
+   "maintenance_work_mem": "7GB",
+   "env": {
+    "server": "PostgreSQL 17.0 (Debian 17.0-1.pgdg120+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14) 12.2.0, 64-bit",
+    "server_num": "170000",
+    "pgvector": "0.7.4",
+    "shared_buffers": "8022MB",
+    "effective_cache_size": "24068MB",
+    "work_mem": "4MB",
+    "random_page_cost": "1.1",
+    "effective_io_concurrency": "200",
+    "synchronous_commit": "on",
+    "max_parallel_workers_per_gather": "2",
+    "jit": "on",
+    "index_bytes": 3072008192,
+    "chunks": 375000,
+    "pages": 53324
+   },
+   "machine": {
+    "cpus": 8,
+    "mem_gb": 31
+   },
+   "boost_map": {
+    "originals/": 1.5,
+    "concepts/": 1.3,
+    "writing/": 1.4,
+    "people/": 1.2,
+    "companies/": 1.2,
+    "deals/": 1.2,
+    "meetings/": 1.1,
+    "media/articles/": 1.1,
+    "media/repos/": 1.1,
+    "yc/": 1,
+    "civic/": 1,
+    "daily/": 0.8,
+    "media/x/": 0.7,
+    "openclaw/chat/": 0.5,
+    "archive/": 0.5,
+    "extracts/": 0.3,
+    "actions/": 0.3
+   },
+   "hard_excludes": [
+    "test/",
+    "attachments/",
+    ".raw/"
+   ],
+   "queries": 200,
+   "queries_untrusted": 500,
+   "truth": "brute",
+   "exact_check": 20,
+   "repeats": 3,
+   "capture": 5,
+   "started": "2026-11-27T13:17:43.958Z"
+  },
+  {
+   "db": "fv_latent_375000_8f47715d",
+   "label": "pg17-v074",
+   "engine": "postgres",
+   "image": "pgvector/pgvector@sha256:31b23c4cc6ab27df7e4c876a17f4f37824a951910125459b480e1ccd56af3e6e",
+   "corpus": "latent",
+   "corpus_files": null,
+   "chunks": 375000,
+   "dims": 1024,
+   "seed": 9817,
+   "attr_seed": 9818,
+   "query_seed": 9819,
+   "latent": {
+    "rank": 16,
+    "mean": 0.25,
+    "superTopic": 0.2,
+    "topic": 0.25,
+    "page": 0.35,
+    "chunk": 0.25,
+    "noise": 0.15,
+    "queryShift": 0.25,
+    "queryNoise": 0.3,
+    "sourceShares": [
+     0.1,
+     0.4
+    ],
+    "chunks": 375000,
+    "dims": 1024,
+    "seed": 9817
+   },
+   "pages": 53324,
+   "gbrain_commit": "3a360389f152e62ccb627ab96eccfad8a9204e75",
+   "harness_commit": "8f674b620f4b4fead935869d859e44fb3eb71bb5",
+   "arm_files": [
+    {
+     "file": "src/core/postgres-engine.ts",
+     "control_sha256": "d1630815488f028ca39fee22a928b72bd02735a795ace3c799953e3d386105ce",
+     "treatment_sha256": "6c0463f0dfab254bac2ba01517931192393ecc926ab3dd8a7cf4eaf9520b0afd"
+    },
+    {
+     "file": "src/core/pglite-engine.ts",
+     "control_sha256": "cb262c5b69ec47f2ce8bc2590cf14b124040f7d2469b8d2ef58cdee1b1c32bfd",
+     "treatment_sha256": "ef2c0687fa1a4eaddbb40fa37b560682e686b60b7f325059e6f1b6e396814cf3"
+    }
+   ],
+   "index_sql": "CREATE INDEX IF NOT EXISTS idx_chunks_embedding ON content_chunks USING hnsw (embedding vector_cosine_ops);",
+   "load_seconds": 54.289831148000005,
+   "index_build_seconds": 40.253151229000004,
+   "maintenance_work_mem": "7GB",
+   "env": {
+    "server": "PostgreSQL 17.0 (Debian 17.0-1.pgdg120+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14) 12.2.0, 64-bit",
+    "server_num": "170000",
+    "pgvector": "0.7.4",
+    "shared_buffers": "8022MB",
+    "effective_cache_size": "24068MB",
+    "work_mem": "4MB",
+    "random_page_cost": "1.1",
+    "effective_io_concurrency": "200",
+    "synchronous_commit": "on",
+    "max_parallel_workers_per_gather": "2",
+    "jit": "on",
+    "index_bytes": 3072008192,
+    "chunks": 375000,
+    "pages": 53324
+   },
+   "machine": {
+    "cpus": 8,
+    "mem_gb": 31
+   },
+   "boost_map": {
+    "originals/": 1.5,
+    "concepts/": 1.3,
+    "writing/": 1.4,
+    "people/": 1.2,
+    "companies/": 1.2,
+    "deals/": 1.2,
+    "meetings/": 1.1,
+    "media/articles/": 1.1,
+    "media/repos/": 1.1,
+    "yc/": 1,
+    "civic/": 1,
+    "daily/": 0.8,
+    "media/x/": 0.7,
+    "openclaw/chat/": 0.5,
+    "archive/": 0.5,
+    "extracts/": 0.3,
+    "actions/": 0.3
+   },
+   "hard_excludes": [
+    "test/",
+    "attachments/",
+    ".raw/"
+   ],
+   "queries": 200,
+   "queries_untrusted": 500,
+   "truth": "brute",
+   "exact_check": 20,
+   "repeats": 3,
+   "capture": 5,
+   "started": "2026-11-27T13:12:31.147Z"
+  },
+  {
+   "db": "fv_latent_375000_d6881931",
+   "label": "pg17-v074",
+   "engine": "postgres",
+   "image": "pgvector/pgvector@sha256:31b23c4cc6ab27df7e4c876a17f4f37824a951910125459b480e1ccd56af3e6e",
+   "corpus": "latent",
+   "corpus_files": null,
+   "chunks": 375000,
+   "dims": 1024,
+   "seed": 9817,
+   "attr_seed": 9818,
+   "query_seed": 9819,
+   "latent": {
+    "rank": 16,
+    "mean": 0.25,
+    "superTopic": 0.2,
+    "topic": 0.25,
+    "page": 0.35,
+    "chunk": 0.25,
+    "noise": 0.15,
+    "queryShift": 0.25,
+    "queryNoise": 0.3,
+    "sourceShares": [
+     0.1,
+     0.4
+    ],
+    "chunks": 375000,
+    "dims": 1024,
+    "seed": 9817
+   },
+   "pages": 53324,
+   "gbrain_commit": "3a360389f152e62ccb627ab96eccfad8a9204e75",
+   "harness_commit": "8f674b620f4b4fead935869d859e44fb3eb71bb5",
+   "arm_files": [
+    {
+     "file": "src/core/postgres-engine.ts",
+     "control_sha256": "d1630815488f028ca39fee22a928b72bd02735a795ace3c799953e3d386105ce",
+     "treatment_sha256": "6c0463f0dfab254bac2ba01517931192393ecc926ab3dd8a7cf4eaf9520b0afd"
+    },
+    {
+     "file": "src/core/pglite-engine.ts",
+     "control_sha256": "cb262c5b69ec47f2ce8bc2590cf14b124040f7d2469b8d2ef58cdee1b1c32bfd",
+     "treatment_sha256": "ef2c0687fa1a4eaddbb40fa37b560682e686b60b7f325059e6f1b6e396814cf3"
+    }
+   ],
+   "index_sql": "CREATE INDEX IF NOT EXISTS idx_chunks_embedding ON content_chunks USING hnsw (embedding vector_cosine_ops);",
+   "load_seconds": 56.375392214,
+   "index_build_seconds": 38.90231428599999,
+   "maintenance_work_mem": "7GB",
+   "env": {
+    "server": "PostgreSQL 17.0 (Debian 17.0-1.pgdg120+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14) 12.2.0, 64-bit",
+    "server_num": "170000",
+    "pgvector": "0.7.4",
+    "shared_buffers": "8022MB",
+    "effective_cache_size": "24068MB",
+    "work_mem": "4MB",
+    "random_page_cost": "1.1",
+    "effective_io_concurrency": "200",
+    "synchronous_commit": "on",
+    "max_parallel_workers_per_gather": "2",
+    "jit": "on",
+    "index_bytes": 3072008192,
+    "chunks": 375000,
+    "pages": 53324
+   },
+   "machine": {
+    "cpus": 8,
+    "mem_gb": 31
+   },
+   "boost_map": {
+    "originals/": 1.5,
+    "concepts/": 1.3,
+    "writing/": 1.4,
+    "people/": 1.2,
+    "companies/": 1.2,
+    "deals/": 1.2,
+    "meetings/": 1.1,
+    "media/articles/": 1.1,
+    "media/repos/": 1.1,
+    "yc/": 1,
+    "civic/": 1,
+    "daily/": 0.8,
+    "media/x/": 0.7,
+    "openclaw/chat/": 0.5,
+    "archive/": 0.5,
+    "extracts/": 0.3,
+    "actions/": 0.3
+   },
+   "hard_excludes": [
+    "test/",
+    "attachments/",
+    ".raw/"
+   ],
+   "queries": 200,
+   "queries_untrusted": 500,
+   "truth": "brute",
+   "exact_check": 20,
+   "repeats": 3,
+   "capture": 5,
+   "started": "2026-11-27T13:13:48.504Z"
+  },
+  {
+   "db": "fv_latent_375000_7910f3be",
+   "label": "pg17-v074",
+   "engine": "postgres",
+   "image": "pgvector/pgvector@sha256:31b23c4cc6ab27df7e4c876a17f4f37824a951910125459b480e1ccd56af3e6e",
+   "corpus": "latent",
+   "corpus_files": null,
+   "chunks": 375000,
+   "dims": 1024,
+   "seed": 9817,
+   "attr_seed": 9818,
+   "query_seed": 9819,
+   "latent": {
+    "rank": 16,
+    "mean": 0.25,
+    "superTopic": 0.2,
+    "topic": 0.25,
+    "page": 0.35,
+    "chunk": 0.25,
+    "noise": 0.15,
+    "queryShift": 0.25,
+    "queryNoise": 0.3,
+    "sourceShares": [
+     0.1,
+     0.4
+    ],
+    "chunks": 375000,
+    "dims": 1024,
+    "seed": 9817
+   },
+   "pages": 53324,
+   "gbrain_commit": "3a360389f152e62ccb627ab96eccfad8a9204e75",
+   "harness_commit": "8f674b620f4b4fead935869d859e44fb3eb71bb5",
+   "arm_files": [
+    {
+     "file": "src/core/postgres-engine.ts",
+     "control_sha256": "d1630815488f028ca39fee22a928b72bd02735a795ace3c799953e3d386105ce",
+     "treatment_sha256": "6c0463f0dfab254bac2ba01517931192393ecc926ab3dd8a7cf4eaf9520b0afd"
+    },
+    {
+     "file": "src/core/pglite-engine.ts",
+     "control_sha256": "cb262c5b69ec47f2ce8bc2590cf14b124040f7d2469b8d2ef58cdee1b1c32bfd",
+     "treatment_sha256": "ef2c0687fa1a4eaddbb40fa37b560682e686b60b7f325059e6f1b6e396814cf3"
+    }
+   ],
+   "index_sql": "CREATE INDEX IF NOT EXISTS idx_chunks_embedding ON content_chunks USING hnsw (embedding vector_cosine_ops);",
+   "load_seconds": 62.667588012,
+   "index_build_seconds": 44.85215110199999,
+   "maintenance_work_mem": "7GB",
+   "env": {
+    "server": "PostgreSQL 17.0 (Debian 17.0-1.pgdg120+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14) 12.2.0, 64-bit",
+    "server_num": "170000",
+    "pgvector": "0.7.4",
+    "shared_buffers": "8022MB",
+    "effective_cache_size": "24068MB",
+    "work_mem": "4MB",
+    "random_page_cost": "1.1",
+    "effective_io_concurrency": "200",
+    "synchronous_commit": "on",
+    "max_parallel_workers_per_gather": "2",
+    "jit": "on",
+    "index_bytes": 3072008192,
+    "chunks": 375000,
+    "pages": 53324
+   },
+   "machine": {
+    "cpus": 8,
+    "mem_gb": 31
+   },
+   "boost_map": {
+    "originals/": 1.5,
+    "concepts/": 1.3,
+    "writing/": 1.4,
+    "people/": 1.2,
+    "companies/": 1.2,
+    "deals/": 1.2,
+    "meetings/": 1.1,
+    "media/articles/": 1.1,
+    "media/repos/": 1.1,
+    "yc/": 1,
+    "civic/": 1,
+    "daily/": 0.8,
+    "media/x/": 0.7,
+    "openclaw/chat/": 0.5,
+    "archive/": 0.5,
+    "extracts/": 0.3,
+    "actions/": 0.3
+   },
+   "hard_excludes": [
+    "test/",
+    "attachments/",
+    ".raw/"
+   ],
+   "queries": 200,
+   "queries_untrusted": 500,
+   "truth": "brute",
+   "exact_check": 20,
+   "repeats": 3,
+   "capture": 5,
+   "started": "2026-11-27T13:14:59.836Z"
+  },
+  {
+   "db": "fv_latent_375000_cf3acd61",
+   "label": "pg17-v074",
+   "engine": "postgres",
+   "image": "pgvector/pgvector@sha256:31b23c4cc6ab27df7e4c876a17f4f37824a951910125459b480e1ccd56af3e6e",
+   "corpus": "latent",
+   "corpus_files": null,
+   "chunks": 375000,
+   "dims": 1024,
+   "seed": 9817,
+   "attr_seed": 9818,
+   "query_seed": 9819,
+   "latent": {
+    "rank": 16,
+    "mean": 0.25,
+    "superTopic": 0.2,
+    "topic": 0.25,
+    "page": 0.35,
+    "chunk": 0.25,
+    "noise": 0.15,
+    "queryShift": 0.25,
+    "queryNoise": 0.3,
+    "sourceShares": [
+     0.1,
+     0.4
+    ],
+    "chunks": 375000,
+    "dims": 1024,
+    "seed": 9817
+   },
+   "pages": 53324,
+   "gbrain_commit": "3a360389f152e62ccb627ab96eccfad8a9204e75",
+   "harness_commit": "8f674b620f4b4fead935869d859e44fb3eb71bb5",
+   "arm_files": [
+    {
+     "file": "src/core/postgres-engine.ts",
+     "control_sha256": "d1630815488f028ca39fee22a928b72bd02735a795ace3c799953e3d386105ce",
+     "treatment_sha256": "6c0463f0dfab254bac2ba01517931192393ecc926ab3dd8a7cf4eaf9520b0afd"
+    },
+    {
+     "file": "src/core/pglite-engine.ts",
+     "control_sha256": "cb262c5b69ec47f2ce8bc2590cf14b124040f7d2469b8d2ef58cdee1b1c32bfd",
+     "treatment_sha256": "ef2c0687fa1a4eaddbb40fa37b560682e686b60b7f325059e6f1b6e396814cf3"
+    }
+   ],
+   "index_sql": "CREATE INDEX IF NOT EXISTS idx_chunks_embedding ON content_chunks USING hnsw (embedding vector_cosine_ops);",
+   "load_seconds": 53.7940855,
+   "index_build_seconds": 41.028066722999995,
+   "maintenance_work_mem": "7GB",
+   "env": {
+    "server": "PostgreSQL 17.0 (Debian 17.0-1.pgdg120+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14) 12.2.0, 64-bit",
+    "server_num": "170000",
+    "pgvector": "0.7.4",
+    "shared_buffers": "8022MB",
+    "effective_cache_size": "24068MB",
+    "work_mem": "4MB",
+    "random_page_cost": "1.1",
+    "effective_io_concurrency": "200",
+    "synchronous_commit": "on",
+    "max_parallel_workers_per_gather": "2",
+    "jit": "on",
+    "index_bytes": 3072008192,
+    "chunks": 375000,
+    "pages": 53324
+   },
+   "machine": {
+    "cpus": 8,
+    "mem_gb": 31
+   },
+   "boost_map": {
+    "originals/": 1.5,
+    "concepts/": 1.3,
+    "writing/": 1.4,
+    "people/": 1.2,
+    "companies/": 1.2,
+    "deals/": 1.2,
+    "meetings/": 1.1,
+    "media/articles/": 1.1,
+    "media/repos/": 1.1,
+    "yc/": 1,
+    "civic/": 1,
+    "daily/": 0.8,
+    "media/x/": 0.7,
+    "openclaw/chat/": 0.5,
+    "archive/": 0.5,
+    "extracts/": 0.3,
+    "actions/": 0.3
+   },
+   "hard_excludes": [
+    "test/",
+    "attachments/",
+    ".raw/"
+   ],
+   "queries": 200,
+   "queries_untrusted": 500,
+   "truth": "brute",
+   "exact_check": 20,
+   "repeats": 3,
+   "capture": 5,
+   "started": "2026-11-27T13:13:49.456Z"
+  },
+  {
+   "db": "fv_latent_375000_81e305ae",
+   "label": "pg17-v074",
+   "engine": "postgres",
+   "image": "pgvector/pgvector@sha256:31b23c4cc6ab27df7e4c876a17f4f37824a951910125459b480e1ccd56af3e6e",
+   "corpus": "latent",
+   "corpus_files": null,
+   "chunks": 375000,
+   "dims": 1024,
+   "seed": 9817,
+   "attr_seed": 9818,
+   "query_seed": 9819,
+   "latent": {
+    "rank": 16,
+    "mean": 0.25,
+    "superTopic": 0.2,
+    "topic": 0.25,
+    "page": 0.35,
+    "chunk": 0.25,
+    "noise": 0.15,
+    "queryShift": 0.25,
+    "queryNoise": 0.3,
+    "sourceShares": [
+     0.1,
+     0.4
+    ],
+    "chunks": 375000,
+    "dims": 1024,
+    "seed": 9817
+   },
+   "pages": 53324,
+   "gbrain_commit": "3a360389f152e62ccb627ab96eccfad8a9204e75",
+   "harness_commit": "8f674b620f4b4fead935869d859e44fb3eb71bb5",
+   "arm_files": [
+    {
+     "file": "src/core/postgres-engine.ts",
+     "control_sha256": "d1630815488f028ca39fee22a928b72bd02735a795ace3c799953e3d386105ce",
+     "treatment_sha256": "6c0463f0dfab254bac2ba01517931192393ecc926ab3dd8a7cf4eaf9520b0afd"
+    },
+    {
+     "file": "src/core/pglite-engine.ts",
+     "control_sha256": "cb262c5b69ec47f2ce8bc2590cf14b124040f7d2469b8d2ef58cdee1b1c32bfd",
+     "treatment_sha256": "ef2c0687fa1a4eaddbb40fa37b560682e686b60b7f325059e6f1b6e396814cf3"
+    }
+   ],
+   "index_sql": "CREATE INDEX IF NOT EXISTS idx_chunks_embedding ON content_chunks USING hnsw (embedding vector_cosine_ops);",
+   "load_seconds": 55.804561582999995,
+   "index_build_seconds": 40.437091566,
+   "maintenance_work_mem": "7GB",
+   "env": {
+    "server": "PostgreSQL 17.0 (Debian 17.0-1.pgdg120+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14) 12.2.0, 64-bit",
+    "server_num": "170000",
+    "pgvector": "0.7.4",
+    "shared_buffers": "8022MB",
+    "effective_cache_size": "24068MB",
+    "work_mem": "4MB",
+    "random_page_cost": "1.1",
+    "effective_io_concurrency": "200",
+    "synchronous_commit": "on",
+    "max_parallel_workers_per_gather": "2",
+    "jit": "on",
+    "index_bytes": 3072008192,
+    "chunks": 375000,
+    "pages": 53324
+   },
+   "machine": {
+    "cpus": 8,
+    "mem_gb": 31
+   },
+   "boost_map": {
+    "originals/": 1.5,
+    "concepts/": 1.3,
+    "writing/": 1.4,
+    "people/": 1.2,
+    "companies/": 1.2,
+    "deals/": 1.2,
+    "meetings/": 1.1,
+    "media/articles/": 1.1,
+    "media/repos/": 1.1,
+    "yc/": 1,
+    "civic/": 1,
+    "daily/": 0.8,
+    "media/x/": 0.7,
+    "openclaw/chat/": 0.5,
+    "archive/": 0.5,
+    "extracts/": 0.3,
+    "actions/": 0.3
+   },
+   "hard_excludes": [
+    "test/",
+    "attachments/",
+    ".raw/"
+   ],
+   "queries": 200,
+   "queries_untrusted": 500,
+   "truth": "brute",
+   "exact_check": 20,
+   "repeats": 3,
+   "capture": 5,
+   "started": "2026-11-27T13:14:50.422Z"
+  },
+  {
+   "db": "fv_latent_375000_b69db448",
+   "label": "pg17-v074",
+   "engine": "postgres",
+   "image": "pgvector/pgvector@sha256:31b23c4cc6ab27df7e4c876a17f4f37824a951910125459b480e1ccd56af3e6e",
+   "corpus": "latent",
+   "corpus_files": null,
+   "chunks": 375000,
+   "dims": 1024,
+   "seed": 9817,
+   "attr_seed": 9818,
+   "query_seed": 9819,
+   "latent": {
+    "rank": 16,
+    "mean": 0.25,
+    "superTopic": 0.2,
+    "topic": 0.25,
+    "page": 0.35,
+    "chunk": 0.25,
+    "noise": 0.15,
+    "queryShift": 0.25,
+    "queryNoise": 0.3,
+    "sourceShares": [
+     0.1,
+     0.4
+    ],
+    "chunks": 375000,
+    "dims": 1024,
+    "seed": 9817
+   },
+   "pages": 53324,
+   "gbrain_commit": "3a360389f152e62ccb627ab96eccfad8a9204e75",
+   "harness_commit": "8f674b620f4b4fead935869d859e44fb3eb71bb5",
+   "arm_files": [
+    {
+     "file": "src/core/postgres-engine.ts",
+     "control_sha256": "d1630815488f028ca39fee22a928b72bd02735a795ace3c799953e3d386105ce",
+     "treatment_sha256": "6c0463f0dfab254bac2ba01517931192393ecc926ab3dd8a7cf4eaf9520b0afd"
+    },
+    {
+     "file": "src/core/pglite-engine.ts",
+     "control_sha256": "cb262c5b69ec47f2ce8bc2590cf14b124040f7d2469b8d2ef58cdee1b1c32bfd",
+     "treatment_sha256": "ef2c0687fa1a4eaddbb40fa37b560682e686b60b7f325059e6f1b6e396814cf3"
+    }
+   ],
+   "index_sql": "CREATE INDEX IF NOT EXISTS idx_chunks_embedding ON content_chunks USING hnsw (embedding vector_cosine_ops);",
+   "load_seconds": 56.12771493,
+   "index_build_seconds": 39.722554781999996,
+   "maintenance_work_mem": "7GB",
+   "env": {
+    "server": "PostgreSQL 17.0 (Debian 17.0-1.pgdg120+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14) 12.2.0, 64-bit",
+    "server_num": "170000",
+    "pgvector": "0.7.4",
+    "shared_buffers": "8022MB",
+    "effective_cache_size": "24068MB",
+    "work_mem": "4MB",
+    "random_page_cost": "1.1",
+    "effective_io_concurrency": "200",
+    "synchronous_commit": "on",
+    "max_parallel_workers_per_gather": "2",
+    "jit": "on",
+    "index_bytes": 3072008192,
+    "chunks": 375000,
+    "pages": 53324
+   },
+   "machine": {
+    "cpus": 8,
+    "mem_gb": 31
+   },
+   "boost_map": {
+    "originals/": 1.5,
+    "concepts/": 1.3,
+    "writing/": 1.4,
+    "people/": 1.2,
+    "companies/": 1.2,
+    "deals/": 1.2,
+    "meetings/": 1.1,
+    "media/articles/": 1.1,
+    "media/repos/": 1.1,
+    "yc/": 1,
+    "civic/": 1,
+    "daily/": 0.8,
+    "media/x/": 0.7,
+    "openclaw/chat/": 0.5,
+    "archive/": 0.5,
+    "extracts/": 0.3,
+    "actions/": 0.3
+   },
+   "hard_excludes": [
+    "test/",
+    "attachments/",
+    ".raw/"
+   ],
+   "queries": 200,
+   "queries_untrusted": 500,
+   "truth": "brute",
+   "exact_check": 20,
+   "repeats": 3,
+   "capture": 5,
+   "started": "2026-11-27T13:16:20.392Z"
+  },
+  {
+   "db": "fv_latent_375000_288d0c15",
+   "label": "pg17-v074",
+   "engine": "postgres",
+   "image": "pgvector/pgvector@sha256:31b23c4cc6ab27df7e4c876a17f4f37824a951910125459b480e1ccd56af3e6e",
+   "corpus": "latent",
+   "corpus_files": null,
+   "chunks": 375000,
+   "dims": 1024,
+   "seed": 9817,
+   "attr_seed": 9818,
+   "query_seed": 9819,
+   "latent": {
+    "rank": 16,
+    "mean": 0.25,
+    "superTopic": 0.2,
+    "topic": 0.25,
+    "page": 0.35,
+    "chunk": 0.25,
+    "noise": 0.15,
+    "queryShift": 0.25,
+    "queryNoise": 0.3,
+    "sourceShares": [
+     0.1,
+     0.4
+    ],
+    "chunks": 375000,
+    "dims": 1024,
+    "seed": 9817
+   },
+   "pages": 53324,
+   "gbrain_commit": "3a360389f152e62ccb627ab96eccfad8a9204e75",
+   "harness_commit": "8f674b620f4b4fead935869d859e44fb3eb71bb5",
+   "arm_files": [
+    {
+     "file": "src/core/postgres-engine.ts",
+     "control_sha256": "d1630815488f028ca39fee22a928b72bd02735a795ace3c799953e3d386105ce",
+     "treatment_sha256": "6c0463f0dfab254bac2ba01517931192393ecc926ab3dd8a7cf4eaf9520b0afd"
+    },
+    {
+     "file": "src/core/pglite-engine.ts",
+     "control_sha256": "cb262c5b69ec47f2ce8bc2590cf14b124040f7d2469b8d2ef58cdee1b1c32bfd",
+     "treatment_sha256": "ef2c0687fa1a4eaddbb40fa37b560682e686b60b7f325059e6f1b6e396814cf3"
+    }
+   ],
+   "index_sql": "CREATE INDEX IF NOT EXISTS idx_chunks_embedding ON content_chunks USING hnsw (embedding vector_cosine_ops);",
+   "load_seconds": 71.045072044,
+   "index_build_seconds": 48.501698753999996,
+   "maintenance_work_mem": "7GB",
+   "env": {
+    "server": "PostgreSQL 17.0 (Debian 17.0-1.pgdg120+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14) 12.2.0, 64-bit",
+    "server_num": "170000",
+    "pgvector": "0.7.4",
+    "shared_buffers": "8022MB",
+    "effective_cache_size": "24068MB",
+    "work_mem": "4MB",
+    "random_page_cost": "1.1",
+    "effective_io_concurrency": "200",
+    "synchronous_commit": "on",
+    "max_parallel_workers_per_gather": "2",
+    "jit": "on",
+    "index_bytes": 3072008192,
+    "chunks": 375000,
+    "pages": 53324
+   },
+   "machine": {
+    "cpus": 8,
+    "mem_gb": 31
+   },
+   "boost_map": {
+    "originals/": 1.5,
+    "concepts/": 1.3,
+    "writing/": 1.4,
+    "people/": 1.2,
+    "companies/": 1.2,
+    "deals/": 1.2,
+    "meetings/": 1.1,
+    "media/articles/": 1.1,
+    "media/repos/": 1.1,
+    "yc/": 1,
+    "civic/": 1,
+    "daily/": 0.8,
+    "media/x/": 0.7,
+    "openclaw/chat/": 0.5,
+    "archive/": 0.5,
+    "extracts/": 0.3,
+    "actions/": 0.3
+   },
+   "hard_excludes": [
+    "test/",
+    "attachments/",
+    ".raw/"
+   ],
+   "queries": 200,
+   "queries_untrusted": 500,
+   "truth": "brute",
+   "exact_check": 20,
+   "repeats": 3,
+   "capture": 5,
+   "started": "2026-11-27T13:20:30.865Z"
+  },
+  {
+   "db": "fv_latent_375000_9703a4e3",
+   "label": "pg17-v074",
+   "engine": "postgres",
+   "image": "pgvector/pgvector@sha256:31b23c4cc6ab27df7e4c876a17f4f37824a951910125459b480e1ccd56af3e6e",
+   "corpus": "latent",
+   "corpus_files": null,
+   "chunks": 375000,
+   "dims": 1024,
+   "seed": 9817,
+   "attr_seed": 9818,
+   "query_seed": 9819,
+   "latent": {
+    "rank": 16,
+    "mean": 0.25,
+    "superTopic": 0.2,
+    "topic": 0.25,
+    "page": 0.35,
+    "chunk": 0.25,
+    "noise": 0.15,
+    "queryShift": 0.25,
+    "queryNoise": 0.3,
+    "sourceShares": [
+     0.1,
+     0.4
+    ],
+    "chunks": 375000,
+    "dims": 1024,
+    "seed": 9817
+   },
+   "pages": 53324,
+   "gbrain_commit": "3a360389f152e62ccb627ab96eccfad8a9204e75",
+   "harness_commit": "8f674b620f4b4fead935869d859e44fb3eb71bb5",
+   "arm_files": [
+    {
+     "file": "src/core/postgres-engine.ts",
+     "control_sha256": "d1630815488f028ca39fee22a928b72bd02735a795ace3c799953e3d386105ce",
+     "treatment_sha256": "6c0463f0dfab254bac2ba01517931192393ecc926ab3dd8a7cf4eaf9520b0afd"
+    },
+    {
+     "file": "src/core/pglite-engine.ts",
+     "control_sha256": "cb262c5b69ec47f2ce8bc2590cf14b124040f7d2469b8d2ef58cdee1b1c32bfd",
+     "treatment_sha256": "ef2c0687fa1a4eaddbb40fa37b560682e686b60b7f325059e6f1b6e396814cf3"
+    }
+   ],
+   "index_sql": "CREATE INDEX IF NOT EXISTS idx_chunks_embedding ON content_chunks USING hnsw (embedding vector_cosine_ops);",
+   "load_seconds": 64.304607293,
+   "index_build_seconds": 44.312248355,
+   "maintenance_work_mem": "7GB",
+   "env": {
+    "server": "PostgreSQL 17.0 (Debian 17.0-1.pgdg120+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14) 12.2.0, 64-bit",
+    "server_num": "170000",
+    "pgvector": "0.7.4",
+    "shared_buffers": "8022MB",
+    "effective_cache_size": "24068MB",
+    "work_mem": "4MB",
+    "random_page_cost": "1.1",
+    "effective_io_concurrency": "200",
+    "synchronous_commit": "on",
+    "max_parallel_workers_per_gather": "2",
+    "jit": "on",
+    "index_bytes": 3072008192,
+    "chunks": 375000,
+    "pages": 53324
+   },
+   "machine": {
+    "cpus": 8,
+    "mem_gb": 31
+   },
+   "boost_map": {
+    "originals/": 1.5,
+    "concepts/": 1.3,
+    "writing/": 1.4,
+    "people/": 1.2,
+    "companies/": 1.2,
+    "deals/": 1.2,
+    "meetings/": 1.1,
+    "media/articles/": 1.1,
+    "media/repos/": 1.1,
+    "yc/": 1,
+    "civic/": 1,
+    "daily/": 0.8,
+    "media/x/": 0.7,
+    "openclaw/chat/": 0.5,
+    "archive/": 0.5,
+    "extracts/": 0.3,
+    "actions/": 0.3
+   },
+   "hard_excludes": [
+    "test/",
+    "attachments/",
+    ".raw/"
+   ],
+   "queries": 200,
+   "queries_untrusted": 500,
+   "truth": "brute",
+   "exact_check": 20,
+   "repeats": 3,
+   "capture": 5,
+   "started": "2026-11-27T15:11:20.849Z"
+  },
+  {
+   "db": "fv_latent_375000_e478aa70",
+   "label": "pg17-v074",
+   "engine": "postgres",
+   "image": "pgvector/pgvector@sha256:31b23c4cc6ab27df7e4c876a17f4f37824a951910125459b480e1ccd56af3e6e",
+   "corpus": "latent",
+   "corpus_files": null,
+   "chunks": 375000,
+   "dims": 1024,
+   "seed": 9817,
+   "attr_seed": 9818,
+   "query_seed": 9819,
+   "latent": {
+    "rank": 16,
+    "mean": 0.25,
+    "superTopic": 0.2,
+    "topic": 0.25,
+    "page": 0.35,
+    "chunk": 0.25,
+    "noise": 0.15,
+    "queryShift": 0.25,
+    "queryNoise": 0.3,
+    "sourceShares": [
+     0.1,
+     0.4
+    ],
+    "chunks": 375000,
+    "dims": 1024,
+    "seed": 9817
+   },
+   "pages": 53324,
+   "gbrain_commit": "3a360389f152e62ccb627ab96eccfad8a9204e75",
+   "harness_commit": "8f674b620f4b4fead935869d859e44fb3eb71bb5",
+   "arm_files": [
+    {
+     "file": "src/core/postgres-engine.ts",
+     "control_sha256": "d1630815488f028ca39fee22a928b72bd02735a795ace3c799953e3d386105ce",
+     "treatment_sha256": "6c0463f0dfab254bac2ba01517931192393ecc926ab3dd8a7cf4eaf9520b0afd"
+    },
+    {
+     "file": "src/core/pglite-engine.ts",
+     "control_sha256": "cb262c5b69ec47f2ce8bc2590cf14b124040f7d2469b8d2ef58cdee1b1c32bfd",
+     "treatment_sha256": "ef2c0687fa1a4eaddbb40fa37b560682e686b60b7f325059e6f1b6e396814cf3"
+    }
+   ],
+   "index_sql": "CREATE INDEX IF NOT EXISTS idx_chunks_embedding ON content_chunks USING hnsw (embedding vector_cosine_ops);",
+   "load_seconds": 68.248831013,
+   "index_build_seconds": 44.473201438000004,
+   "maintenance_work_mem": "7GB",
+   "env": {
+    "server": "PostgreSQL 17.0 (Debian 17.0-1.pgdg120+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14) 12.2.0, 64-bit",
+    "server_num": "170000",
+    "pgvector": "0.7.4",
+    "shared_buffers": "8022MB",
+    "effective_cache_size": "24068MB",
+    "work_mem": "4MB",
+    "random_page_cost": "1.1",
+    "effective_io_concurrency": "200",
+    "synchronous_commit": "on",
+    "max_parallel_workers_per_gather": "2",
+    "jit": "on",
+    "index_bytes": 3072008192,
+    "chunks": 375000,
+    "pages": 53324
+   },
+   "machine": {
+    "cpus": 8,
+    "mem_gb": 31
+   },
+   "boost_map": {
+    "originals/": 1.5,
+    "concepts/": 1.3,
+    "writing/": 1.4,
+    "people/": 1.2,
+    "companies/": 1.2,
+    "deals/": 1.2,
+    "meetings/": 1.1,
+    "media/articles/": 1.1,
+    "media/repos/": 1.1,
+    "yc/": 1,
+    "civic/": 1,
+    "daily/": 0.8,
+    "media/x/": 0.7,
+    "openclaw/chat/": 0.5,
+    "archive/": 0.5,
+    "extracts/": 0.3,
+    "actions/": 0.3
+   },
+   "hard_excludes": [
+    "test/",
+    "attachments/",
+    ".raw/"
+   ],
+   "queries": 200,
+   "queries_untrusted": 500,
+   "truth": "brute",
+   "exact_check": 20,
+   "repeats": 3,
+   "capture": 5,
+   "started": "2026-11-27T14:34:07.259Z"
+  },
+  {
+   "db": "fv_latent_15000_02d70b9a",
+   "label": "pg17-v087",
+   "engine": "postgres",
+   "image": "pgvector/pgvector@sha256:b513c48566e4777cd3370451400000c78eda6a08131d68f4c31d4a76f27bd8fd",
+   "corpus": "latent",
+   "corpus_files": null,
+   "chunks": 15000,
+   "dims": 1024,
+   "seed": 9817,
+   "attr_seed": 9818,
+   "query_seed": 9819,
+   "latent": {
+    "rank": 16,
+    "mean": 0.25,
+    "superTopic": 0.2,
+    "topic": 0.25,
+    "page": 0.35,
+    "chunk": 0.25,
+    "noise": 0.15,
+    "queryShift": 0.25,
+    "queryNoise": 0.3,
+    "sourceShares": [
+     0.1,
+     0.4
+    ],
+    "chunks": 15000,
+    "dims": 1024,
+    "seed": 9817
+   },
+   "pages": 2200,
+   "gbrain_commit": "3a360389f152e62ccb627ab96eccfad8a9204e75",
+   "harness_commit": "0559c3766ebdf710ebd75c9277ec66e997dc3be1",
+   "arm_files": [
+    {
+     "file": "src/core/postgres-engine.ts",
+     "control_sha256": "d1630815488f028ca39fee22a928b72bd02735a795ace3c799953e3d386105ce",
+     "treatment_sha256": "6c0463f0dfab254bac2ba01517931192393ecc926ab3dd8a7cf4eaf9520b0afd"
+    },
+    {
+     "file": "src/core/pglite-engine.ts",
+     "control_sha256": "cb262c5b69ec47f2ce8bc2590cf14b124040f7d2469b8d2ef58cdee1b1c32bfd",
+     "treatment_sha256": "ef2c0687fa1a4eaddbb40fa37b560682e686b60b7f325059e6f1b6e396814cf3"
+    }
+   ],
+   "index_sql": "CREATE INDEX IF NOT EXISTS idx_chunks_embedding ON content_chunks USING hnsw (embedding vector_cosine_ops);",
+   "load_seconds": 4.381749802,
+   "index_build_seconds": 8.156738631000001,
+   "maintenance_work_mem": "15GB",
+   "env": {
+    "server": "PostgreSQL 17.12 (Debian 17.12-1.pgdg12+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit",
+    "server_num": "170012",
+    "pgvector": "0.8.7",
+    "shared_buffers": "16074MB",
+    "effective_cache_size": "48222MB",
+    "work_mem": "4MB",
+    "random_page_cost": "1.1",
+    "effective_io_concurrency": "200",
+    "synchronous_commit": "on",
+    "max_parallel_workers_per_gather": "2",
+    "jit": "on",
+    "index_bytes": 122888192,
+    "chunks": 15000,
+    "pages": 2200
+   },
+   "machine": {
+    "cpus": 16,
+    "mem_gb": 63
+   },
+   "boost_map": {
+    "originals/": 1.5,
+    "concepts/": 1.3,
+    "writing/": 1.4,
+    "people/": 1.2,
+    "companies/": 1.2,
+    "deals/": 1.2,
+    "meetings/": 1.1,
+    "media/articles/": 1.1,
+    "media/repos/": 1.1,
+    "yc/": 1,
+    "civic/": 1,
+    "daily/": 0.8,
+    "media/x/": 0.7,
+    "openclaw/chat/": 0.5,
+    "archive/": 0.5,
+    "extracts/": 0.3,
+    "actions/": 0.3
+   },
+   "hard_excludes": [
+    "test/",
+    "attachments/",
+    ".raw/"
+   ],
+   "queries": 200,
+   "queries_untrusted": 500,
+   "truth": "brute",
+   "exact_check": 20,
+   "repeats": 3,
+   "capture": 5,
+   "started": "2026-11-26T19:42:23.332Z"
+  },
+  {
+   "db": "fv_latent_75000_4e274b26",
+   "label": "pg17-v087",
+   "engine": "postgres",
+   "image": "pgvector/pgvector@sha256:b513c48566e4777cd3370451400000c78eda6a08131d68f4c31d4a76f27bd8fd",
+   "corpus": "latent",
+   "corpus_files": null,
+   "chunks": 75000,
+   "dims": 1024,
+   "seed": 9817,
+   "attr_seed": 9818,
+   "query_seed": 9819,
+   "latent": {
+    "rank": 16,
+    "mean": 0.25,
+    "superTopic": 0.2,
+    "topic": 0.25,
+    "page": 0.35,
+    "chunk": 0.25,
+    "noise": 0.15,
+    "queryShift": 0.25,
+    "queryNoise": 0.3,
+    "sourceShares": [
+     0.1,
+     0.4
+    ],
+    "chunks": 75000,
+    "dims": 1024,
+    "seed": 9817
+   },
+   "pages": 10675,
+   "gbrain_commit": "3a360389f152e62ccb627ab96eccfad8a9204e75",
+   "harness_commit": "0559c3766ebdf710ebd75c9277ec66e997dc3be1",
+   "arm_files": [
+    {
+     "file": "src/core/postgres-engine.ts",
+     "control_sha256": "d1630815488f028ca39fee22a928b72bd02735a795ace3c799953e3d386105ce",
+     "treatment_sha256": "6c0463f0dfab254bac2ba01517931192393ecc926ab3dd8a7cf4eaf9520b0afd"
+    },
+    {
+     "file": "src/core/pglite-engine.ts",
+     "control_sha256": "cb262c5b69ec47f2ce8bc2590cf14b124040f7d2469b8d2ef58cdee1b1c32bfd",
+     "treatment_sha256": "ef2c0687fa1a4eaddbb40fa37b560682e686b60b7f325059e6f1b6e396814cf3"
+    }
+   ],
+   "index_sql": "CREATE INDEX IF NOT EXISTS idx_chunks_embedding ON content_chunks USING hnsw (embedding vector_cosine_ops);",
+   "load_seconds": 10.86335778,
+   "index_build_seconds": 11.673548831000002,
+   "maintenance_work_mem": "15GB",
+   "env": {
+    "server": "PostgreSQL 17.12 (Debian 17.12-1.pgdg12+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit",
+    "server_num": "170012",
+    "pgvector": "0.8.7",
+    "shared_buffers": "16074MB",
+    "effective_cache_size": "48222MB",
+    "work_mem": "4MB",
+    "random_page_cost": "1.1",
+    "effective_io_concurrency": "200",
+    "synchronous_commit": "on",
+    "max_parallel_workers_per_gather": "2",
+    "jit": "on",
+    "index_bytes": 614408192,
+    "chunks": 75000,
+    "pages": 10675
+   },
+   "machine": {
+    "cpus": 16,
+    "mem_gb": 63
+   },
+   "boost_map": {
+    "originals/": 1.5,
+    "concepts/": 1.3,
+    "writing/": 1.4,
+    "people/": 1.2,
+    "companies/": 1.2,
+    "deals/": 1.2,
+    "meetings/": 1.1,
+    "media/articles/": 1.1,
+    "media/repos/": 1.1,
+    "yc/": 1,
+    "civic/": 1,
+    "daily/": 0.8,
+    "media/x/": 0.7,
+    "openclaw/chat/": 0.5,
+    "archive/": 0.5,
+    "extracts/": 0.3,
+    "actions/": 0.3
+   },
+   "hard_excludes": [
+    "test/",
+    "attachments/",
+    ".raw/"
+   ],
+   "queries": 200,
+   "queries_untrusted": 500,
+   "truth": "brute",
+   "exact_check": 20,
+   "repeats": 3,
+   "capture": 5,
+   "started": "2026-11-27T00:39:44.098Z"
+  },
+  {
+   "db": "fv_latent_1500000_68aeba5d",
+   "label": "pg17-v087",
+   "engine": "postgres",
+   "image": "pgvector/pgvector@sha256:b513c48566e4777cd3370451400000c78eda6a08131d68f4c31d4a76f27bd8fd",
+   "corpus": "latent",
+   "corpus_files": null,
+   "chunks": 1500000,
+   "dims": 1024,
+   "seed": 9817,
+   "attr_seed": 9818,
+   "query_seed": 9819,
+   "latent": {
+    "rank": 16,
+    "mean": 0.25,
+    "superTopic": 0.2,
+    "topic": 0.25,
+    "page": 0.35,
+    "chunk": 0.25,
+    "noise": 0.15,
+    "queryShift": 0.25,
+    "queryNoise": 0.3,
+    "sourceShares": [
+     0.1,
+     0.4
+    ],
+    "chunks": 1500000,
+    "dims": 1024,
+    "seed": 9817
+   },
+   "pages": 213566,
+   "gbrain_commit": "3a360389f152e62ccb627ab96eccfad8a9204e75",
+   "harness_commit": "0559c3766ebdf710ebd75c9277ec66e997dc3be1",
+   "arm_files": [
+    {
+     "file": "src/core/postgres-engine.ts",
+     "control_sha256": "d1630815488f028ca39fee22a928b72bd02735a795ace3c799953e3d386105ce",
+     "treatment_sha256": "6c0463f0dfab254bac2ba01517931192393ecc926ab3dd8a7cf4eaf9520b0afd"
+    },
+    {
+     "file": "src/core/pglite-engine.ts",
+     "control_sha256": "cb262c5b69ec47f2ce8bc2590cf14b124040f7d2469b8d2ef58cdee1b1c32bfd",
+     "treatment_sha256": "ef2c0687fa1a4eaddbb40fa37b560682e686b60b7f325059e6f1b6e396814cf3"
+    }
+   ],
+   "index_sql": "CREATE INDEX IF NOT EXISTS idx_chunks_embedding ON content_chunks USING hnsw (embedding vector_cosine_ops);",
+   "load_seconds": 176.045229743,
+   "index_build_seconds": 161.947032468,
+   "maintenance_work_mem": "15GB",
+   "env": {
+    "server": "PostgreSQL 17.12 (Debian 17.12-1.pgdg12+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit",
+    "server_num": "170012",
+    "pgvector": "0.8.7",
+    "shared_buffers": "16074MB",
+    "effective_cache_size": "48222MB",
+    "work_mem": "4MB",
+    "random_page_cost": "1.1",
+    "effective_io_concurrency": "200",
+    "synchronous_commit": "on",
+    "max_parallel_workers_per_gather": "2",
+    "jit": "on",
+    "index_bytes": 12288008192,
+    "chunks": 1500000,
+    "pages": 213566
+   },
+   "machine": {
+    "cpus": 16,
+    "mem_gb": 63
+   },
+   "boost_map": {
+    "originals/": 1.5,
+    "concepts/": 1.3,
+    "writing/": 1.4,
+    "people/": 1.2,
+    "companies/": 1.2,
+    "deals/": 1.2,
+    "meetings/": 1.1,
+    "media/articles/": 1.1,
+    "media/repos/": 1.1,
+    "yc/": 1,
+    "civic/": 1,
+    "daily/": 0.8,
+    "media/x/": 0.7,
+    "openclaw/chat/": 0.5,
+    "archive/": 0.5,
+    "extracts/": 0.3,
+    "actions/": 0.3
+   },
+   "hard_excludes": [
+    "test/",
+    "attachments/",
+    ".raw/"
+   ],
+   "queries": 100,
+   "queries_untrusted": 250,
+   "truth": "brute",
+   "exact_check": 20,
+   "repeats": 3,
+   "capture": 5,
+   "started": "2026-11-26T19:48:18.098Z"
+  },
+  {
+   "db": "fv_latent_1500000_76950daa",
+   "label": "pg17-v087",
+   "engine": "postgres",
+   "image": "pgvector/pgvector@sha256:b513c48566e4777cd3370451400000c78eda6a08131d68f4c31d4a76f27bd8fd",
+   "corpus": "latent",
+   "corpus_files": null,
+   "chunks": 1500000,
+   "dims": 1024,
+   "seed": 9817,
+   "attr_seed": 9818,
+   "query_seed": 9819,
+   "latent": {
+    "rank": 16,
+    "mean": 0.25,
+    "superTopic": 0.2,
+    "topic": 0.25,
+    "page": 0.35,
+    "chunk": 0.25,
+    "noise": 0.15,
+    "queryShift": 0.25,
+    "queryNoise": 0.3,
+    "sourceShares": [
+     0.1,
+     0.4
+    ],
+    "chunks": 1500000,
+    "dims": 1024,
+    "seed": 9817
+   },
+   "pages": 213566,
+   "gbrain_commit": "3a360389f152e62ccb627ab96eccfad8a9204e75",
+   "harness_commit": "0559c3766ebdf710ebd75c9277ec66e997dc3be1",
+   "arm_files": [
+    {
+     "file": "src/core/postgres-engine.ts",
+     "control_sha256": "d1630815488f028ca39fee22a928b72bd02735a795ace3c799953e3d386105ce",
+     "treatment_sha256": "6c0463f0dfab254bac2ba01517931192393ecc926ab3dd8a7cf4eaf9520b0afd"
+    },
+    {
+     "file": "src/core/pglite-engine.ts",
+     "control_sha256": "cb262c5b69ec47f2ce8bc2590cf14b124040f7d2469b8d2ef58cdee1b1c32bfd",
+     "treatment_sha256": "ef2c0687fa1a4eaddbb40fa37b560682e686b60b7f325059e6f1b6e396814cf3"
+    }
+   ],
+   "index_sql": "CREATE INDEX IF NOT EXISTS idx_chunks_embedding ON content_chunks USING hnsw (embedding vector_cosine_ops);",
+   "load_seconds": 241.751918932,
+   "index_build_seconds": 184.31731179200003,
+   "maintenance_work_mem": "15GB",
+   "env": {
+    "server": "PostgreSQL 17.12 (Debian 17.12-1.pgdg12+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit",
+    "server_num": "170012",
+    "pgvector": "0.8.7",
+    "shared_buffers": "16074MB",
+    "effective_cache_size": "48222MB",
+    "work_mem": "4MB",
+    "random_page_cost": "1.1",
+    "effective_io_concurrency": "200",
+    "synchronous_commit": "on",
+    "max_parallel_workers_per_gather": "2",
+    "jit": "on",
+    "index_bytes": 12288008192,
+    "chunks": 1500000,
+    "pages": 213566
+   },
+   "machine": {
+    "cpus": 16,
+    "mem_gb": 63
+   },
+   "boost_map": {
+    "originals/": 1.5,
+    "concepts/": 1.3,
+    "writing/": 1.4,
+    "people/": 1.2,
+    "companies/": 1.2,
+    "deals/": 1.2,
+    "meetings/": 1.1,
+    "media/articles/": 1.1,
+    "media/repos/": 1.1,
+    "yc/": 1,
+    "civic/": 1,
+    "daily/": 0.8,
+    "media/x/": 0.7,
+    "openclaw/chat/": 0.5,
+    "archive/": 0.5,
+    "extracts/": 0.3,
+    "actions/": 0.3
+   },
+   "hard_excludes": [
+    "test/",
+    "attachments/",
+    ".raw/"
+   ],
+   "queries": 100,
+   "queries_untrusted": 250,
+   "truth": "brute",
+   "exact_check": 20,
+   "repeats": 3,
+   "capture": 5,
+   "started": "2026-11-26T19:49:55.764Z"
+  },
+  {
+   "db": "fv_latent_375000_eba70cd6",
+   "label": "pg17-v087",
+   "engine": "postgres",
+   "image": "pgvector/pgvector@sha256:b513c48566e4777cd3370451400000c78eda6a08131d68f4c31d4a76f27bd8fd",
+   "corpus": "latent",
+   "corpus_files": null,
+   "chunks": 375000,
+   "dims": 1024,
+   "seed": 9817,
+   "attr_seed": 9818,
+   "query_seed": 9819,
+   "latent": {
+    "rank": 16,
+    "mean": 0.25,
+    "superTopic": 0.2,
+    "topic": 0.25,
+    "page": 0.35,
+    "chunk": 0.25,
+    "noise": 0.15,
+    "queryShift": 0.25,
+    "queryNoise": 0.3,
+    "sourceShares": [
+     0.1,
+     0.4
+    ],
+    "chunks": 375000,
+    "dims": 1024,
+    "seed": 9817
+   },
+   "pages": 53324,
+   "gbrain_commit": "3a360389f152e62ccb627ab96eccfad8a9204e75",
+   "harness_commit": "0559c3766ebdf710ebd75c9277ec66e997dc3be1",
+   "arm_files": [
+    {
+     "file": "src/core/postgres-engine.ts",
+     "control_sha256": "d1630815488f028ca39fee22a928b72bd02735a795ace3c799953e3d386105ce",
+     "treatment_sha256": "6c0463f0dfab254bac2ba01517931192393ecc926ab3dd8a7cf4eaf9520b0afd"
+    },
+    {
+     "file": "src/core/pglite-engine.ts",
+     "control_sha256": "cb262c5b69ec47f2ce8bc2590cf14b124040f7d2469b8d2ef58cdee1b1c32bfd",
+     "treatment_sha256": "ef2c0687fa1a4eaddbb40fa37b560682e686b60b7f325059e6f1b6e396814cf3"
+    }
+   ],
+   "index_sql": "CREATE INDEX IF NOT EXISTS idx_chunks_embedding ON content_chunks USING hnsw (embedding vector_cosine_ops);",
+   "load_seconds": 58.054176198,
+   "index_build_seconds": 43.177157291,
+   "maintenance_work_mem": "15GB",
+   "env": {
+    "server": "PostgreSQL 17.12 (Debian 17.12-1.pgdg12+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit",
+    "server_num": "170012",
+    "pgvector": "0.8.7",
+    "shared_buffers": "16074MB",
+    "effective_cache_size": "48222MB",
+    "work_mem": "4MB",
+    "random_page_cost": "1.1",
+    "effective_io_concurrency": "200",
+    "synchronous_commit": "on",
+    "max_parallel_workers_per_gather": "2",
+    "jit": "on",
+    "index_bytes": 3072008192,
+    "chunks": 375000,
+    "pages": 53324
+   },
+   "machine": {
+    "cpus": 16,
+    "mem_gb": 63
+   },
+   "boost_map": {
+    "originals/": 1.5,
+    "concepts/": 1.3,
+    "writing/": 1.4,
+    "people/": 1.2,
+    "companies/": 1.2,
+    "deals/": 1.2,
+    "meetings/": 1.1,
+    "media/articles/": 1.1,
+    "media/repos/": 1.1,
+    "yc/": 1,
+    "civic/": 1,
+    "daily/": 0.8,
+    "media/x/": 0.7,
+    "openclaw/chat/": 0.5,
+    "archive/": 0.5,
+    "extracts/": 0.3,
+    "actions/": 0.3
+   },
+   "hard_excludes": [
+    "test/",
+    "attachments/",
+    ".raw/"
+   ],
+   "queries": 200,
+   "queries_untrusted": 500,
+   "truth": "brute",
+   "exact_check": 20,
+   "repeats": 3,
+   "capture": 5,
+   "started": "2026-11-26T19:44:06.985Z"
+  },
+  {
+   "db": "fv_latent_375000_9d8567e4",
+   "label": "pg17-v087",
+   "engine": "postgres",
+   "image": "pgvector/pgvector@sha256:b513c48566e4777cd3370451400000c78eda6a08131d68f4c31d4a76f27bd8fd",
+   "corpus": "latent",
+   "corpus_files": null,
+   "chunks": 375000,
+   "dims": 1024,
+   "seed": 9817,
+   "attr_seed": 9818,
+   "query_seed": 9819,
+   "latent": {
+    "rank": 16,
+    "mean": 0.25,
+    "superTopic": 0.2,
+    "topic": 0.25,
+    "page": 0.35,
+    "chunk": 0.25,
+    "noise": 0.15,
+    "queryShift": 0.25,
+    "queryNoise": 0.3,
+    "sourceShares": [
+     0.1,
+     0.4
+    ],
+    "chunks": 375000,
+    "dims": 1024,
+    "seed": 9817
+   },
+   "pages": 53324,
+   "gbrain_commit": "3a360389f152e62ccb627ab96eccfad8a9204e75",
+   "harness_commit": "0559c3766ebdf710ebd75c9277ec66e997dc3be1",
+   "arm_files": [
+    {
+     "file": "src/core/postgres-engine.ts",
+     "control_sha256": "d1630815488f028ca39fee22a928b72bd02735a795ace3c799953e3d386105ce",
+     "treatment_sha256": "6c0463f0dfab254bac2ba01517931192393ecc926ab3dd8a7cf4eaf9520b0afd"
+    },
+    {
+     "file": "src/core/pglite-engine.ts",
+     "control_sha256": "cb262c5b69ec47f2ce8bc2590cf14b124040f7d2469b8d2ef58cdee1b1c32bfd",
+     "treatment_sha256": "ef2c0687fa1a4eaddbb40fa37b560682e686b60b7f325059e6f1b6e396814cf3"
+    }
+   ],
+   "index_sql": "CREATE INDEX IF NOT EXISTS idx_chunks_embedding ON content_chunks USING hnsw (embedding vector_cosine_ops);",
+   "load_seconds": 45.04667329,
+   "index_build_seconds": 37.77447238500001,
+   "maintenance_work_mem": "15GB",
+   "env": {
+    "server": "PostgreSQL 17.12 (Debian 17.12-1.pgdg12+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit",
+    "server_num": "170012",
+    "pgvector": "0.8.7",
+    "shared_buffers": "16074MB",
+    "effective_cache_size": "48222MB",
+    "work_mem": "4MB",
+    "random_page_cost": "1.1",
+    "effective_io_concurrency": "200",
+    "synchronous_commit": "on",
+    "max_parallel_workers_per_gather": "2",
+    "jit": "on",
+    "index_bytes": 3072008192,
+    "chunks": 375000,
+    "pages": 53324
+   },
+   "machine": {
+    "cpus": 16,
+    "mem_gb": 63
+   },
+   "boost_map": {
+    "originals/": 1.5,
+    "concepts/": 1.3,
+    "writing/": 1.4,
+    "people/": 1.2,
+    "companies/": 1.2,
+    "deals/": 1.2,
+    "meetings/": 1.1,
+    "media/articles/": 1.1,
+    "media/repos/": 1.1,
+    "yc/": 1,
+    "civic/": 1,
+    "daily/": 0.8,
+    "media/x/": 0.7,
+    "openclaw/chat/": 0.5,
+    "archive/": 0.5,
+    "extracts/": 0.3,
+    "actions/": 0.3
+   },
+   "hard_excludes": [
+    "test/",
+    "attachments/",
+    ".raw/"
+   ],
+   "queries": 200,
+   "queries_untrusted": 500,
+   "truth": "brute",
+   "exact_check": 20,
+   "repeats": 3,
+   "capture": 5,
+   "started": "2026-11-26T19:43:46.569Z"
+  },
+  {
+   "db": "fv_latent_375000_091b7429",
+   "label": "pg15-v087",
+   "engine": "postgres",
+   "image": "pgvector/pgvector@sha256:e0b617fffc06dd37323ee99873c7a8683f19f1dce34633670262b0113ce32638",
+   "corpus": "latent",
+   "corpus_files": null,
+   "chunks": 375000,
+   "dims": 1024,
+   "seed": 9817,
+   "attr_seed": 9818,
+   "query_seed": 9819,
+   "latent": {
+    "rank": 16,
+    "mean": 0.25,
+    "superTopic": 0.2,
+    "topic": 0.25,
+    "page": 0.35,
+    "chunk": 0.25,
+    "noise": 0.15,
+    "queryShift": 0.25,
+    "queryNoise": 0.3,
+    "sourceShares": [
+     0.1,
+     0.4
+    ],
+    "chunks": 375000,
+    "dims": 1024,
+    "seed": 9817
+   },
+   "pages": 53324,
+   "gbrain_commit": "3a360389f152e62ccb627ab96eccfad8a9204e75",
+   "harness_commit": "875020d47eebf5068cafecdff4b1235bb75d043d",
+   "arm_files": [
+    {
+     "file": "src/core/postgres-engine.ts",
+     "control_sha256": "d1630815488f028ca39fee22a928b72bd02735a795ace3c799953e3d386105ce",
+     "treatment_sha256": "6c0463f0dfab254bac2ba01517931192393ecc926ab3dd8a7cf4eaf9520b0afd"
+    },
+    {
+     "file": "src/core/pglite-engine.ts",
+     "control_sha256": "cb262c5b69ec47f2ce8bc2590cf14b124040f7d2469b8d2ef58cdee1b1c32bfd",
+     "treatment_sha256": "ef2c0687fa1a4eaddbb40fa37b560682e686b60b7f325059e6f1b6e396814cf3"
+    }
+   ],
+   "index_sql": "CREATE INDEX IF NOT EXISTS idx_chunks_embedding ON content_chunks USING hnsw (embedding vector_cosine_ops);",
+   "load_seconds": 57.034581923000005,
+   "index_build_seconds": 41.568448572,
+   "maintenance_work_mem": "7GB",
+   "env": {
+    "server": "PostgreSQL 15.20 (Debian 15.20-1.pgdg12+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit",
+    "server_num": "150020",
+    "pgvector": "0.8.7",
+    "shared_buffers": "8022MB",
+    "effective_cache_size": "24068MB",
+    "work_mem": "4MB",
+    "random_page_cost": "1.1",
+    "effective_io_concurrency": "200",
+    "synchronous_commit": "on",
+    "max_parallel_workers_per_gather": "2",
+    "jit": "on",
+    "index_bytes": 3072008192,
+    "chunks": 375000,
+    "pages": 53324
+   },
+   "machine": {
+    "cpus": 8,
+    "mem_gb": 31
+   },
+   "boost_map": {
+    "originals/": 1.5,
+    "concepts/": 1.3,
+    "writing/": 1.4,
+    "people/": 1.2,
+    "companies/": 1.2,
+    "deals/": 1.2,
+    "meetings/": 1.1,
+    "media/articles/": 1.1,
+    "media/repos/": 1.1,
+    "yc/": 1,
+    "civic/": 1,
+    "daily/": 0.8,
+    "media/x/": 0.7,
+    "openclaw/chat/": 0.5,
+    "archive/": 0.5,
+    "extracts/": 0.3,
+    "actions/": 0.3
+   },
+   "hard_excludes": [
+    "test/",
+    "attachments/",
+    ".raw/"
+   ],
+   "queries": 200,
+   "queries_untrusted": 500,
+   "truth": "brute",
+   "exact_check": 20,
+   "repeats": 3,
+   "capture": 5,
+   "started": "2026-11-27T01:48:33.078Z"
+  },
+  {
+   "db": "fv_latent_75000_58ba8d97",
+   "label": "pg15-v087",
+   "engine": "postgres",
+   "image": "pgvector/pgvector@sha256:e0b617fffc06dd37323ee99873c7a8683f19f1dce34633670262b0113ce32638",
+   "corpus": "latent",
+   "corpus_files": null,
+   "chunks": 75000,
+   "dims": 1024,
+   "seed": 9817,
+   "attr_seed": 9818,
+   "query_seed": 9819,
+   "latent": {
+    "rank": 16,
+    "mean": 0.25,
+    "superTopic": 0.2,
+    "topic": 0.25,
+    "page": 0.35,
+    "chunk": 0.25,
+    "noise": 0.15,
+    "queryShift": 0.25,
+    "queryNoise": 0.3,
+    "sourceShares": [
+     0.1,
+     0.4
+    ],
+    "chunks": 75000,
+    "dims": 1024,
+    "seed": 9817
+   },
+   "pages": 10675,
+   "gbrain_commit": "3a360389f152e62ccb627ab96eccfad8a9204e75",
+   "harness_commit": "875020d47eebf5068cafecdff4b1235bb75d043d",
+   "arm_files": [
+    {
+     "file": "src/core/postgres-engine.ts",
+     "control_sha256": "d1630815488f028ca39fee22a928b72bd02735a795ace3c799953e3d386105ce",
+     "treatment_sha256": "6c0463f0dfab254bac2ba01517931192393ecc926ab3dd8a7cf4eaf9520b0afd"
+    },
+    {
+     "file": "src/core/pglite-engine.ts",
+     "control_sha256": "cb262c5b69ec47f2ce8bc2590cf14b124040f7d2469b8d2ef58cdee1b1c32bfd",
+     "treatment_sha256": "ef2c0687fa1a4eaddbb40fa37b560682e686b60b7f325059e6f1b6e396814cf3"
+    }
+   ],
+   "index_sql": "CREATE INDEX IF NOT EXISTS idx_chunks_embedding ON content_chunks USING hnsw (embedding vector_cosine_ops);",
+   "load_seconds": 15.559577281,
+   "index_build_seconds": 9.933806782,
+   "maintenance_work_mem": "7GB",
+   "env": {
+    "server": "PostgreSQL 15.20 (Debian 15.20-1.pgdg12+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit",
+    "server_num": "150020",
+    "pgvector": "0.8.7",
+    "shared_buffers": "8022MB",
+    "effective_cache_size": "24068MB",
+    "work_mem": "4MB",
+    "random_page_cost": "1.1",
+    "effective_io_concurrency": "200",
+    "synchronous_commit": "on",
+    "max_parallel_workers_per_gather": "2",
+    "jit": "on",
+    "index_bytes": 614408192,
+    "chunks": 75000,
+    "pages": 10675
+   },
+   "machine": {
+    "cpus": 8,
+    "mem_gb": 31
+   },
+   "boost_map": {
+    "originals/": 1.5,
+    "concepts/": 1.3,
+    "writing/": 1.4,
+    "people/": 1.2,
+    "companies/": 1.2,
+    "deals/": 1.2,
+    "meetings/": 1.1,
+    "media/articles/": 1.1,
+    "media/repos/": 1.1,
+    "yc/": 1,
+    "civic/": 1,
+    "daily/": 0.8,
+    "media/x/": 0.7,
+    "openclaw/chat/": 0.5,
+    "archive/": 0.5,
+    "extracts/": 0.3,
+    "actions/": 0.3
+   },
+   "hard_excludes": [
+    "test/",
+    "attachments/",
+    ".raw/"
+   ],
+   "queries": 200,
+   "queries_untrusted": 500,
+   "truth": "brute",
+   "exact_check": 20,
+   "repeats": 3,
+   "capture": 5,
+   "started": "2026-11-26T20:05:29.565Z"
+  },
+  {
+   "db": "fv_latent_375000_6a79723a",
+   "label": "pg16-v087",
+   "engine": "postgres",
+   "image": "pgvector/pgvector@sha256:484e838076e04939d27d3e176e91c86eea96236126023be8d3059761122e579f",
+   "corpus": "latent",
+   "corpus_files": null,
+   "chunks": 375000,
+   "dims": 1024,
+   "seed": 9817,
+   "attr_seed": 9818,
+   "query_seed": 9819,
+   "latent": {
+    "rank": 16,
+    "mean": 0.25,
+    "superTopic": 0.2,
+    "topic": 0.25,
+    "page": 0.35,
+    "chunk": 0.25,
+    "noise": 0.15,
+    "queryShift": 0.25,
+    "queryNoise": 0.3,
+    "sourceShares": [
+     0.1,
+     0.4
+    ],
+    "chunks": 375000,
+    "dims": 1024,
+    "seed": 9817
+   },
+   "pages": 53324,
+   "gbrain_commit": "3a360389f152e62ccb627ab96eccfad8a9204e75",
+   "harness_commit": "875020d47eebf5068cafecdff4b1235bb75d043d",
+   "arm_files": [
+    {
+     "file": "src/core/postgres-engine.ts",
+     "control_sha256": "d1630815488f028ca39fee22a928b72bd02735a795ace3c799953e3d386105ce",
+     "treatment_sha256": "6c0463f0dfab254bac2ba01517931192393ecc926ab3dd8a7cf4eaf9520b0afd"
+    },
+    {
+     "file": "src/core/pglite-engine.ts",
+     "control_sha256": "cb262c5b69ec47f2ce8bc2590cf14b124040f7d2469b8d2ef58cdee1b1c32bfd",
+     "treatment_sha256": "ef2c0687fa1a4eaddbb40fa37b560682e686b60b7f325059e6f1b6e396814cf3"
+    }
+   ],
+   "index_sql": "CREATE INDEX IF NOT EXISTS idx_chunks_embedding ON content_chunks USING hnsw (embedding vector_cosine_ops);",
+   "load_seconds": 56.748707757999995,
+   "index_build_seconds": 38.093122551,
+   "maintenance_work_mem": "7GB",
+   "env": {
+    "server": "PostgreSQL 16.16 (Debian 16.16-1.pgdg12+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit",
+    "server_num": "160016",
+    "pgvector": "0.8.7",
+    "shared_buffers": "8022MB",
+    "effective_cache_size": "24068MB",
+    "work_mem": "4MB",
+    "random_page_cost": "1.1",
+    "effective_io_concurrency": "200",
+    "synchronous_commit": "on",
+    "max_parallel_workers_per_gather": "2",
+    "jit": "on",
+    "index_bytes": 3072008192,
+    "chunks": 375000,
+    "pages": 53324
+   },
+   "machine": {
+    "cpus": 8,
+    "mem_gb": 31
+   },
+   "boost_map": {
+    "originals/": 1.5,
+    "concepts/": 1.3,
+    "writing/": 1.4,
+    "people/": 1.2,
+    "companies/": 1.2,
+    "deals/": 1.2,
+    "meetings/": 1.1,
+    "media/articles/": 1.1,
+    "media/repos/": 1.1,
+    "yc/": 1,
+    "civic/": 1,
+    "daily/": 0.8,
+    "media/x/": 0.7,
+    "openclaw/chat/": 0.5,
+    "archive/": 0.5,
+    "extracts/": 0.3,
+    "actions/": 0.3
+   },
+   "hard_excludes": [
+    "test/",
+    "attachments/",
+    ".raw/"
+   ],
+   "queries": 200,
+   "queries_untrusted": 500,
+   "truth": "brute",
+   "exact_check": 20,
+   "repeats": 3,
+   "capture": 5,
+   "started": "2026-11-27T01:47:26.089Z"
+  },
+  {
+   "db": "fv_latent_75000_4129fffd",
+   "label": "pg16-v087",
+   "engine": "postgres",
+   "image": "pgvector/pgvector@sha256:484e838076e04939d27d3e176e91c86eea96236126023be8d3059761122e579f",
+   "corpus": "latent",
+   "corpus_files": null,
+   "chunks": 75000,
+   "dims": 1024,
+   "seed": 9817,
+   "attr_seed": 9818,
+   "query_seed": 9819,
+   "latent": {
+    "rank": 16,
+    "mean": 0.25,
+    "superTopic": 0.2,
+    "topic": 0.25,
+    "page": 0.35,
+    "chunk": 0.25,
+    "noise": 0.15,
+    "queryShift": 0.25,
+    "queryNoise": 0.3,
+    "sourceShares": [
+     0.1,
+     0.4
+    ],
+    "chunks": 75000,
+    "dims": 1024,
+    "seed": 9817
+   },
+   "pages": 10675,
+   "gbrain_commit": "3a360389f152e62ccb627ab96eccfad8a9204e75",
+   "harness_commit": "875020d47eebf5068cafecdff4b1235bb75d043d",
+   "arm_files": [
+    {
+     "file": "src/core/postgres-engine.ts",
+     "control_sha256": "d1630815488f028ca39fee22a928b72bd02735a795ace3c799953e3d386105ce",
+     "treatment_sha256": "6c0463f0dfab254bac2ba01517931192393ecc926ab3dd8a7cf4eaf9520b0afd"
+    },
+    {
+     "file": "src/core/pglite-engine.ts",
+     "control_sha256": "cb262c5b69ec47f2ce8bc2590cf14b124040f7d2469b8d2ef58cdee1b1c32bfd",
+     "treatment_sha256": "ef2c0687fa1a4eaddbb40fa37b560682e686b60b7f325059e6f1b6e396814cf3"
+    }
+   ],
+   "index_sql": "CREATE INDEX IF NOT EXISTS idx_chunks_embedding ON content_chunks USING hnsw (embedding vector_cosine_ops);",
+   "load_seconds": 14.461813914,
+   "index_build_seconds": 9.310557426,
+   "maintenance_work_mem": "7GB",
+   "env": {
+    "server": "PostgreSQL 16.16 (Debian 16.16-1.pgdg12+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit",
+    "server_num": "160016",
+    "pgvector": "0.8.7",
+    "shared_buffers": "8022MB",
+    "effective_cache_size": "24068MB",
+    "work_mem": "4MB",
+    "random_page_cost": "1.1",
+    "effective_io_concurrency": "200",
+    "synchronous_commit": "on",
+    "max_parallel_workers_per_gather": "2",
+    "jit": "on",
+    "index_bytes": 614408192,
+    "chunks": 75000,
+    "pages": 10675
+   },
+   "machine": {
+    "cpus": 8,
+    "mem_gb": 31
+   },
+   "boost_map": {
+    "originals/": 1.5,
+    "concepts/": 1.3,
+    "writing/": 1.4,
+    "people/": 1.2,
+    "companies/": 1.2,
+    "deals/": 1.2,
+    "meetings/": 1.1,
+    "media/articles/": 1.1,
+    "media/repos/": 1.1,
+    "yc/": 1,
+    "civic/": 1,
+    "daily/": 0.8,
+    "media/x/": 0.7,
+    "openclaw/chat/": 0.5,
+    "archive/": 0.5,
+    "extracts/": 0.3,
+    "actions/": 0.3
+   },
+   "hard_excludes": [
+    "test/",
+    "attachments/",
+    ".raw/"
+   ],
+   "queries": 200,
+   "queries_untrusted": 500,
+   "truth": "brute",
+   "exact_check": 20,
+   "repeats": 3,
+   "capture": 5,
+   "started": "2026-11-26T20:05:25.800Z"
+  },
+  {
+   "db": "fv_latent_375000_5b6ae279",
+   "label": "pg17-v074",
+   "engine": "postgres",
+   "image": "pgvector/pgvector@sha256:31b23c4cc6ab27df7e4c876a17f4f37824a951910125459b480e1ccd56af3e6e",
+   "corpus": "latent",
+   "corpus_files": null,
+   "chunks": 375000,
+   "dims": 1024,
+   "seed": 9817,
+   "attr_seed": 9818,
+   "query_seed": 9819,
+   "latent": {
+    "rank": 16,
+    "mean": 0.25,
+    "superTopic": 0.2,
+    "topic": 0.25,
+    "page": 0.35,
+    "chunk": 0.25,
+    "noise": 0.15,
+    "queryShift": 0.25,
+    "queryNoise": 0.3,
+    "sourceShares": [
+     0.1,
+     0.4
+    ],
+    "chunks": 375000,
+    "dims": 1024,
+    "seed": 9817
+   },
+   "pages": 53324,
+   "gbrain_commit": "3a360389f152e62ccb627ab96eccfad8a9204e75",
+   "harness_commit": "8f674b620f4b4fead935869d859e44fb3eb71bb5",
+   "arm_files": [
+    {
+     "file": "src/core/postgres-engine.ts",
+     "control_sha256": "d1630815488f028ca39fee22a928b72bd02735a795ace3c799953e3d386105ce",
+     "treatment_sha256": "6c0463f0dfab254bac2ba01517931192393ecc926ab3dd8a7cf4eaf9520b0afd"
+    },
+    {
+     "file": "src/core/pglite-engine.ts",
+     "control_sha256": "cb262c5b69ec47f2ce8bc2590cf14b124040f7d2469b8d2ef58cdee1b1c32bfd",
+     "treatment_sha256": "ef2c0687fa1a4eaddbb40fa37b560682e686b60b7f325059e6f1b6e396814cf3"
+    }
+   ],
+   "index_sql": "CREATE INDEX IF NOT EXISTS idx_chunks_embedding ON content_chunks USING hnsw (embedding vector_cosine_ops);",
+   "load_seconds": 58.22246413800001,
+   "index_build_seconds": 41.028386191,
+   "maintenance_work_mem": "7GB",
+   "env": {
+    "server": "PostgreSQL 17.0 (Debian 17.0-1.pgdg120+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14) 12.2.0, 64-bit",
+    "server_num": "170000",
+    "pgvector": "0.7.4",
+    "shared_buffers": "8022MB",
+    "effective_cache_size": "24068MB",
+    "work_mem": "4MB",
+    "random_page_cost": "1.1",
+    "effective_io_concurrency": "200",
+    "synchronous_commit": "on",
+    "max_parallel_workers_per_gather": "2",
+    "jit": "on",
+    "index_bytes": 3072008192,
+    "chunks": 375000,
+    "pages": 53324
+   },
+   "machine": {
+    "cpus": 8,
+    "mem_gb": 31
+   },
+   "boost_map": {
+    "originals/": 1.5,
+    "concepts/": 1.3,
+    "writing/": 1.4,
+    "people/": 1.2,
+    "companies/": 1.2,
+    "deals/": 1.2,
+    "meetings/": 1.1,
+    "media/articles/": 1.1,
+    "media/repos/": 1.1,
+    "yc/": 1,
+    "civic/": 1,
+    "daily/": 0.8,
+    "media/x/": 0.7,
+    "openclaw/chat/": 0.5,
+    "archive/": 0.5,
+    "extracts/": 0.3,
+    "actions/": 0.3
+   },
+   "hard_excludes": [
+    "test/",
+    "attachments/",
+    ".raw/"
+   ],
+   "queries": 200,
+   "queries_untrusted": 500,
+   "truth": "brute",
+   "exact_check": 20,
+   "repeats": 3,
+   "capture": 5,
+   "started": "2026-11-27T01:14:55.844Z"
+  },
+  {
+   "db": "fv_latent_75000_56700fa1",
+   "label": "pg17-v074",
+   "engine": "postgres",
+   "image": "pgvector/pgvector@sha256:31b23c4cc6ab27df7e4c876a17f4f37824a951910125459b480e1ccd56af3e6e",
+   "corpus": "latent",
+   "corpus_files": null,
+   "chunks": 75000,
+   "dims": 1024,
+   "seed": 9817,
+   "attr_seed": 9818,
+   "query_seed": 9819,
+   "latent": {
+    "rank": 16,
+    "mean": 0.25,
+    "superTopic": 0.2,
+    "topic": 0.25,
+    "page": 0.35,
+    "chunk": 0.25,
+    "noise": 0.15,
+    "queryShift": 0.25,
+    "queryNoise": 0.3,
+    "sourceShares": [
+     0.1,
+     0.4
+    ],
+    "chunks": 75000,
+    "dims": 1024,
+    "seed": 9817
+   },
+   "pages": 10675,
+   "gbrain_commit": "3a360389f152e62ccb627ab96eccfad8a9204e75",
+   "harness_commit": "875020d47eebf5068cafecdff4b1235bb75d043d",
+   "arm_files": [
+    {
+     "file": "src/core/postgres-engine.ts",
+     "control_sha256": "d1630815488f028ca39fee22a928b72bd02735a795ace3c799953e3d386105ce",
+     "treatment_sha256": "6c0463f0dfab254bac2ba01517931192393ecc926ab3dd8a7cf4eaf9520b0afd"
+    },
+    {
+     "file": "src/core/pglite-engine.ts",
+     "control_sha256": "cb262c5b69ec47f2ce8bc2590cf14b124040f7d2469b8d2ef58cdee1b1c32bfd",
+     "treatment_sha256": "ef2c0687fa1a4eaddbb40fa37b560682e686b60b7f325059e6f1b6e396814cf3"
+    }
+   ],
+   "index_sql": "CREATE INDEX IF NOT EXISTS idx_chunks_embedding ON content_chunks USING hnsw (embedding vector_cosine_ops);",
+   "load_seconds": 13.765189493999998,
+   "index_build_seconds": 9.263785447,
+   "maintenance_work_mem": "7GB",
+   "env": {
+    "server": "PostgreSQL 17.0 (Debian 17.0-1.pgdg120+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14) 12.2.0, 64-bit",
+    "server_num": "170000",
+    "pgvector": "0.7.4",
+    "shared_buffers": "8022MB",
+    "effective_cache_size": "24068MB",
+    "work_mem": "4MB",
+    "random_page_cost": "1.1",
+    "effective_io_concurrency": "200",
+    "synchronous_commit": "on",
+    "max_parallel_workers_per_gather": "2",
+    "jit": "on",
+    "index_bytes": 614408192,
+    "chunks": 75000,
+    "pages": 10675
+   },
+   "machine": {
+    "cpus": 8,
+    "mem_gb": 31
+   },
+   "boost_map": {
+    "originals/": 1.5,
+    "concepts/": 1.3,
+    "writing/": 1.4,
+    "people/": 1.2,
+    "companies/": 1.2,
+    "deals/": 1.2,
+    "meetings/": 1.1,
+    "media/articles/": 1.1,
+    "media/repos/": 1.1,
+    "yc/": 1,
+    "civic/": 1,
+    "daily/": 0.8,
+    "media/x/": 0.7,
+    "openclaw/chat/": 0.5,
+    "archive/": 0.5,
+    "extracts/": 0.3,
+    "actions/": 0.3
+   },
+   "hard_excludes": [
+    "test/",
+    "attachments/",
+    ".raw/"
+   ],
+   "queries": 200,
+   "queries_untrusted": 500,
+   "truth": "brute",
+   "exact_check": 20,
+   "repeats": 3,
+   "capture": 5,
+   "started": "2026-11-26T20:05:27.395Z"
+  },
+  {
+   "db": "fv_latent_375000_22e7da48",
+   "label": "pg18-v087",
+   "engine": "postgres",
+   "image": "pgvector/pgvector@sha256:38681dc6eaf55308e2a4c6de392d131652dcfac70e1263e35cd9b5ea3fe39782",
+   "corpus": "latent",
+   "corpus_files": null,
+   "chunks": 375000,
+   "dims": 1024,
+   "seed": 9817,
+   "attr_seed": 9818,
+   "query_seed": 9819,
+   "latent": {
+    "rank": 16,
+    "mean": 0.25,
+    "superTopic": 0.2,
+    "topic": 0.25,
+    "page": 0.35,
+    "chunk": 0.25,
+    "noise": 0.15,
+    "queryShift": 0.25,
+    "queryNoise": 0.3,
+    "sourceShares": [
+     0.1,
+     0.4
+    ],
+    "chunks": 375000,
+    "dims": 1024,
+    "seed": 9817
+   },
+   "pages": 53324,
+   "gbrain_commit": "3a360389f152e62ccb627ab96eccfad8a9204e75",
+   "harness_commit": "8f674b620f4b4fead935869d859e44fb3eb71bb5",
+   "arm_files": [
+    {
+     "file": "src/core/postgres-engine.ts",
+     "control_sha256": "d1630815488f028ca39fee22a928b72bd02735a795ace3c799953e3d386105ce",
+     "treatment_sha256": "6c0463f0dfab254bac2ba01517931192393ecc926ab3dd8a7cf4eaf9520b0afd"
+    },
+    {
+     "file": "src/core/pglite-engine.ts",
+     "control_sha256": "cb262c5b69ec47f2ce8bc2590cf14b124040f7d2469b8d2ef58cdee1b1c32bfd",
+     "treatment_sha256": "ef2c0687fa1a4eaddbb40fa37b560682e686b60b7f325059e6f1b6e396814cf3"
+    }
+   ],
+   "index_sql": "CREATE INDEX IF NOT EXISTS idx_chunks_embedding ON content_chunks USING hnsw (embedding vector_cosine_ops);",
+   "load_seconds": 53.580912139,
+   "index_build_seconds": 38.77734743199999,
+   "maintenance_work_mem": "7GB",
+   "env": {
+    "server": "PostgreSQL 18.7 (Debian 18.7-1.pgdg12+2) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit",
+    "server_num": "180007",
+    "pgvector": "0.8.7",
+    "shared_buffers": "8022MB",
+    "effective_cache_size": "24068MB",
+    "work_mem": "4MB",
+    "random_page_cost": "1.1",
+    "effective_io_concurrency": "200",
+    "synchronous_commit": "on",
+    "max_parallel_workers_per_gather": "2",
+    "jit": "on",
+    "index_bytes": 3072008192,
+    "chunks": 375000,
+    "pages": 53324
+   },
+   "machine": {
+    "cpus": 8,
+    "mem_gb": 31
+   },
+   "boost_map": {
+    "originals/": 1.5,
+    "concepts/": 1.3,
+    "writing/": 1.4,
+    "people/": 1.2,
+    "companies/": 1.2,
+    "deals/": 1.2,
+    "meetings/": 1.1,
+    "media/articles/": 1.1,
+    "media/repos/": 1.1,
+    "yc/": 1,
+    "civic/": 1,
+    "daily/": 0.8,
+    "media/x/": 0.7,
+    "openclaw/chat/": 0.5,
+    "archive/": 0.5,
+    "extracts/": 0.3,
+    "actions/": 0.3
+   },
+   "hard_excludes": [
+    "test/",
+    "attachments/",
+    ".raw/"
+   ],
+   "queries": 200,
+   "queries_untrusted": 500,
+   "truth": "brute",
+   "exact_check": 20,
+   "repeats": 3,
+   "capture": 5,
+   "started": "2026-11-27T01:40:34.368Z"
+  },
+  {
+   "db": "fv_latent_75000_69221009",
+   "label": "pg18-v087",
+   "engine": "postgres",
+   "image": "pgvector/pgvector@sha256:38681dc6eaf55308e2a4c6de392d131652dcfac70e1263e35cd9b5ea3fe39782",
+   "corpus": "latent",
+   "corpus_files": null,
+   "chunks": 75000,
+   "dims": 1024,
+   "seed": 9817,
+   "attr_seed": 9818,
+   "query_seed": 9819,
+   "latent": {
+    "rank": 16,
+    "mean": 0.25,
+    "superTopic": 0.2,
+    "topic": 0.25,
+    "page": 0.35,
+    "chunk": 0.25,
+    "noise": 0.15,
+    "queryShift": 0.25,
+    "queryNoise": 0.3,
+    "sourceShares": [
+     0.1,
+     0.4
+    ],
+    "chunks": 75000,
+    "dims": 1024,
+    "seed": 9817
+   },
+   "pages": 10675,
+   "gbrain_commit": "3a360389f152e62ccb627ab96eccfad8a9204e75",
+   "harness_commit": "8f674b620f4b4fead935869d859e44fb3eb71bb5",
+   "arm_files": [
+    {
+     "file": "src/core/postgres-engine.ts",
+     "control_sha256": "d1630815488f028ca39fee22a928b72bd02735a795ace3c799953e3d386105ce",
+     "treatment_sha256": "6c0463f0dfab254bac2ba01517931192393ecc926ab3dd8a7cf4eaf9520b0afd"
+    },
+    {
+     "file": "src/core/pglite-engine.ts",
+     "control_sha256": "cb262c5b69ec47f2ce8bc2590cf14b124040f7d2469b8d2ef58cdee1b1c32bfd",
+     "treatment_sha256": "ef2c0687fa1a4eaddbb40fa37b560682e686b60b7f325059e6f1b6e396814cf3"
+    }
+   ],
+   "index_sql": "CREATE INDEX IF NOT EXISTS idx_chunks_embedding ON content_chunks USING hnsw (embedding vector_cosine_ops);",
+   "load_seconds": 13.112486962,
+   "index_build_seconds": 9.147858059,
+   "maintenance_work_mem": "7GB",
+   "env": {
+    "server": "PostgreSQL 18.7 (Debian 18.7-1.pgdg12+2) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit",
+    "server_num": "180007",
+    "pgvector": "0.8.7",
+    "shared_buffers": "8022MB",
+    "effective_cache_size": "24068MB",
+    "work_mem": "4MB",
+    "random_page_cost": "1.1",
+    "effective_io_concurrency": "200",
+    "synchronous_commit": "on",
+    "max_parallel_workers_per_gather": "2",
+    "jit": "on",
+    "index_bytes": 614408192,
+    "chunks": 75000,
+    "pages": 10675
+   },
+   "machine": {
+    "cpus": 8,
+    "mem_gb": 31
+   },
+   "boost_map": {
+    "originals/": 1.5,
+    "concepts/": 1.3,
+    "writing/": 1.4,
+    "people/": 1.2,
+    "companies/": 1.2,
+    "deals/": 1.2,
+    "meetings/": 1.1,
+    "media/articles/": 1.1,
+    "media/repos/": 1.1,
+    "yc/": 1,
+    "civic/": 1,
+    "daily/": 0.8,
+    "media/x/": 0.7,
+    "openclaw/chat/": 0.5,
+    "archive/": 0.5,
+    "extracts/": 0.3,
+    "actions/": 0.3
+   },
+   "hard_excludes": [
+    "test/",
+    "attachments/",
+    ".raw/"
+   ],
+   "queries": 200,
+   "queries_untrusted": 500,
+   "truth": "brute",
+   "exact_check": 20,
+   "repeats": 3,
+   "capture": 5,
+   "started": "2026-11-26T20:06:27.810Z"
+  },
+  {
+   "db": "~/pgl/data-15000",
+   "label": "pglite",
+   "engine": "pglite",
+   "image": "",
+   "corpus": "latent",
+   "corpus_files": null,
+   "chunks": 15000,
+   "dims": 1024,
+   "seed": 9817,
+   "attr_seed": 9818,
+   "query_seed": 9819,
+   "latent": {
+    "rank": 16,
+    "mean": 0.25,
+    "superTopic": 0.2,
+    "topic": 0.25,
+    "page": 0.35,
+    "chunk": 0.25,
+    "noise": 0.15,
+    "queryShift": 0.25,
+    "queryNoise": 0.3,
+    "sourceShares": [
+     0.1,
+     0.4
+    ],
+    "chunks": 15000,
+    "dims": 1024,
+    "seed": 9817
+   },
+   "pages": 2200,
+   "gbrain_commit": "3a360389f152e62ccb627ab96eccfad8a9204e75",
+   "harness_commit": "875020d47eebf5068cafecdff4b1235bb75d043d",
+   "arm_files": [
+    {
+     "file": "src/core/postgres-engine.ts",
+     "control_sha256": "d1630815488f028ca39fee22a928b72bd02735a795ace3c799953e3d386105ce",
+     "treatment_sha256": "6c0463f0dfab254bac2ba01517931192393ecc926ab3dd8a7cf4eaf9520b0afd"
+    },
+    {
+     "file": "src/core/pglite-engine.ts",
+     "control_sha256": "cb262c5b69ec47f2ce8bc2590cf14b124040f7d2469b8d2ef58cdee1b1c32bfd",
+     "treatment_sha256": "ef2c0687fa1a4eaddbb40fa37b560682e686b60b7f325059e6f1b6e396814cf3"
+    }
+   ],
+   "index_sql": "CREATE INDEX IF NOT EXISTS idx_chunks_embedding ON content_chunks USING hnsw (embedding vector_cosine_ops);",
+   "load_seconds": 33.663670227,
+   "index_build_seconds": 13.503954749999997,
+   "maintenance_work_mem": "1GB",
+   "env": {
+    "server": "PostgreSQL 17.5 on wasm32-unknown-linux-gnu, compiled by emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 3.1.74 (1092ec30a3fb1d46b1782ff1b4db5094d3d06ae5), 32-bit",
+    "server_num": "170005",
+    "pgvector": "0.8.1",
+    "shared_buffers": "128MB",
+    "effective_cache_size": "4GB",
+    "work_mem": "4MB",
+    "random_page_cost": "4",
+    "effective_io_concurrency": "1",
+    "synchronous_commit": "on",
+    "max_parallel_workers_per_gather": "0",
+    "jit": "on",
+    "index_bytes": 122888192,
+    "chunks": 15000,
+    "pages": 2200
+   },
+   "machine": {
+    "cpus": 8,
+    "mem_gb": 31
+   },
+   "boost_map": {
+    "originals/": 1.5,
+    "concepts/": 1.3,
+    "writing/": 1.4,
+    "people/": 1.2,
+    "companies/": 1.2,
+    "deals/": 1.2,
+    "meetings/": 1.1,
+    "media/articles/": 1.1,
+    "media/repos/": 1.1,
+    "yc/": 1,
+    "civic/": 1,
+    "daily/": 0.8,
+    "media/x/": 0.7,
+    "openclaw/chat/": 0.5,
+    "archive/": 0.5,
+    "extracts/": 0.3,
+    "actions/": 0.3
+   },
+   "hard_excludes": [
+    "test/",
+    "attachments/",
+    ".raw/"
+   ],
+   "queries": 200,
+   "queries_untrusted": 500,
+   "truth": "brute",
+   "exact_check": 20,
+   "repeats": 3,
+   "capture": 5,
+   "started": "2026-11-26T20:05:47.220Z"
+  },
+  {
+   "db": "~/pgl/data-75000",
+   "label": "pglite",
+   "engine": "pglite",
+   "image": "",
+   "corpus": "latent",
+   "corpus_files": null,
+   "chunks": 75000,
+   "dims": 1024,
+   "seed": 9817,
+   "attr_seed": 9818,
+   "query_seed": 9819,
+   "latent": {
+    "rank": 16,
+    "mean": 0.25,
+    "superTopic": 0.2,
+    "topic": 0.25,
+    "page": 0.35,
+    "chunk": 0.25,
+    "noise": 0.15,
+    "queryShift": 0.25,
+    "queryNoise": 0.3,
+    "sourceShares": [
+     0.1,
+     0.4
+    ],
+    "chunks": 75000,
+    "dims": 1024,
+    "seed": 9817
+   },
+   "pages": 10675,
+   "gbrain_commit": "3a360389f152e62ccb627ab96eccfad8a9204e75",
+   "harness_commit": "8f674b620f4b4fead935869d859e44fb3eb71bb5",
+   "arm_files": [
+    {
+     "file": "src/core/postgres-engine.ts",
+     "control_sha256": "d1630815488f028ca39fee22a928b72bd02735a795ace3c799953e3d386105ce",
+     "treatment_sha256": "6c0463f0dfab254bac2ba01517931192393ecc926ab3dd8a7cf4eaf9520b0afd"
+    },
+    {
+     "file": "src/core/pglite-engine.ts",
+     "control_sha256": "cb262c5b69ec47f2ce8bc2590cf14b124040f7d2469b8d2ef58cdee1b1c32bfd",
+     "treatment_sha256": "ef2c0687fa1a4eaddbb40fa37b560682e686b60b7f325059e6f1b6e396814cf3"
+    }
+   ],
+   "index_sql": "CREATE INDEX IF NOT EXISTS idx_chunks_embedding ON content_chunks USING hnsw (embedding vector_cosine_ops);",
+   "load_seconds": 170.67259696300002,
+   "index_build_seconds": 69.65091001400002,
+   "maintenance_work_mem": "1GB",
+   "env": {
+    "server": "PostgreSQL 17.5 on wasm32-unknown-linux-gnu, compiled by emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 3.1.74 (1092ec30a3fb1d46b1782ff1b4db5094d3d06ae5), 32-bit",
+    "server_num": "170005",
+    "pgvector": "0.8.1",
+    "shared_buffers": "128MB",
+    "effective_cache_size": "4GB",
+    "work_mem": "4MB",
+    "random_page_cost": "4",
+    "effective_io_concurrency": "1",
+    "synchronous_commit": "on",
+    "max_parallel_workers_per_gather": "0",
+    "jit": "on",
+    "index_bytes": 614408192,
+    "chunks": 75000,
+    "pages": 10675
+   },
+   "machine": {
+    "cpus": 8,
+    "mem_gb": 31
+   },
+   "boost_map": {
+    "originals/": 1.5,
+    "concepts/": 1.3,
+    "writing/": 1.4,
+    "people/": 1.2,
+    "companies/": 1.2,
+    "deals/": 1.2,
+    "meetings/": 1.1,
+    "media/articles/": 1.1,
+    "media/repos/": 1.1,
+    "yc/": 1,
+    "civic/": 1,
+    "daily/": 0.8,
+    "media/x/": 0.7,
+    "openclaw/chat/": 0.5,
+    "archive/": 0.5,
+    "extracts/": 0.3,
+    "actions/": 0.3
+   },
+   "hard_excludes": [
+    "test/",
+    "attachments/",
+    ".raw/"
+   ],
+   "queries": 200,
+   "queries_untrusted": 500,
+   "truth": "brute",
+   "exact_check": 20,
+   "repeats": 3,
+   "capture": 5,
+   "started": "2026-11-27T01:17:56.595Z"
+  },
+  {
+   "db": "~/pgl/data-75000",
+   "label": "pglite",
+   "engine": "pglite",
+   "image": "",
+   "corpus": "latent",
+   "corpus_files": null,
+   "chunks": 75000,
+   "dims": 1024,
+   "seed": 9817,
+   "attr_seed": 9818,
+   "query_seed": 9819,
+   "latent": {
+    "rank": 16,
+    "mean": 0.25,
+    "superTopic": 0.2,
+    "topic": 0.25,
+    "page": 0.35,
+    "chunk": 0.25,
+    "noise": 0.15,
+    "queryShift": 0.25,
+    "queryNoise": 0.3,
+    "sourceShares": [
+     0.1,
+     0.4
+    ],
+    "chunks": 75000,
+    "dims": 1024,
+    "seed": 9817
+   },
+   "pages": 10675,
+   "gbrain_commit": "3a360389f152e62ccb627ab96eccfad8a9204e75",
+   "harness_commit": "8f674b620f4b4fead935869d859e44fb3eb71bb5",
+   "arm_files": [
+    {
+     "file": "src/core/postgres-engine.ts",
+     "control_sha256": "d1630815488f028ca39fee22a928b72bd02735a795ace3c799953e3d386105ce",
+     "treatment_sha256": "6c0463f0dfab254bac2ba01517931192393ecc926ab3dd8a7cf4eaf9520b0afd"
+    },
+    {
+     "file": "src/core/pglite-engine.ts",
+     "control_sha256": "cb262c5b69ec47f2ce8bc2590cf14b124040f7d2469b8d2ef58cdee1b1c32bfd",
+     "treatment_sha256": "ef2c0687fa1a4eaddbb40fa37b560682e686b60b7f325059e6f1b6e396814cf3"
+    }
+   ],
+   "index_sql": "CREATE INDEX IF NOT EXISTS idx_chunks_embedding ON content_chunks USING hnsw (embedding vector_cosine_ops);",
+   "load_seconds": 172.48126408299999,
+   "index_build_seconds": 69.872742872,
+   "maintenance_work_mem": "1GB",
+   "env": {
+    "server": "PostgreSQL 17.5 on wasm32-unknown-linux-gnu, compiled by emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 3.1.74 (1092ec30a3fb1d46b1782ff1b4db5094d3d06ae5), 32-bit",
+    "server_num": "170005",
+    "pgvector": "0.8.1",
+    "shared_buffers": "128MB",
+    "effective_cache_size": "4GB",
+    "work_mem": "4MB",
+    "random_page_cost": "4",
+    "effective_io_concurrency": "1",
+    "synchronous_commit": "on",
+    "max_parallel_workers_per_gather": "0",
+    "jit": "on",
+    "index_bytes": 614408192,
+    "chunks": 75000,
+    "pages": 10675
+   },
+   "machine": {
+    "cpus": 8,
+    "mem_gb": 31
+   },
+   "boost_map": {
+    "originals/": 1.5,
+    "concepts/": 1.3,
+    "writing/": 1.4,
+    "people/": 1.2,
+    "companies/": 1.2,
+    "deals/": 1.2,
+    "meetings/": 1.1,
+    "media/articles/": 1.1,
+    "media/repos/": 1.1,
+    "yc/": 1,
+    "civic/": 1,
+    "daily/": 0.8,
+    "media/x/": 0.7,
+    "openclaw/chat/": 0.5,
+    "archive/": 0.5,
+    "extracts/": 0.3,
+    "actions/": 0.3
+   },
+   "hard_excludes": [
+    "test/",
+    "attachments/",
+    ".raw/"
+   ],
+   "queries": 200,
+   "queries_untrusted": 500,
+   "truth": "brute",
+   "exact_check": 20,
+   "repeats": 3,
+   "capture": 5,
+   "started": "2026-11-27T01:17:35.803Z"
+  },
+  {
+   "db": "fv_latent_375000_78bf7814",
+   "label": "pg17-v074",
+   "engine": "postgres",
+   "image": "pgvector/pgvector@sha256:31b23c4cc6ab27df7e4c876a17f4f37824a951910125459b480e1ccd56af3e6e",
+   "corpus": "latent",
+   "corpus_files": null,
+   "chunks": 375000,
+   "dims": 1024,
+   "seed": 9817,
+   "attr_seed": 9818,
+   "query_seed": 9819,
+   "latent": {
+    "rank": 16,
+    "mean": 0.25,
+    "superTopic": 0.2,
+    "topic": 0.25,
+    "page": 0.35,
+    "chunk": 0.25,
+    "noise": 0.15,
+    "queryShift": 0.25,
+    "queryNoise": 0.3,
+    "sourceShares": [
+     0.1,
+     0.4
+    ],
+    "chunks": 375000,
+    "dims": 1024,
+    "seed": 9817
+   },
+   "pages": 53324,
+   "gbrain_commit": "3a360389f152e62ccb627ab96eccfad8a9204e75",
+   "harness_commit": "8f674b620f4b4fead935869d859e44fb3eb71bb5",
+   "arm_files": [
+    {
+     "file": "src/core/postgres-engine.ts",
+     "control_sha256": "d1630815488f028ca39fee22a928b72bd02735a795ace3c799953e3d386105ce",
+     "treatment_sha256": "6c0463f0dfab254bac2ba01517931192393ecc926ab3dd8a7cf4eaf9520b0afd"
+    },
+    {
+     "file": "src/core/pglite-engine.ts",
+     "control_sha256": "cb262c5b69ec47f2ce8bc2590cf14b124040f7d2469b8d2ef58cdee1b1c32bfd",
+     "treatment_sha256": "ef2c0687fa1a4eaddbb40fa37b560682e686b60b7f325059e6f1b6e396814cf3"
+    }
+   ],
+   "index_sql": "CREATE INDEX IF NOT EXISTS idx_chunks_embedding ON content_chunks USING hnsw (embedding vector_cosine_ops);",
+   "load_seconds": 59.208713742,
+   "index_build_seconds": 40.867060466000005,
+   "maintenance_work_mem": "7GB",
+   "env": {
+    "server": "PostgreSQL 17.0 (Debian 17.0-1.pgdg120+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14) 12.2.0, 64-bit",
+    "server_num": "170000",
+    "pgvector": "0.7.4",
+    "shared_buffers": "8022MB",
+    "effective_cache_size": "24068MB",
+    "work_mem": "4MB",
+    "random_page_cost": "1.1",
+    "effective_io_concurrency": "200",
+    "synchronous_commit": "on",
+    "max_parallel_workers_per_gather": "2",
+    "jit": "on",
+    "index_bytes": 3072008192,
+    "chunks": 375000,
+    "pages": 53324
+   },
+   "machine": {
+    "cpus": 8,
+    "mem_gb": 31
+   },
+   "boost_map": {
+    "originals/": 1.5,
+    "concepts/": 1.3,
+    "writing/": 1.4,
+    "people/": 1.2,
+    "companies/": 1.2,
+    "deals/": 1.2,
+    "meetings/": 1.1,
+    "media/articles/": 1.1,
+    "media/repos/": 1.1,
+    "yc/": 1,
+    "civic/": 1,
+    "daily/": 0.8,
+    "media/x/": 0.7,
+    "openclaw/chat/": 0.5,
+    "archive/": 0.5,
+    "extracts/": 0.3,
+    "actions/": 0.3
+   },
+   "hard_excludes": [
+    "test/",
+    "attachments/",
+    ".raw/"
+   ],
+   "queries": 200,
+   "queries_untrusted": 500,
+   "truth": "brute",
+   "exact_check": 20,
+   "repeats": 3,
+   "capture": 5,
+   "started": "2026-11-27T09:00:46.923Z"
+  },
+  {
+   "db": "fv_latent_375000_6a0af734",
+   "label": "pg17-v074",
+   "engine": "postgres",
+   "image": "pgvector/pgvector@sha256:31b23c4cc6ab27df7e4c876a17f4f37824a951910125459b480e1ccd56af3e6e",
+   "corpus": "latent",
+   "corpus_files": null,
+   "chunks": 375000,
+   "dims": 1024,
+   "seed": 9817,
+   "attr_seed": 9818,
+   "query_seed": 9819,
+   "latent": {
+    "rank": 16,
+    "mean": 0.25,
+    "superTopic": 0.2,
+    "topic": 0.25,
+    "page": 0.35,
+    "chunk": 0.25,
+    "noise": 0.15,
+    "queryShift": 0.25,
+    "queryNoise": 0.3,
+    "sourceShares": [
+     0.1,
+     0.4
+    ],
+    "chunks": 375000,
+    "dims": 1024,
+    "seed": 9817
+   },
+   "pages": 53324,
+   "gbrain_commit": "3a360389f152e62ccb627ab96eccfad8a9204e75",
+   "harness_commit": "8f674b620f4b4fead935869d859e44fb3eb71bb5",
+   "arm_files": [
+    {
+     "file": "src/core/postgres-engine.ts",
+     "control_sha256": "d1630815488f028ca39fee22a928b72bd02735a795ace3c799953e3d386105ce",
+     "treatment_sha256": "6c0463f0dfab254bac2ba01517931192393ecc926ab3dd8a7cf4eaf9520b0afd"
+    },
+    {
+     "file": "src/core/pglite-engine.ts",
+     "control_sha256": "cb262c5b69ec47f2ce8bc2590cf14b124040f7d2469b8d2ef58cdee1b1c32bfd",
+     "treatment_sha256": "ef2c0687fa1a4eaddbb40fa37b560682e686b60b7f325059e6f1b6e396814cf3"
+    }
+   ],
+   "index_sql": "CREATE INDEX IF NOT EXISTS idx_chunks_embedding ON content_chunks USING hnsw (embedding vector_cosine_ops);",
+   "load_seconds": 53.901535915000004,
+   "index_build_seconds": 40.208422166999995,
+   "maintenance_work_mem": "7GB",
+   "env": {
+    "server": "PostgreSQL 17.0 (Debian 17.0-1.pgdg120+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14) 12.2.0, 64-bit",
+    "server_num": "170000",
+    "pgvector": "0.7.4",
+    "shared_buffers": "8022MB",
+    "effective_cache_size": "24068MB",
+    "work_mem": "4MB",
+    "random_page_cost": "1.1",
+    "effective_io_concurrency": "200",
+    "synchronous_commit": "on",
+    "max_parallel_workers_per_gather": "2",
+    "jit": "on",
+    "index_bytes": 3072008192,
+    "chunks": 375000,
+    "pages": 53324
+   },
+   "machine": {
+    "cpus": 8,
+    "mem_gb": 31
+   },
+   "boost_map": {
+    "originals/": 1.5,
+    "concepts/": 1.3,
+    "writing/": 1.4,
+    "people/": 1.2,
+    "companies/": 1.2,
+    "deals/": 1.2,
+    "meetings/": 1.1,
+    "media/articles/": 1.1,
+    "media/repos/": 1.1,
+    "yc/": 1,
+    "civic/": 1,
+    "daily/": 0.8,
+    "media/x/": 0.7,
+    "openclaw/chat/": 0.5,
+    "archive/": 0.5,
+    "extracts/": 0.3,
+    "actions/": 0.3
+   },
+   "hard_excludes": [
+    "test/",
+    "attachments/",
+    ".raw/"
+   ],
+   "queries": 200,
+   "queries_untrusted": 500,
+   "truth": "brute",
+   "exact_check": 20,
+   "repeats": 3,
+   "capture": 5,
+   "started": "2026-11-27T08:59:57.607Z"
+  },
+  {
+   "db": "fv_latent_375000_289bb3c9",
+   "label": "pg17-v074",
+   "engine": "postgres",
+   "image": "pgvector/pgvector@sha256:31b23c4cc6ab27df7e4c876a17f4f37824a951910125459b480e1ccd56af3e6e",
+   "corpus": "latent",
+   "corpus_files": null,
+   "chunks": 375000,
+   "dims": 1024,
+   "seed": 9817,
+   "attr_seed": 9818,
+   "query_seed": 9819,
+   "latent": {
+    "rank": 16,
+    "mean": 0.25,
+    "superTopic": 0.2,
+    "topic": 0.25,
+    "page": 0.35,
+    "chunk": 0.25,
+    "noise": 0.15,
+    "queryShift": 0.25,
+    "queryNoise": 0.3,
+    "sourceShares": [
+     0.1,
+     0.4
+    ],
+    "chunks": 375000,
+    "dims": 1024,
+    "seed": 9817
+   },
+   "pages": 53324,
+   "gbrain_commit": "3a360389f152e62ccb627ab96eccfad8a9204e75",
+   "harness_commit": "8f674b620f4b4fead935869d859e44fb3eb71bb5",
+   "arm_files": [
+    {
+     "file": "src/core/postgres-engine.ts",
+     "control_sha256": "d1630815488f028ca39fee22a928b72bd02735a795ace3c799953e3d386105ce",
+     "treatment_sha256": "6c0463f0dfab254bac2ba01517931192393ecc926ab3dd8a7cf4eaf9520b0afd"
+    },
+    {
+     "file": "src/core/pglite-engine.ts",
+     "control_sha256": "cb262c5b69ec47f2ce8bc2590cf14b124040f7d2469b8d2ef58cdee1b1c32bfd",
+     "treatment_sha256": "ef2c0687fa1a4eaddbb40fa37b560682e686b60b7f325059e6f1b6e396814cf3"
+    }
+   ],
+   "index_sql": "CREATE INDEX IF NOT EXISTS idx_chunks_embedding ON content_chunks USING hnsw (embedding vector_cosine_ops);",
+   "load_seconds": 57.227628708999994,
+   "index_build_seconds": 40.265732531,
+   "maintenance_work_mem": "7GB",
+   "env": {
+    "server": "PostgreSQL 17.0 (Debian 17.0-1.pgdg120+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14) 12.2.0, 64-bit",
+    "server_num": "170000",
+    "pgvector": "0.7.4",
+    "shared_buffers": "8022MB",
+    "effective_cache_size": "24068MB",
+    "work_mem": "4MB",
+    "random_page_cost": "1.1",
+    "effective_io_concurrency": "200",
+    "synchronous_commit": "on",
+    "max_parallel_workers_per_gather": "2",
+    "jit": "on",
+    "index_bytes": 3072008192,
+    "chunks": 375000,
+    "pages": 53324
+   },
+   "machine": {
+    "cpus": 8,
+    "mem_gb": 31
+   },
+   "boost_map": {
+    "originals/": 1.5,
+    "concepts/": 1.3,
+    "writing/": 1.4,
+    "people/": 1.2,
+    "companies/": 1.2,
+    "deals/": 1.2,
+    "meetings/": 1.1,
+    "media/articles/": 1.1,
+    "media/repos/": 1.1,
+    "yc/": 1,
+    "civic/": 1,
+    "daily/": 0.8,
+    "media/x/": 0.7,
+    "openclaw/chat/": 0.5,
+    "archive/": 0.5,
+    "extracts/": 0.3,
+    "actions/": 0.3
+   },
+   "hard_excludes": [
+    "test/",
+    "attachments/",
+    ".raw/"
+   ],
+   "queries": 200,
+   "queries_untrusted": 500,
+   "truth": "brute",
+   "exact_check": 20,
+   "repeats": 3,
+   "capture": 5,
+   "started": "2026-11-27T08:59:44.719Z"
+  },
+  {
+   "db": "fv_wiki_375000_1158b301",
+   "label": "pg17-v087",
+   "engine": "postgres",
+   "image": "pgvector/pgvector@sha256:b513c48566e4777cd3370451400000c78eda6a08131d68f4c31d4a76f27bd8fd",
+   "corpus": "wiki",
+   "corpus_files": {
+    "pages.tsv": "deaa312fc7e9f918de9a1dc997c1a197a17cd83950d7dbe89c0767ff0e948d67",
+    "chunks.txt": "7c3355b436470ef0f8dad9632b608953da3c393024d14a7ee787bfef7c3841b5",
+    "vectors.f32": "d9f50fc5fcd2838e5be9065f3d9c5ad49afeab2d880169d6de3f8fabb51a7df1"
+   },
+   "chunks": 375000,
+   "dims": 1024,
+   "seed": 9817,
+   "attr_seed": 9818,
+   "query_seed": 9819,
+   "latent": null,
+   "pages": 69616,
+   "gbrain_commit": "3a360389f152e62ccb627ab96eccfad8a9204e75",
+   "harness_commit": "875020d47eebf5068cafecdff4b1235bb75d043d",
+   "arm_files": [
+    {
+     "file": "src/core/postgres-engine.ts",
+     "control_sha256": "d1630815488f028ca39fee22a928b72bd02735a795ace3c799953e3d386105ce",
+     "treatment_sha256": "6c0463f0dfab254bac2ba01517931192393ecc926ab3dd8a7cf4eaf9520b0afd"
+    },
+    {
+     "file": "src/core/pglite-engine.ts",
+     "control_sha256": "cb262c5b69ec47f2ce8bc2590cf14b124040f7d2469b8d2ef58cdee1b1c32bfd",
+     "treatment_sha256": "ef2c0687fa1a4eaddbb40fa37b560682e686b60b7f325059e6f1b6e396814cf3"
+    }
+   ],
+   "index_sql": "CREATE INDEX IF NOT EXISTS idx_chunks_embedding ON content_chunks USING hnsw (embedding vector_cosine_ops);",
+   "load_seconds": 55.054040416,
+   "index_build_seconds": 48.829730438,
+   "maintenance_work_mem": "15GB",
+   "env": {
+    "server": "PostgreSQL 17.12 (Debian 17.12-1.pgdg12+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit",
+    "server_num": "170012",
+    "pgvector": "0.8.7",
+    "shared_buffers": "16074MB",
+    "effective_cache_size": "48222MB",
+    "work_mem": "4MB",
+    "random_page_cost": "1.1",
+    "effective_io_concurrency": "200",
+    "synchronous_commit": "on",
+    "max_parallel_workers_per_gather": "2",
+    "jit": "on",
+    "index_bytes": 3071770624,
+    "chunks": 375000,
+    "pages": 69616
+   },
+   "machine": {
+    "cpus": 16,
+    "mem_gb": 63
+   },
+   "boost_map": {
+    "originals/": 1.5,
+    "concepts/": 1.3,
+    "writing/": 1.4,
+    "people/": 1.2,
+    "companies/": 1.2,
+    "deals/": 1.2,
+    "meetings/": 1.1,
+    "media/articles/": 1.1,
+    "media/repos/": 1.1,
+    "yc/": 1,
+    "civic/": 1,
+    "daily/": 0.8,
+    "media/x/": 0.7,
+    "openclaw/chat/": 0.5,
+    "archive/": 0.5,
+    "extracts/": 0.3,
+    "actions/": 0.3
+   },
+   "hard_excludes": [
+    "test/",
+    "attachments/",
+    ".raw/"
+   ],
+   "queries": 200,
+   "queries_untrusted": 500,
+   "truth": "brute",
+   "exact_check": 20,
+   "repeats": 3,
+   "capture": 5,
+   "started": "2026-11-26T19:58:59.820Z"
+  },
+  {
+   "db": "fv_wiki_375000_134160f7",
+   "label": "pg17-v087",
+   "engine": "postgres",
+   "image": "pgvector/pgvector@sha256:b513c48566e4777cd3370451400000c78eda6a08131d68f4c31d4a76f27bd8fd",
+   "corpus": "wiki",
+   "corpus_files": {
+    "pages.tsv": "deaa312fc7e9f918de9a1dc997c1a197a17cd83950d7dbe89c0767ff0e948d67",
+    "chunks.txt": "7c3355b436470ef0f8dad9632b608953da3c393024d14a7ee787bfef7c3841b5",
+    "vectors.f32": "d9f50fc5fcd2838e5be9065f3d9c5ad49afeab2d880169d6de3f8fabb51a7df1"
+   },
+   "chunks": 375000,
+   "dims": 1024,
+   "seed": 9817,
+   "attr_seed": 9818,
+   "query_seed": 9819,
+   "latent": null,
+   "pages": 69616,
+   "gbrain_commit": "3a360389f152e62ccb627ab96eccfad8a9204e75",
+   "harness_commit": "875020d47eebf5068cafecdff4b1235bb75d043d",
+   "arm_files": [
+    {
+     "file": "src/core/postgres-engine.ts",
+     "control_sha256": "d1630815488f028ca39fee22a928b72bd02735a795ace3c799953e3d386105ce",
+     "treatment_sha256": "6c0463f0dfab254bac2ba01517931192393ecc926ab3dd8a7cf4eaf9520b0afd"
+    },
+    {
+     "file": "src/core/pglite-engine.ts",
+     "control_sha256": "cb262c5b69ec47f2ce8bc2590cf14b124040f7d2469b8d2ef58cdee1b1c32bfd",
+     "treatment_sha256": "ef2c0687fa1a4eaddbb40fa37b560682e686b60b7f325059e6f1b6e396814cf3"
+    }
+   ],
+   "index_sql": "CREATE INDEX IF NOT EXISTS idx_chunks_embedding ON content_chunks USING hnsw (embedding vector_cosine_ops);",
+   "load_seconds": 53.054769992,
+   "index_build_seconds": 47.40527715499999,
+   "maintenance_work_mem": "15GB",
+   "env": {
+    "server": "PostgreSQL 17.12 (Debian 17.12-1.pgdg12+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit",
+    "server_num": "170012",
+    "pgvector": "0.8.7",
+    "shared_buffers": "16074MB",
+    "effective_cache_size": "48222MB",
+    "work_mem": "4MB",
+    "random_page_cost": "1.1",
+    "effective_io_concurrency": "200",
+    "synchronous_commit": "on",
+    "max_parallel_workers_per_gather": "2",
+    "jit": "on",
+    "index_bytes": 3071778816,
+    "chunks": 375000,
+    "pages": 69616
+   },
+   "machine": {
+    "cpus": 16,
+    "mem_gb": 63
+   },
+   "boost_map": {
+    "originals/": 1.5,
+    "concepts/": 1.3,
+    "writing/": 1.4,
+    "people/": 1.2,
+    "companies/": 1.2,
+    "deals/": 1.2,
+    "meetings/": 1.1,
+    "media/articles/": 1.1,
+    "media/repos/": 1.1,
+    "yc/": 1,
+    "civic/": 1,
+    "daily/": 0.8,
+    "media/x/": 0.7,
+    "openclaw/chat/": 0.5,
+    "archive/": 0.5,
+    "extracts/": 0.3,
+    "actions/": 0.3
+   },
+   "hard_excludes": [
+    "test/",
+    "attachments/",
+    ".raw/"
+   ],
+   "queries": 200,
+   "queries_untrusted": 500,
+   "truth": "brute",
+   "exact_check": 20,
+   "repeats": 3,
+   "capture": 5,
+   "started": "2026-11-26T19:58:56.973Z"
+  }
+ ]
+}

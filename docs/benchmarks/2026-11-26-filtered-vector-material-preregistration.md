@@ -285,4 +285,122 @@ its work ends. Amounts are in GST-4006, not here.
 
 ## Amendments
 
-None yet.
+### 2026-11-26: the pin, the oracle's boost factor, and an affected set that is never reached
+
+Committed on the results branch before any pilot or counted cell. It changes no arm, cell, metric or threshold.
+
+1. **Pin.** The results branch's first commit runs `bun eval/runner/gbrain-pin.ts bump`, which moves `package.json`
+   to v0.60.776.0 ([`3a360389`](https://github.com/garrytan/gbrain/tree/3a360389f152e62ccb627ab96eccfad8a9204e75)),
+   the build this plan already names and still gbrain's newest release.
+2. **Why the oracle's factor is 1.** "Exact ground truth" says every page's factor is 1 because `GBRAIN_SOURCE_BOOST`
+   and `GBRAIN_SEARCH_EXCLUDE` are unset. That alone isn't enough: gbrain always merges its default source boosts
+   (for example `originals/` 1.5, `daily/` 0.8, `archive/` 0.5) and the brain's `search.source_boosts` config, and
+   always applies its default hard excludes (`test/`, `attachments/`, `.raw/`), in
+   `src/core/search/source-boost.ts` at the pin. The factor is 1 because the corpus slugs (`bench/latent/p<n>` on L,
+   `bench/wiki/<article id>` on W, the slugs gbrain's own `scripts/bench/hnsw-iterative-scan.ts` gives that corpus) match no prefix in the resolved boost map or hard-exclude list, the brain sets no
+   `search.source_boosts`, and the two variables are unset. Before loading, the harness checks every slug against
+   `resolveBoostMap()` and `resolveHardExcludes()` at the pin and refuses to run if one matches. The pilot's brute-force
+   check (scores within 1e-5) still catches any factor other than 1.
+3. **No reached cell.** If no realistic affected warm cell is reached (every arm-T search there was answered by an index
+   walk, a scope scan or the exact fallback), latency does not improve on the realistic affected cells and the outcome
+   is **Close**, reported with every cell's reached share.
+
+Both 2 and 3 were raised by the preregistration's second review round and left open on #662 for this amendment.
+
+### 2026-11-26: query counts after the pilot, brute-force ground truth, and a truth stop
+
+Committed on the results branch after the pilot and before any counted cell. It changes no arm, filter, size, metric,
+margin or outcome rule. Approved by the experiment's owner on GST-4006.
+
+1. **Query counts.** The pilot passed its other checks (see "Pilot per arm"), but its projected recall half-width was
+   above 0.008 in every family of the untrusted caller, on both engines it ran on, and under 0.008 in every trusted
+   family. Under "Smallest detectable difference", those families rise to the rule's ceiling of 500 queries per cell at
+   375,000 chunks and below and on W. At 1,500,000 chunks, where the plan set 100 queries for cost, they rise to 250,
+   the same factor. That size is outside the realistic cells the outcome pools. Trusted cells keep 200 (100 at
+   1,500,000), and cold cells keep 30. In clustered mode an untrusted cell draws its own 500 queries, as before. In
+   independent mode the trusted cells use the first 200 queries of the same seeded set (`--queries-untrusted`).
+2. **Ground truth.** "Exact ground truth" names gbrain's `exactSql` with an unbounded candidate window. At the planned
+   sizes the pilot showed that query costs about as much as the timed searches it checks, and more on unselective
+   filters, so most of the grid's machine time would go to it. On every pilot cell (366 cells, two engines) it agreed
+   with the float64 brute force on every query, under the rule in that section (ties within 1e-6, scores within 1e-5).
+   So counted cells take the brute force as their truth (`--truth brute`): each eligible page ranked by its best
+   chunk's cosine with the query, over the vectors the harness loaded (generated on L, `vectors.f32` on W), with
+   eligibility from the same page attributes and caller rule. `exactSql` keeps running as a check on the first 20
+   queries of every cell at the cell's largest limit (`--exact-check 20`). Both results go to `oracle-check.jsonl`,
+   and the recount's `truth_check` lists every checked cell.
+3. **Truth stop.** If `exactSql` and the brute force disagree on any checked query, that cell stops before any
+   search runs. It's written to `truth-stops.jsonl`, reported, and goes to the experiment's owner before its
+   numbers count. It is never quietly re-run or dropped.
+4. **Harness only.** `exactSql` now runs on its own pool of connections, so several run at once on Postgres. This
+   changes no timed search and no result.
+
+### 2026-11-27: stage 2 skipped, the order of the stage 1b look, and W's re-run corpus
+
+Committed on the results branch before any stage 1b result was read, and before the W re-runs finished. It changes no
+arm, cell, metric, margin or outcome rule. Approved by the experiment's owner on GST-4006.
+
+1. **Stage 2 doesn't run.** Its trigger fired. On L at 375,000 chunks, the untrusted caller's cold `where` 20% cell
+   ends *loss* on PostgreSQL 15, 16 and 18, and each re-run on seed 29819 agreed. The loss is not a different
+   nearest-neighbour ranking. After a restart, some arm-T searches on that filter run into the 8 s budget of gbrain's
+   vector pool (`const deadline = performance.now() + 8_000` in `src/core/search/vector-pool.ts` at the pin). gbrain
+   then reports them incomplete (`onVectorPoolMeta`) and returns fewer than k pages. Warm, the same queries finish in
+   about 0.9 s with every page, and arm C returns the same pages cold and warm. The candidate rule from stage 1 keeps
+   today's plan on these cells, so measuring answer accuracy there would not change what ships. Stage 2 is skipped,
+   and the cold-cache timeout is reported as a finding about gbrain in its own right: how many queries hit the budget,
+   how many pages they returned, and whether gbrain's callers see the incomplete flag. A rule broadened to flip any
+   untrusted `where` 20% cell reopens stage 2.
+2. **Stage 1b's order.** Stage 1b's runs (L at 75,000 and 375,000 chunks, seeds 19817, 19818 and 19819, primary
+   engine, every filter, both modes, both callers, limits 20 and 50, warm and cold) started before the last stage 1
+   re-runs finished, so the confirmation would finish the same day. The rule is fixed from stage 1 data alone and
+   committed on this branch before any stage 1b result is read. Stage 1b is recounted on its own, apart from stage 1.
+3. **W's re-run corpus.** Two W cells came out *regresses* and need re-runs. W's vectors weren't kept after its run
+   machines were destroyed, so the re-runs rebuild the corpus. The same prep script at the pin cuts the same shards,
+   and the run stops before embedding unless `pages.tsv` and `chunks.txt` match the hashes the W runs recorded. Then
+   `voyage-4` embeds the text again. The results report whether the new `vectors.f32` matches the recorded hash.
+   If it doesn't, the re-run used re-embedded vectors of the same text, and the results say so beside those two cells.
+
+
+### 2026-11-27: PGLite at 375,000 chunks is left out, because its HNSW index never finished building
+
+Committed on the results branch after the PGLite 375,000-chunk runs were stopped. No cell of them ran, so no number is
+dropped. It changes no other arm, cell, metric or outcome rule. Approved by the experiment's owner on GST-4006, with a
+deadline of 20:00 UTC on 2026-11-27.
+
+The plan puts PGLite on L at 15,000, 75,000 and 375,000 chunks. At 375,000 chunks (53,324 pages), gbrain's default chunk
+index (`CREATE INDEX ... USING hnsw (embedding vector_cosine_ops)` from `chunkEmbeddingIndexSql` at the pin, PGLite
+0.4.3) never finished building:
+
+- Four `standard-8` machines (8 vCPU, 32 GB), one per mode and caller, loaded the corpus by about 09:15 UTC. The
+  index build then ran single-threaded at 100% of one core, with about 4.7 GB resident and a 7.5 GB data directory,
+  for about 10.8 hours with `maintenance_work_mem` at 1 GB (the harness's PGLite default). It didn't finish.
+- One of the four was restarted at 11:10 UTC with `maintenance_work_mem` at 2 GB. That build ran for about 8.8 hours
+  and didn't finish either.
+- For scale, the same index on PGLite at 75,000 chunks built in 70 s, and at 15,000 chunks in 14 s, both at 1 GB.
+
+All four machines were destroyed at 20:00 UTC. PGLite's results cover 15,000 and 75,000 chunks, and PGLite cells at
+375,000 chunks are reported as not run, with this reason. The results report this as a finding about gbrain in its
+own right: at the top of the size range gbrain's README gives for PGLite, its default index couldn't be built within a
+working day.
+
+### 2026-11-27: the rule stage 1b confirms
+
+Committed on the results branch before any stage 1b result was read. It names the rule, as "Limited flip" under
+"Decision rule" asks, from stage 1's cells after their re-runs. The only re-runs still out are PGLite's at 15,000 and
+75,000 chunks, and those cells are on the keep side under any threshold that separates the rest. It changes no arm,
+cell, metric, margin or outcome rule.
+
+**The rule.** Turn materialization off for a filtered joined attempt when the search has a date bound (`afterDate` or
+`beforeDate`), alone or with a `type` filter, and the brain holds at least 375,000 chunks (about 50,000 pages on L).
+Every other search keeps today's plan.
+
+It is the threshold that keeps every realistic *loss*, *unresolved* and *regresses* cell on the keep side, and puts the
+most *improves* cells on the flip side. That is a search over filter kind (`type`, date, `where`, the combination,
+small scopes), nominal share (0.1% to 50%) and size (15,000, 75,000 and 375,000 chunks). On stage 1 it covers 180
+realistic affected cells: none blocks, and 69 improve. No share bound is needed. Every date and combination cell at
+375,000 chunks is *safe* on recall and none *regresses*, across PostgreSQL 15 to 18 and pgvector 0.7.4 and 0.8.7. At
+1,500,000 chunks the same filters are all *safe*, and none *regresses*, so the rule carries no upper size limit.
+
+**Stage 1b's pass condition** (from "Decision rule"): on the fresh corpus (seeds 19817 to 19819, primary engine), every
+cell the rule flips, meaning date and combination filters at 375,000 chunks, both modes, both callers, limits 20 and
+50, warm and cold, is *safe* on recall, and none *regresses*. An *unresolved* flip-side cell fails it. The 75,000-chunk
+cells are the keep side and are reported, not tested.
