@@ -391,10 +391,9 @@ The stage 1 recount takes about 90 minutes on one core at 10,000 resamples. Its 
 
 - `summary.json` holds the decision, truth check and sanity checks.
 - `cells.json.gz` (the recount's `cells.json`, gzipped) and `cells.md` hold every cell.
-- [`tables.md`](2026-11-26-filtered-vector-material/tables.md) holds the tables that `tables.ts` prints: states by engine, the rule's flip side, the losing
-  and regressing cells, the re-runs, the incomplete searches and stage 1b. The per-engine count of losing and
-  regressing cells, the pgvector 0.7.4 and 0.8.7 latency table and the warm medians in the prose come from
-  `cells.json.gz` but aren't printed by it.
+- [`tables.md`](2026-11-26-filtered-vector-material/tables.md) holds every table on this page, printed by
+  `tables.ts`. Its "Figures in the prose" section also prints the warm medians, the flip-side cells whose p50
+  interval lies above 1 and the incomplete searches that returned at most one page.
 
 To run a cell yourself, use `eval/runner/filtered-vector/run.ts`, and set up the machine with
 `scripts/ubicloud/filtered-vector-setup.sh`. Each run's `manifest.json` records its image digest, commits and

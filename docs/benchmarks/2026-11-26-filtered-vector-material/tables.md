@@ -296,3 +296,74 @@ PASS: 38 flip-side cells, 17 improve, 0 block.
 | pg17-v087 latent 375000 independent trusted date-50 k50 warm | safe | neutral | 1.00 | 1.00 | 0.000 |
 | pg17-v087 latent 375000 independent trusted type-20+date-50 k20 warm | safe | neutral | 1.02 | 1.05 | 0.000 |
 | pg17-v087 latent 375000 independent trusted type-20+date-50 k50 warm | safe | neutral | 1.02 | 1.00 | 0.000 |
+
+## Figures in the prose
+
+### Cells that lose, stay unresolved or regress, by engine and brain size
+
+| engine | chunks | loss | unresolved | regresses, warm | regresses, cold |
+|---|---|---|---|---|---|
+| pg15-v087 | 375000 | 1 | 1 | 0 | 0 |
+| pg15-v087 | 75000 | 0 | 0 | 8 | 3 |
+| pg16-v087 | 375000 | 1 | 1 | 0 | 0 |
+| pg16-v087 | 75000 | 0 | 0 | 8 | 3 |
+| pg17-v074 | 375000 | 0 | 0 | 4 | 0 |
+| pg17-v087 | 15000 | 0 | 0 | 6 | 0 |
+| pg17-v087 | 375000 | 1 | 1 | 0 | 0 |
+| pg17-v087 | 75000 | 0 | 0 | 8 | 3 |
+| pg18-v087 | 375000 | 1 | 1 | 0 | 0 |
+| pg18-v087 | 75000 | 0 | 0 | 9 | 2 |
+| pglite | 15000 | 0 | 0 | 9 | 0 |
+| pglite | 75000 | 0 | 0 | 8 | 2 |
+
+### Median p50 of the untrusted caller's warm limit-20 filtered cells
+
+| engine | corpus | cells | C | T |
+|---|---|---|---|---|
+| pg15-v087 | latent-375000 | 36 | 359 ms | 39 ms |
+| pg16-v087 | latent-375000 | 36 | 318 ms | 35 ms |
+| pg17-v087 | latent-375000 | 36 | 328 ms | 46 ms |
+| pg18-v087 | latent-375000 | 36 | 304 ms | 38 ms |
+| pg17-v087 | latent-1500000 | 36 | 154 ms | 56 ms |
+| pg17-v087 | wiki-375000 | 36 | 79 ms | 46 ms |
+
+### C's median p50 on PostgreSQL 17 by pgvector version (warm limit-20 filtered cells)
+
+| corpus | caller | pgvector 0.7.4 | pgvector 0.8.7 |
+|---|---|---|---|
+| latent-375000 | untrusted | 1,525 ms | 328 ms |
+| latent-375000 | trusted | 291 ms | 34 ms |
+| latent-75000 | untrusted | 364 ms | 77 ms |
+
+### Flip-side cells whose p50 T/C interval lies above 1
+
+| stage | cell | latency | p50 T/C interval | re-run |
+|---|---|---|---|---|
+| stage 1 | pg17-v087 latent 375000 independent trusted date-20 k50 warm | neutral | 1.012 to 1.041 | not re-run |
+| stage 1 | pg15-v087 latent 375000 independent untrusted date-0.1 k20 warm | neutral | 1.007 to 1.018 | not re-run |
+| stage 1 | pg16-v087 latent 375000 clustered untrusted date-0.1 k20 warm | neutral | 1.021 to 1.085 | not re-run |
+| stage 1 | pg18-v087 latent 375000 independent trusted date-50 k20 warm | neutral | 1.018 to 1.042 | not re-run |
+| stage 1 | pg18-v087 latent 375000 independent untrusted date-0.1 k20 warm | neutral | 1.025 to 1.035 | not re-run |
+| stage 1 | pg18-v087 latent 375000 clustered trusted date-0.1 k20 warm | neutral | 1.021 to 1.065 | not re-run |
+| stage 1 | pg17-v087 wiki 375000 clustered trusted date-1 k20 warm | neutral | 1.003 to 1.022 | not re-run |
+| stage 1 | pg17-v087 wiki 375000 clustered untrusted date-0.1 k20 warm | neutral | 1.009 to 1.073 | not re-run |
+| stage 1 | pg17-v087 wiki 375000 independent trusted date-0.1 k50 warm | neutral | 1.001 to 1.017 | not re-run |
+| stage 1 | pg17-v087 wiki 375000 independent trusted date-5 k20 warm | neutral | 1.004 to 1.049 | not re-run |
+| stage 1 | pg17-v087 wiki 375000 independent trusted date-5 k50 warm | neutral | 1.020 to 1.086 | not re-run |
+| stage 1 | pg17-v087 wiki 375000 independent trusted date-50 k20 warm | neutral | 1.013 to 1.051 | not re-run |
+| stage 1 | pg17-v087 wiki 375000 independent untrusted date-0.1 k20 warm | regresses | 1.136 to 1.167 | neutral |
+| stage 1b | pg17-v087 latent 375000 clustered trusted type-20+date-50 k20 warm | neutral | 1.009 to 1.057 | not re-run |
+| stage 1b | pg17-v087 latent 375000 independent trusted date-0.1 k20 warm | neutral | 1.002 to 1.017 | not re-run |
+| stage 1b | pg17-v087 latent 375000 independent trusted date-0.1 k50 warm | neutral | 1.001 to 1.019 | not re-run |
+| stage 1b | pg17-v087 latent 375000 independent trusted date-5 k20 warm | neutral | 1.010 to 1.064 | not re-run |
+| stage 1b | pg17-v087 latent 375000 independent trusted type-20+date-50 k20 warm | neutral | 1.009 to 1.031 | not re-run |
+
+### Incomplete searches that returned at most one page
+
+| cell | arm | incomplete searches | no pages | one page |
+|---|---|---|---|---|
+| pg17-v074 latent 375000 independent untrusted type-20 k20 cold | C | 30 | 0 | 2 |
+| pg17-v074 latent 375000 independent untrusted type-20 k20 cold | T | 30 | 0 | 2 |
+| pg17-v074 latent 375000 independent untrusted where-20 k20 cold | C | 30 | 0 | 1 |
+| pg17-v074 latent 375000 independent untrusted where-20 k20 cold | T | 30 | 0 | 1 |
+| pg17-v074 latent 375000 independent untrusted date-1 k20 cold | C | 30 | 25 | 5 |
