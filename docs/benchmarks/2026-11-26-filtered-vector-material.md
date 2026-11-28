@@ -288,7 +288,7 @@ The table shows four cases.
 
 ## pgvector 0.7.4 is several times slower for untrusted filtered searches
 
-gbrain accepts pgvector 0.7 and newer, and 0.7.4 has no iterative index scans. Compare C's median p50 over the limit-20
+gbrain accepts pgvector 0.7 and newer, and 0.7.4 has no iterative index scans. Compare C's median p50 over the warm limit-20
 filtered cells on PostgreSQL 17, with pgvector 0.7.4 and then 0.8.7:
 
 | Brain size | Caller | pgvector 0.7.4 | pgvector 0.8.7 |
