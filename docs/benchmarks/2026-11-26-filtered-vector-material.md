@@ -3,10 +3,10 @@
 - **We learned that turning off Postgres materialization (`enable_material = off`) makes gbrain's date-filtered vector
   searches several times faster on brains of 375,000 chunks (about 50,000 pages), with no measurable loss of
   nearest-neighbour recall.** Across PostgreSQL 15 to 18, pgvector 0.7.4 and 0.8.7, and generated and Wikipedia
-  corpora, the rule below flips 180 realistic cells. None loses recall beyond a one-point margin, and none slows down. On 1% date filters it also fixes recall: with
-  limit 20, the shipped plan walks the approximate vector index and returns 66% to 72% of the true top 20 pages on
-  generated data (85% to 87% on Wikipedia), while with materialization off the planner scores the filtered chunks
-  exactly and returns all of them.
+  corpora, the rule below flips 180 realistic cells. None loses recall beyond a one-point margin, and none slows down. On 1% date filters it also fixes recall for untrusted
+  callers: with limit 20, the shipped plan walks the approximate vector index and returns 60% to 72% of the true top 20
+  pages on generated data (85% to 87% on Wikipedia), while with materialization off the planner scores the filtered
+  chunks exactly and returns all of them. Trusted callers already get all of them.
   The 69 that speed up have a median p50 of 0.11 times the shipped plan's. All of the gain goes to callers gbrain treats
   as untrusted, whose searches carry the private-page rule. A fresh corpus confirmed the rule: its 38 cells there are all safe, none slows down, and the 17 that speed up have a median p50 of 0.12 times the shipped plan's. You should get it when gbrain ships the
   rule: date filters, alone or with a type filter, on brains of at least 375,000 chunks.
@@ -137,8 +137,10 @@ The rule's flip side in stage 1:
 | pg18-v087 | latent-375000 | 26 | 12 | 0 | 0.000 | 0.11 | 0.05 to 0.62 |
 
 Every flip-side cell is *safe*, and the lowest end of any recall interval is 0.000. On 1% date filters with limit
-20 on pgvector 0.8.7, T is better: C's captured plans walk the HNSW index and return 66% to 72% of the true top 20 on
-L and 85% to 87% on W, while T's plans score the date-filtered chunks exactly and return all of them, warm and cold. On pgvector 0.7.4, only 2 of the
+20 on pgvector 0.8.7, T is better for the untrusted caller: C's captured plans walk the HNSW index and return 67% to
+72% of the true top 20 on L warm (60% to 68% cold, where some of PostgreSQL 15's searches also ran out gbrain's 8 s
+budget) and 85% to 87% on W, while T's plans score the date-filtered chunks exactly and return all of them, warm and
+cold. The trusted caller's C already returns all of them. On pgvector 0.7.4, only 2 of the
 26 cells improve, because that version's searches are slow in both arms (below). At 1,500,000 chunks, which the plan
 reports but doesn't pool, the same filters are all *safe* and none regresses, so the rule needs no upper size limit.
 
@@ -289,7 +291,7 @@ filtered cells on PostgreSQL 17, with pgvector 0.7.4 and then 0.8.7:
 | 375,000 chunks | trusted | 291 ms | 34 ms |
 | 75,000 chunks | untrusted | 364 ms | 77 ms |
 
-On 0.7.4, the warm 20% and 50% cells take 2.9 to 6.3 s per search in both arms. Turning materialization off doesn't
+On 0.7.4, the warm 20% and 50% cells take 2.8 to 6.3 s per search in both arms. Turning materialization off doesn't
 fix this. It makes four 0.7.4 cells worse at p95: clustered `where` and `type` at 5%, and both 3% scopes. A brain
 on pgvector 0.7 should move to 0.8 before anything else.
 
@@ -313,7 +315,7 @@ gbrain's maintainers have the details.
   construction: no filter, and a 50% source scope.
   - The captured attempts had identical SQL and settings in both arms.
   - The arms returned the same ordered pages for at least 99.8% of queries.
-  - The pooled p50 ratio's interval fell inside 0.95 to 1.05 on each engine and version. It ranged from 0.961 to 0.975
+  - The pooled p50 ratio's interval fell inside 0.95 to 1.05 on each engine and version. It ranged from 0.960 to 0.975
     on PostgreSQL 18 to 1.006 to 1.020 on pgvector 0.7.4.
 - **The plans show the mechanism.** Take the 1,120 warm cells filtered by `type`, date, `where` or both where T ran
   a joined attempt.

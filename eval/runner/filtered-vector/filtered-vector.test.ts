@@ -9,11 +9,15 @@ import { MACHINE_LOCAL_PATH } from '../receipt.ts';
 import { applyReruns, decide, publishedManifest, recountDir, truthCheck, type CellResult } from './recount.ts';
 import { latencyState, outcome, recallAt, recallState, type CellVerdict } from './stats.ts';
 import { flipsUnderRule } from './tables.ts';
+import { specSha } from '../gbrain-pin.ts';
+import { cellStats, pooledRatio } from './stats.ts';
 
 const GBRAIN = resolve(import.meta.dir, '../../../node_modules/gbrain');
+const MEASURED_GBRAIN = '3a360389f152e62ccb627ab96eccfad8a9204e75';
+const atMeasuredGbrain = specSha(JSON.parse(readFileSync(resolve(import.meta.dir, '../../../package.json'), 'utf8')).dependencies.gbrain) === MEASURED_GBRAIN;
 
 describe('arm patch', () => {
-  test('each shipped predicate occurs exactly once in the pinned gbrain', () => {
+  test.skipIf(!atMeasuredGbrain)('each shipped predicate occurs exactly once in the measured gbrain', () => {
     for (const patch of ARM_PATCHES) {
       const text = readFileSync(join(GBRAIN, patch.file), 'utf8');
       const after = applyPatch(text, patch);
@@ -29,7 +33,7 @@ describe('arm patch', () => {
 });
 
 describe('attempt kinds', () => {
-  test('classifies the four statements gbrain builds', async () => {
+  test.skipIf(!atMeasuredGbrain)('classifies the four statements the measured gbrain builds', async () => {
     const vs = await import(join(GBRAIN, 'src/core/search/vector-statement.ts'));
     const column = { name: 'embedding', type: 'vector', dimensions: 4, embeddingModel: 'bench:latent' };
     const plain = vs.buildVectorSearchStatement({ dialect: 'postgres', embedding: new Float32Array(4), limit: 20, offset: 0, opts: { embeddingColumn: column } });
@@ -198,6 +202,21 @@ describe('the stage 1b rule', () => {
     expect(flipsUnderRule(cell('type', 375_000))).toBe(false);
     expect(flipsUnderRule(cell('where', 375_000))).toBe(false);
     expect(flipsUnderRule(cell('scope', 375_000))).toBe(false);
+  });
+});
+
+describe('latency ratio intervals', () => {
+  test('T at half of C on constant latencies gives 0.5 with a zero-width interval', () => {
+    const rows = Array.from({ length: 10 }, () => ({ c: [10, 10, 10], t: [5, 5, 5], recallC: 1, recallT: 1 }));
+    const s = cellStats(rows, 1, 200);
+    expect(s.p50.ratio).toEqual({ est: 0.5, lo: 0.5, hi: 0.5 });
+    expect(s.p95.ratio).toEqual({ est: 0.5, lo: 0.5, hi: 0.5 });
+    expect(s.recall!.diff.est).toBe(0);
+    expect(pooledRatio([rows, rows], 0.5, 1, 200)).toEqual({ est: 0.5, lo: 0.5, hi: 0.5 });
+  });
+  test('a cell with one query has finite bounds', () => {
+    const s = cellStats([{ c: [10, 12, 11], t: [4, 6, 5], recallC: 0.9, recallT: 1 }], 1, 200);
+    for (const v of [s.p50.ratio.lo, s.p50.ratio.hi, s.p95.ratio.lo, s.p95.ratio.hi]) expect(Number.isFinite(v)).toBe(true);
   });
 });
 
