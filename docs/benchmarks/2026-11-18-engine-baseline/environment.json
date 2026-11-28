@@ -1,0 +1,125 @@
+{
+  "date_utc": "2026-11-18",
+  "machine": {
+    "cpu": "Intel(R) Xeon(R) 6975P-C",
+    "vcpus": 8,
+    "ram_gb": 30,
+    "kernel": "7.0.0-1014-aws",
+    "kind": "single Vorflux cloud sandbox VM; every engine ran on it, serially"
+  },
+  "gbrain_evals": {
+    "base_commit": "ef3200db092abb519fbcfd89bef6aae336c1bf51",
+    "branch": "vorflux/cat13-engine-arm",
+    "worktree_dirty_during_runs": true,
+    "dirty_note": "the runs used this branch's uncommitted harness patch (the same code this PR commits)"
+  },
+  "gbrain_under_test": {
+    "declared_pin_in_package_json": "github:garrytan/gbrain#6ce7195b44a034f85aec811f11fbf862db376f50 (0.60.733.0, has no Rust engine)",
+    "loaded_code": "garrytan/gbrain 6ad51d6b90dd1ad7d827e8061b8dce588865ccf3 (branch rust-cli-members, 0.60.737.0, committed 2026-11-18T16:09:39Z), symlinked as node_modules/gbrain",
+    "loaded_is_on_master": false,
+    "receipt_package_sha256": "c5fdd8af5cf780b955593079ce02cb1123b5cd78495bdeb3411158400629e562",
+    "rust_addon": {
+      "file": "rust/target/addon/gbrain_engine.linux-x64-glibc.node",
+      "sha256": "7715b2d8f6c5b34be9769d232f3b48bc3a55359e1395b9443be0cf19f801b138",
+      "built_with": "rustc 1.100.0 (0ef1bc386 2026-11-09)",
+      "loaded_via": "GBRAIN_RUST_ENGINE_ADDON"
+    }
+  },
+  "runtime": {
+    "bun": "1.4.4"
+  },
+  "engines": {
+    "pglite": "in-process, in-memory PGLite (WASM) from the same gbrain build",
+    "postgres": {
+      "image": "pgvector/pgvector@sha256:c29f30688a9ad961691bdf0ec1650717cc132a5814619d80f80463d6e4c42e47",
+      "server": "PostgreSQL 18.6 (Debian 18.6-1.pgdg12+2)",
+      "pgvector": "0.8.7",
+      "transport": "TCP over the loopback interface into a Docker container on the same VM",
+      "settings": {
+        "max_connections": 200,
+        "shared_buffers": "512MB"
+      },
+      "database": "fresh scratch database per run, dropped on close",
+      "locale": {
+        "recorded": false,
+        "note": "not recorded for the 6ad51d6b or dbc85b2d runs; the container started without locale flags"
+      }
+    },
+    "rust": "gbrain Rust store engine (napi-rs addon above), fresh temp store per run"
+  },
+  "bench": {
+    "runner": "eval/runner/cat13-conceptual.ts --adapter gbrain --reranker off --autocut off",
+    "corpus": "eval/data/world-v1 (full index; 30 concept pages carry the gold)",
+    "probes": "548 (target 500, seed 42, default CAT13_PROBES)",
+    "top_k": 5,
+    "search_pins": {
+      "search.mode": "balanced",
+      "search.reranker.enabled": "false",
+      "search.autocut": "false",
+      "expansion": false
+    },
+    "embedder": "openai:text-embedding-3-large @ 1536d",
+    "embedding_cache": "one shared SQLite cache (--embed-cache). The warm-up run paid for every vector (1028 misses); all six scored runs had 1028 hits and 0 misses, so every engine searched byte-identical vectors",
+    "isolation": "GBRAIN_HOME set to an empty scratch dir per run (the sandbox ~/.gbrain config has embedding_disabled=true, which otherwise turns hybrid search keyword-only)",
+    "order": "rust r1-r3, then pglite r1, postgres r1, pglite r2, postgres r2, pglite r3, postgres r3; serial, nothing else running"
+  },
+  "second_build": {
+    "date_utc": "2026-11-19",
+    "gbrain_under_test": {
+      "loaded_code": "garrytan/gbrain dbc85b2d19111666a4f26b8f1052d86741a622e4 (branch rust-engine/lane6-import-embedding-column, 0.60.737.0, committed 2026-11-18T19:56:02Z), symlinked as node_modules/gbrain",
+      "loaded_is_on_master": false,
+      "rust_addon": {
+        "file": "rust/target/addon/gbrain_engine.linux-x64-glibc.node",
+        "sha256": "60819b1a4dfdbae302649ae056405f738f20a96a7e0570e65601bc221d68ba35",
+        "built_with": "rustc 1.100.0 (0ef1bc386 2026-11-09), bun run rust:build",
+        "loaded_via": "GBRAIN_RUST_ENGINE_ADDON"
+      }
+    },
+    "machine": "same VM as the first build (restarted between builds); Postgres container recreated from the same image digest and settings",
+    "postgres": {
+      "server": "PostgreSQL 18.6 (Debian 18.6-1.pgdg12+2)",
+      "pgvector": "0.8.7"
+    },
+    "extra_flag": "--warm-passes 1",
+    "embedding_cache": "same SQLite cache; every run 1576 hits, 0 misses, 0 paid requests",
+    "order": "rust r1, pglite ctl, rust r2, postgres ctl, rust r3; serial, nothing else running"
+  },
+  "method": {
+    "postgres_locale": {
+      "query": "SELECT datname, datcollate, datctype, datlocprovider, pg_encoding_to_char(encoding) FROM pg_database",
+      "why": "PostgreSQL 16+ removed SHOW lc_collate",
+      "pinned_from": "2026-11-20",
+      "value": {
+        "datcollate": "en_US.UTF-8",
+        "datctype": "en_US.UTF-8",
+        "datlocprovider": "c (libc)",
+        "encoding": "UTF8"
+      },
+      "docker_flags": "-e LANG=en_US.utf8 -e POSTGRES_INITDB_ARGS=\"--locale=en_US.UTF-8 --encoding=UTF8\""
+    },
+    "query_tokens": {
+      "tokenizer": "tiktoken cl100k_base (not chars/4)",
+      "mean_tokens_per_probe": 6.72,
+      "probes": 548
+    },
+    "warm_passes": {
+      "flag": "--warm-passes 1",
+      "cold": "first query pass after import; the only scored pass",
+      "warm": "same probes repeated on the same brain; timed, not scored",
+      "report": "cold p50/p95 and warm p50/p95 separately",
+      "os_page_cache": "not dropped between passes"
+    },
+    "degraded_warm": {
+      "source": "https://github.com/garrytan/gbrain-evals/pull/547",
+      "fields": [
+        "per-search degraded flag",
+        "degraded reason",
+        "warm_excluded_degraded"
+      ],
+      "merged_into_main_at_last_read": false,
+      "last_read": "2026-11-20"
+    },
+    "gbev3": "any published warm p95 shows the count and reasons of excluded degraded repeats beside it",
+    "rust": "Rust numbers stay out of results tables on main until a named gbrain release can select the Rust engine (expected via engine: \"rust\" in config and gbrain init, from 2026-11-21); branch-build Rust runs are diagnostics only"
+  }
+}
