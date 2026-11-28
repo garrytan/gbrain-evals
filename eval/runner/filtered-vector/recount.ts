@@ -60,7 +60,7 @@ export function summarizePlans(captures: Any[]): PlanSummary {
 }
 
 export interface CellResult {
-  cell: string; key: string; label: string; corpus: string; chunks: number; size: string; mode: string; caller: string; filter: string; kind: string;
+  cell: string; cellKey: string; label: string; corpus: string; chunks: number; size: string; mode: string; caller: string; filter: string; kind: string;
   affected: boolean; realistic: boolean; limit: number; cache: string; queries: number; query_set: string; share_measured: number; eligible_pages: number;
   stats: CellStats; recall_diff_sd: number; recall10: { c: number; t: number } | null; same_pages: number; repeat_stable: { c: number; t: number };
   errors: { c: number; t: number }; invalid: boolean; incomplete: { c: number; t: number }; reached: number; reached_any: boolean;
@@ -120,7 +120,7 @@ export function recountDir(dir: string, resamples = BOOTSTRAP_RESAMPLES): CellRe
     const sd = diffs.length > 1 ? Math.sqrt(diffs.reduce((a, d) => a + (d - dm) ** 2, 0) / (diffs.length - 1)) : 0;
     const pair = (xs: Array<[number, number]>) => (xs.length ? { c: meanOf(xs.map(x => x[0])), t: meanOf(xs.map(x => x[1])) } : null);
     out.push({
-      cell: c.cell, key: c.cell.split('|').slice(0, -1).join('|'), label: c.label, corpus: c.corpus, chunks: c.chunks, size: c.corpus + '-' + c.chunks, mode: c.mode, caller: c.caller,
+      cell: c.cell, cellKey: c.cell.split('|').slice(0, -1).join('|'), label: c.label, corpus: c.corpus, chunks: c.chunks, size: c.corpus + '-' + c.chunks, mode: c.mode, caller: c.caller,
       filter: c.filter, kind: c.kind, affected: c.affected, realistic: c.corpus === 'wiki' || c.chunks <= REALISTIC_MAX_CHUNKS, limit: k, cache: c.cache,
       queries: qs.length, query_set: c.query_set, share_measured: c.share_measured, eligible_pages: c.eligible_pages, stats, recall_diff_sd: sd,
       recall10: pair(recall10), same_pages: qs.length ? same / qs.length : NaN, repeat_stable: { c: multi ? stableC / multi : NaN, t: multi ? stableT / multi : NaN },
@@ -137,9 +137,9 @@ export function recountDir(dir: string, resamples = BOOTSTRAP_RESAMPLES): CellRe
 
 /** Applies re-runs: a loss or regresses state stands only when the re-run of the same cell agrees. */
 export function applyReruns(cells: CellResult[], reruns: CellResult[]): void {
-  const byKey = new Map(reruns.map(r => [r.key, r]));
+  const byKey = new Map(reruns.map(r => [r.cellKey, r]));
   for (const c of cells) {
-    const r = byKey.get(c.key);
+    const r = byKey.get(c.cellKey);
     if (!r) continue;
     const agreesRecall = c.recall_state !== 'loss' || r.recall_state === 'loss';
     const agreesLatency = c.latency_state !== 'regresses' || r.latency_state === 'regresses';
