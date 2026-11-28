@@ -382,7 +382,7 @@ The stage 1 recount takes about 90 minutes on one core at 10,000 resamples. Its 
 [`recount-1b/`](2026-11-26-filtered-vector-material/recount-1b).
 
 - `summary.json` holds the decision, truth check and sanity checks.
-- `cells.json` and `cells.md` hold every cell.
+- `cells.json.gz` (the recount's `cells.json`, gzipped) and `cells.md` hold every cell.
 - [`tables.md`](2026-11-26-filtered-vector-material/tables.md) holds every table on this page.
 
 To run a cell yourself, use `eval/runner/filtered-vector/run.ts`, and set up the machine with
