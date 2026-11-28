@@ -129,6 +129,8 @@ OUTBOX_WAIT_S = 10.0
 # Write-receipt effect states that still need serve's consumer (src/core/persistence/effect-model.ts; `dispatched`
 # means a facts effect queued its job, which the job queue then shows).
 PENDING_EFFECT_STATES = ("queued", "running")
+# POST /trigger: each scheduled job's documented trigger, by job name (GbrainDefaultsAdapter.trigger).
+TRIGGERS = {"maintain": ("maintain", "--unattended", "--json")}
 FORBIDDEN_QUERY_KEYS = {"token_budget", "return_unit"}
 QUERY_KNOBS = {"limit", "autocut", "expand"}
 # Evidence-delivery fallbacks that are gbrain's shipped, content-driven behavior (preregistered): `redaction_unmapped`
@@ -612,11 +614,12 @@ class GbrainDefaultsAdapter(Adapter):
     def outbox_pending(self) -> dict[str, int]:
         """Write effects still in gbrain's outbox, by kind, through starter `list_write_requests` on the live serve.
         Receipts come newest first and the consumer claims effects in request order, so paging stops at the first page
-        with none pending."""
+        with none pending. Pages are gbrain's default size: `limit` is full-surface only, and since v0.60.740.0 a starter
+        caller that passes it is refused with param_not_on_surface."""
         by_kind: dict[str, int] = {}
         before = None
         while True:
-            body, _m, _n, _ms = self.call("list_write_requests", {"limit": 100, **({"before": before} if before else {})})
+            body, _m, _n, _ms = self.call("list_write_requests", {"before": before} if before else {})
             body = body if isinstance(body, dict) else {}
             pending = [e for r in body.get("requests") or [] for e in r.get("effects") or [] if e.get("state") in PENDING_EFFECT_STATES]
             for e in pending:
@@ -1289,6 +1292,22 @@ class GbrainDefaultsAdapter(Adapter):
             raise ShimError("invalid_request", f"unknown policy settings {unknown}; allowed: {sorted(QUERY_KNOBS)} and on_degraded", 400)
         return {"query": question, **{k: settings[k] for k in sorted(QUERY_KNOBS) if k in settings}}
 
+    def query_on_surface(self, args: dict[str, Any]) -> tuple[Any, dict[str, Any], list[Any], float, dict[str, Any], list[str]]:
+        """A query on the starter surface, without each knob gbrain refuses there (since v0.60.740.0 `limit` and `autocut`
+        are full-surface only, refused with param_not_on_surface before anything is read), so a fixed-evidence read
+        still runs, at gbrain's defaults for those knobs; the dropped knobs are returned and recorded, and retrieve
+        classifies such a read as not scored, so it can't count as fixed evidence. A full-surface stack sends every knob."""
+        dropped: list[str] = []
+        while True:
+            try:
+                return (*self.call("query", args), args, dropped)
+            except GbrainError as e:
+                m = re.search(r"parameter (\w+) is not on this connection's starter tool surface", str(e))
+                if FULL_SURFACE or F6 or not m or m.group(1) == "query" or m.group(1) not in args:
+                    raise
+                dropped.append(m.group(1))
+                args = {k: v for k, v in args.items() if k != m.group(1)}
+
     def retrieve(self, ns: str, question: str, query_time: str | None, policy: dict[str, Any]) -> dict[str, Any]:
         if "op" in (policy.get("settings") or {}):
             return self.f6_retrieve(ns, question, policy)
@@ -1297,9 +1316,11 @@ class GbrainDefaultsAdapter(Adapter):
         with self.lock:
             self.activate(ns)
             sources = {v["slug"]: sid for sid, v in self.state()["sessions"].items()}
-            rows, meta, notices, ms = self.call("query", args)
+            rows, meta, notices, ms, args, dropped = self.query_on_surface(args)
             retrieval = meta.get("retrieval") or {}
             verdict = classify_query_meta(retrieval, self.require_reference()["resolved"]["search"])
+            if dropped:
+                verdict = {**verdict, "outcome": "harness_invalid", "reasons": [*verdict["reasons"], f"settings_not_on_surface:{','.join(sorted(dropped))}"]}
             for r in verdict["recorded"]:
                 if r.startswith("delivery_fallback:"):
                     self.shipped_counts[r] = self.shipped_counts.get(r, 0) + 1
@@ -1317,8 +1338,9 @@ class GbrainDefaultsAdapter(Adapter):
                     "provenance_status": "exact" if sid else "unavailable",
                 })
             raw = {"tool": "query", "args": args, "gbrain_ms": ms, "meta": retrieval, "notices": notices, "classification": verdict,
-                   "serve_session": self.serve_session, "query_time": "not sent: query takes no as-of date", "rows": len(items)}
-            self.receipt("retrieve", args=args, gbrain_ms=ms, classification=verdict, notices=len(notices), rows=len(items))
+                   "serve_session": self.serve_session, "query_time": "not sent: query takes no as-of date", "rows": len(items),
+                   **({"not_on_surface": dropped} if dropped else {})}
+            self.receipt("retrieve", args=args, gbrain_ms=ms, classification=verdict, notices=len(notices), rows=len(items), **({"not_on_surface": dropped} if dropped else {}))
             if verdict["outcome"] != "scored" and on_degraded == "error":
                 raise ShimError("invalid_request", f"degraded read (harness failure; retry after quiesce): {', '.join(verdict['reasons'])}", 503)
             return {"items": items, "applied_settings": args, "truncated": False, "raw": raw}
@@ -1361,11 +1383,38 @@ class GbrainDefaultsAdapter(Adapter):
     def delete_source(self, ns: str, source_id: str) -> dict[str, Any]:
         return {"status": "unsupported", "receipt": {"why": "the starter surface has no page delete (delete_page is a full-surface op); the scoreboard reads only starter ops"}}
 
+    def trigger(self, ns: str, job: str, timeout_s: float) -> dict[str, Any]:
+        """A scheduled job's documented trigger, run once on the namespace's brain with serve stopped, so the
+        cost-and-speed experiment can price a job whose cadence is longer than its idle window per run. `maintain` is
+        `gbrain maintain --unattended`, the command gbrain's upkeep schedule runs; it records the round, so the restarted
+        serve's idle tick finds upkeep not due. `gbrain maintain --status` is read after, with serve stopped."""
+        args = TRIGGERS.get(job)
+        if args is None:
+            raise ShimError("invalid_request", f"no trigger {job!r}; this shim runs {sorted(TRIGGERS)}", 400)
+        with self.lock:
+            self.place(ns)
+            t0 = time.perf_counter()
+            try:
+                r = self.cli(*args, timeout_s=timeout_s, check=False)
+                ms = round((time.perf_counter() - t0) * 1000, 1)
+                status = self.cli_json("maintain", "--status", "--json", timeout_s=300)
+            finally:
+                self.start_serve()
+            text = r.stdout.strip()
+            try:
+                report: Any = json.loads(text[text.index("{"):]) if "{" in text else None
+            except (ValueError, json.JSONDecodeError):
+                report = None
+            self.receipt("trigger", job=job, exit=r.returncode, ms=ms)
+            return {"job": job, "command": f"gbrain {' '.join(args)}", "exit": r.returncode, "ms": ms, "report": report, "status": status,
+                    **({"stderr_tail": (r.stderr or text)[-400:]} if r.returncode else {})}
+
 
 def extended_dispatch(adapter: GbrainDefaultsAdapter, method: str, path: str, body: dict[str, Any]) -> tuple[int, dict[str, Any]]:
-    """Protocol v1 with its optional POST /answer {ns, question, query_time, mode, model} (gbrain's own answer), plus two
-    gbrain-defaults routes: GET /stats (serve memory and brain size) and POST /restart {ns} (serve restart time)."""
-    routes = {("POST", "/answer"), ("GET", "/stats"), ("POST", "/restart")}
+    """Protocol v1 with its optional POST /answer {ns, question, query_time, mode, model} (gbrain's own answer), plus three
+    gbrain-defaults routes: GET /stats (serve memory and brain size), POST /restart {ns} (serve restart time) and
+    POST /trigger {ns, job, timeout_s} (one run of a scheduled job's documented trigger)."""
+    routes = {("POST", "/answer"), ("GET", "/stats"), ("POST", "/restart"), ("POST", "/trigger")}
     if (method, path) not in routes:
         return dispatch(adapter, method, path, body)
     start = time.perf_counter()
@@ -1373,10 +1422,11 @@ def extended_dispatch(adapter: GbrainDefaultsAdapter, method: str, path: str, bo
         if path == "/stats":
             out = adapter.stats()
         else:
-            missing = [k for k in (("ns", "question") if path == "/answer" else ("ns",)) if k not in body]
+            missing = [k for k in (("ns", "question") if path == "/answer" else ("ns", "job") if path == "/trigger" else ("ns",)) if k not in body]
             if missing:
                 raise ShimError("invalid_request", f"missing fields: {', '.join(missing)}", 400)
             out = adapter.restart(body["ns"]) if path == "/restart" else \
+                adapter.trigger(body["ns"], str(body["job"]), float(body.get("timeout_s", 7200))) if path == "/trigger" else \
                 adapter.answer(body["ns"], body["question"], body.get("query_time"), body.get("mode", "synthesize"), body.get("model"))
         status = 200
     except ShimError as e:

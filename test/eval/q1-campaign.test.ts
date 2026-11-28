@@ -9,12 +9,12 @@
  * Keyless: no VM starts; runners are fakes that write what a pulled VM would.
  */
 import { afterAll, beforeEach, describe, expect, test } from 'bun:test';
-import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { basename, dirname, join, resolve } from 'node:path';
 import { BudgetRun, closeLedgers } from '../../eval/runner/budget-ledger.ts';
-import { Campaign, executedTree, loadCampaign, ownerTag, planWaves, Q1_VM_PATHS, REPO_RUNNER, resolveRunner, runRemote, treeDiff, type CampaignManifest, type LaunchContext, type RemotePayload } from '../../eval/runner/shootout-cell.ts';
+import { attemptRows, Campaign, executedTree, loadCampaign, ownerTag, planWaves, Q1_VM_PATHS, REPO_RUNNER, resolveRunner, runRemote, treeDiff, type CampaignManifest, type LaunchContext, type RemotePayload } from '../../eval/runner/shootout-cell.ts';
 import { exitCodeOf, ScoreboardError } from '../../eval/runner/q1/scoreboard-errors.ts';
 import { freePort } from '../../eval/runner/lifecycle/slice.ts';
 
@@ -322,6 +322,25 @@ describe('on the VM', () => {
     expect(r.realization_id).toMatch(/^real-kb-locomo-[0-9a-f]{16}$/);
     expect(JSON.parse(readFileSync(join(out, 'lease-summary.json'), 'utf8'))).toMatchObject({ checkpoint_rows: 45, realization_id: r.realization_id, realization_status: 'complete' });
   }, 30_000);
+});
+
+describe('row count while the cell writes', () => {
+  // Value: protects=the checkpoint watcher on the VM keeps running while a cell deletes directories in its own output (the
+  // file agent's working tree, CS1-COUNTED 2026-11-26); fails_when=a directory listed by one readdir is gone before the walk
+  // reads it, and the ENOENT kills the watcher, so the remote exits non-zero after a clean cell.
+  test('a directory or attempts file that vanishes mid-walk is skipped, and the rows still there are counted', () => {
+    const out = join(tmp, 'vanishing-out');
+    mkdirSync(join(out, 'runs', 'a'), { recursive: true });
+    mkdirSync(join(out, 'runs', 'agent', 'tree', 'gone'), { recursive: true });
+    writeFileSync(join(out, 'runs', 'a', 'attempts.ndjson'), '{"id":"q1"}\n{"id":"q2"}\n');
+    writeFileSync(join(out, 'runs', 'agent', 'attempts.ndjson'), '{"id":"q3"}\n');
+    const failing = (code: string) => (dir: string) => {
+      if (dir.endsWith(join('tree', 'gone'))) throw Object.assign(new Error(code + ': ' + dir), { code });
+      return readdirSync(dir, { withFileTypes: true });
+    };
+    expect(attemptRows(out, failing('ENOENT'))).toBe(3);
+    expect(() => attemptRows(out, failing('EACCES'))).toThrow('EACCES');
+  });
 });
 
 describe('A22: the VM side under a stop and a checkpoint-only resume', () => {

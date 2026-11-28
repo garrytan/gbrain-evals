@@ -79,6 +79,12 @@ Compose puts the shim and Qdrant on an internal network. The only exits are `pro
 which publishes the shim on `127.0.0.1:${SHIM_HOST_PORT:-8702}`. The container holds a dummy `OPENAI_API_KEY`. Set
 `SHIM_CONFIG=common` for the common models and `MEM0_CHUNK_TURNS=1` for LoCoMo cells.
 
+The `read-route` stack ([read-route/](read-route/), started with `bootstrap.sh --config read-route`) is the recipe with
+one change for the cost-and-speed experiment: searches run on a second search-only `Memory` over the same Qdrant
+collections, whose embedder calls the metering slot's read route (`<slot>~read`), so the proxy can label a search's
+second embedding (the question's entities) as a probe. The model and the requests are the same, and this bundle's files
+are unchanged.
+
 ### Keyless plumbing test
 
 `fake_provider.py` stands in for the metering proxy's OpenAI route: hashed bag-of-words embeddings and a scripted
@@ -117,6 +123,10 @@ The extracted memories carried the session dates from the system line, for examp
 trip at Yosemite with her brother around June 20, 2023", although the prompt's Observation Date was 2026-10-05.
 
 ## Changelog
+
+### 2026-11-25: read-route stack
+Adds [read-route/](read-route/), the recipe with searches embedding through the metering slot's read route, for the
+cost-and-speed experiment. This bundle's own files are unchanged.
 
 ### 2026-11-23: security fix in the lock
 `certifi` 2026.7.22 to 2026.10.19, the same change [gbrain-evals#433](https://github.com/garrytan/gbrain-evals/pull/433)

@@ -1,0 +1,875 @@
+{
+  "schema_version": "engine-bench-correctness/v1",
+  "runner": "engine-bench/correctness",
+  "generated_at": "2026-11-27T03:40:56.724Z",
+  "gbrain": {
+    "version": "0.60.777.0",
+    "product": {
+      "package": "gbrain",
+      "declared_pin": "github:garrytan/gbrain#97ef356f574a66709ef1bf4ae1cad604727852d8",
+      "declared_sha": "97ef356f574a66709ef1bf4ae1cad604727852d8",
+      "version": "0.60.777.0",
+      "package_sha256": "ffa7a2a551ce24ffd8f71415aa1d196d2f68c46d22013727242a584c49884480",
+      "loaded_git_head": "d8eb35769120cf0b60704478aaef96a412ee0009"
+    },
+    "overlay": {
+      "requested": "gbrain@v0.60.777.0",
+      "ref": "v0.60.777.0",
+      "commit": "d8eb35769120cf0b60704478aaef96a412ee0009",
+      "tree": "8656a204b93a149ff392c05b4b6713a76400e596",
+      "version": "0.60.777.0",
+      "checkout_dirty": false,
+      "verified": {
+        "copy_tree": "8656a204b93a149ff392c05b4b6713a76400e596",
+        "tree_matches": true,
+        "symlinks_under_src": 0,
+        "dir_is_realpath": true,
+        "cli_version": "0.60.777.0",
+        "cli_version_matches": true
+      },
+      "copied_not_symlinked": true
+    },
+    "rust_engine_in_build": true,
+    "rust_addon": {
+      "sha256": "d325d17502bda4dd3ebcd73ff73a45e15016e87823a0c50cd4bb9261d4748d74",
+      "bytes": 53108048,
+      "target": "linux-x64-glibc",
+      "engine_build": "e228393ad2237f9aed947ca98ab785d324e793ddc31963cc8d03f5e188ebe53c",
+      "engine_abi": 1,
+      "catalog_version": 0,
+      "format_versions": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ]
+    },
+    "spec": "~/gbrain@v0.60.777.0"
+  },
+  "engines": [
+    "pglite",
+    "postgres",
+    "rust"
+  ],
+  "rule": "A check passes on Rust when its verdict is pass and every contract count equals the count on both TypeScript engines. When a TypeScript engine fails a contract (or the TypeScript engines disagree), that is a gbrain finding and Rust must be no worse than the better TypeScript engine. A contract whose measurement is not_applicable on an engine counts as neither; a check with every contract not_applicable is unmeasured there. Exit 69 is refused, never fail.",
+  "keyless": {
+    "child_env_stripped": [],
+    "provider_calls": 0
+  },
+  "checks": [
+    {
+      "id": "n1",
+      "label": "N1 knowledge update (full)",
+      "runner": "eval/runner/n1-knowledge-update.ts",
+      "args": [],
+      "contracts": [
+        {
+          "id": "stale_served",
+          "path": "data.metrics.stale_served"
+        },
+        {
+          "id": "private_value_leaks",
+          "path": "data.metrics.private_value_leaks"
+        },
+        {
+          "id": "acknowledged_writes_lost",
+          "path": "data.metrics.acknowledged_writes_lost"
+        }
+      ],
+      "engines": {
+        "pglite": {
+          "engine": "pglite",
+          "exit_code": 0,
+          "wall_ms": 337751,
+          "log": "out/correctness-work/n1-pglite.log",
+          "receipt": "out/correctness-work/n1-pglite/receipt.json",
+          "contracts": {
+            "stale_served": {
+              "value": 0
+            },
+            "private_value_leaks": {
+              "value": 0
+            },
+            "acknowledged_writes_lost": {
+              "value": 0
+            }
+          },
+          "not_applicable": [],
+          "receipt_verdict": "pass",
+          "gbrain_commit": "d8eb35769120cf0b60704478aaef96a412ee0009",
+          "status": "pass"
+        },
+        "postgres": {
+          "engine": "postgres",
+          "exit_code": 0,
+          "wall_ms": 247400,
+          "log": "out/correctness-work/n1-postgres.log",
+          "receipt": "out/correctness-work/n1-postgres/receipt.json",
+          "contracts": {
+            "stale_served": {
+              "value": 0
+            },
+            "private_value_leaks": {
+              "value": 0
+            },
+            "acknowledged_writes_lost": {
+              "value": 0
+            }
+          },
+          "not_applicable": [],
+          "receipt_verdict": "pass",
+          "gbrain_commit": "d8eb35769120cf0b60704478aaef96a412ee0009",
+          "status": "pass"
+        },
+        "rust": {
+          "engine": "rust",
+          "exit_code": 3,
+          "wall_ms": 5813,
+          "log": "out/correctness-work/n1-rust.log",
+          "receipt": "out/correctness-work/n1-rust/receipt.json",
+          "error": "exit 3: promotion rules: fail (current-value-floor, history-retained-floor) | gbrain findings: see docs/benchmarks/2026-10-01-wave-bugs.md (N1-*) | receipt: out/correctness-work/n1-rust/receipt.json",
+          "contracts": {
+            "stale_served": {
+              "value": 0
+            },
+            "private_value_leaks": {
+              "value": 0
+            },
+            "acknowledged_writes_lost": {
+              "value": 0
+            }
+          },
+          "not_applicable": [],
+          "gbrain_commit": "d8eb35769120cf0b60704478aaef96a412ee0009",
+          "status": "error"
+        }
+      },
+      "typescript": {
+        "compared": [
+          "pglite",
+          "postgres"
+        ],
+        "differences": []
+      },
+      "rust": {
+        "verdict": "fail",
+        "reasons": [
+          "runner error: exit 3: promotion rules: fail (current-value-floor, history-retained-floor) | gbrain findings: see docs/benchmarks/2026-10-01-wave-bugs.md (N1-*) | receipt: out/correctness-work/n1-rust/receipt.json"
+        ],
+        "gaps": []
+      }
+    },
+    {
+      "id": "n5",
+      "label": "N5 forget residue (full)",
+      "runner": "eval/runner/n5-forget-residue.ts",
+      "args": [],
+      "contracts": [
+        {
+          "id": "prohibited_active_outputs",
+          "path": "data.metrics.prohibited_active_outputs"
+        },
+        {
+          "id": "reactivations",
+          "path": "data.metrics.reactivations"
+        },
+        {
+          "id": "collateral_expirations",
+          "path": "data.metrics.collateral_expirations"
+        },
+        {
+          "id": "unauthorized_forgets_applied",
+          "path": "data.metrics.unauthorized_forgets_applied"
+        },
+        {
+          "id": "private_canary_leaks",
+          "path": "data.metrics.private_canary_leaks"
+        }
+      ],
+      "engines": {
+        "pglite": {
+          "engine": "pglite",
+          "exit_code": 0,
+          "wall_ms": 527439,
+          "log": "out/correctness-work/n5-pglite.log",
+          "receipt": "out/correctness-work/n5-pglite/receipt.json",
+          "contracts": {
+            "prohibited_active_outputs": {
+              "value": 0
+            },
+            "reactivations": {
+              "value": 0
+            },
+            "collateral_expirations": {
+              "value": 0
+            },
+            "unauthorized_forgets_applied": {
+              "value": 0
+            },
+            "private_canary_leaks": {
+              "value": 0
+            }
+          },
+          "not_applicable": [],
+          "receipt_verdict": "pass",
+          "gbrain_commit": "d8eb35769120cf0b60704478aaef96a412ee0009",
+          "status": "pass"
+        },
+        "postgres": {
+          "engine": "postgres",
+          "exit_code": 0,
+          "wall_ms": 398691,
+          "log": "out/correctness-work/n5-postgres.log",
+          "receipt": "out/correctness-work/n5-postgres/receipt.json",
+          "contracts": {
+            "prohibited_active_outputs": {
+              "value": 0
+            },
+            "reactivations": {
+              "value": 0
+            },
+            "collateral_expirations": {
+              "value": 0
+            },
+            "unauthorized_forgets_applied": {
+              "value": 0
+            },
+            "private_canary_leaks": {
+              "value": 0
+            }
+          },
+          "not_applicable": [],
+          "receipt_verdict": "pass",
+          "gbrain_commit": "d8eb35769120cf0b60704478aaef96a412ee0009",
+          "status": "pass"
+        },
+        "rust": {
+          "engine": "rust",
+          "exit_code": 3,
+          "wall_ms": 4620,
+          "log": "out/correctness-work/n5-rust.log",
+          "receipt": "out/correctness-work/n5-rust/receipt.json",
+          "error": "exit 3: promotion rules: fail (retained-recall-floor, reinstatement-floor) | gbrain findings: see docs/benchmarks/2026-10-01-wave-bugs.md (N5-*) | receipt: out/correctness-work/n5-rust/receipt.json",
+          "contracts": {
+            "prohibited_active_outputs": {
+              "value": 0
+            },
+            "reactivations": {
+              "value": 0
+            },
+            "collateral_expirations": {
+              "value": 0
+            },
+            "unauthorized_forgets_applied": {
+              "value": 0
+            },
+            "private_canary_leaks": {
+              "value": 0
+            }
+          },
+          "not_applicable": [],
+          "gbrain_commit": "d8eb35769120cf0b60704478aaef96a412ee0009",
+          "status": "error"
+        }
+      },
+      "typescript": {
+        "compared": [
+          "pglite",
+          "postgres"
+        ],
+        "differences": []
+      },
+      "rust": {
+        "verdict": "fail",
+        "reasons": [
+          "runner error: exit 3: promotion rules: fail (retained-recall-floor, reinstatement-floor) | gbrain findings: see docs/benchmarks/2026-10-01-wave-bugs.md (N5-*) | receipt: out/correctness-work/n5-rust/receipt.json"
+        ],
+        "gaps": []
+      }
+    },
+    {
+      "id": "n6",
+      "label": "N6 visibility fuzz (in process)",
+      "runner": "eval/runner/n6-visibility-fuzz.ts",
+      "args": [],
+      "contracts": [
+        {
+          "id": "content_leak_probes",
+          "path": "data.metrics.content_leak_probes"
+        },
+        {
+          "id": "existence_leak_probes",
+          "path": "data.metrics.existence_leak_probes"
+        },
+        {
+          "id": "oracle_probes",
+          "path": "data.metrics.oracle_probes"
+        },
+        {
+          "id": "gate_bypasses",
+          "path": "data.metrics.gate_bypasses"
+        },
+        {
+          "id": "sealed_chunk_violations",
+          "path": "data.metrics.sealed_chunk_violations",
+          "na_check": "N6 safety: sealed fence markers absent from content_chunks"
+        }
+      ],
+      "engines": {
+        "pglite": {
+          "engine": "pglite",
+          "exit_code": 0,
+          "wall_ms": 144728,
+          "log": "out/correctness-work/n6-pglite.log",
+          "receipt": "out/correctness-work/n6-pglite/receipt.json",
+          "contracts": {
+            "content_leak_probes": {
+              "value": 0
+            },
+            "existence_leak_probes": {
+              "value": 0
+            },
+            "oracle_probes": {
+              "value": 0
+            },
+            "gate_bypasses": {
+              "value": 0
+            },
+            "sealed_chunk_violations": {
+              "value": 0
+            }
+          },
+          "not_applicable": [],
+          "receipt_verdict": "pass",
+          "gbrain_commit": "d8eb35769120cf0b60704478aaef96a412ee0009",
+          "status": "pass"
+        },
+        "postgres": {
+          "engine": "postgres",
+          "exit_code": 0,
+          "wall_ms": 818201,
+          "log": "out/correctness-work/n6-postgres.log",
+          "receipt": "out/correctness-work/n6-postgres/receipt.json",
+          "contracts": {
+            "content_leak_probes": {
+              "value": 0
+            },
+            "existence_leak_probes": {
+              "value": 0
+            },
+            "oracle_probes": {
+              "value": 0
+            },
+            "gate_bypasses": {
+              "value": 0
+            },
+            "sealed_chunk_violations": {
+              "value": 0
+            }
+          },
+          "not_applicable": [],
+          "receipt_verdict": "pass",
+          "gbrain_commit": "d8eb35769120cf0b60704478aaef96a412ee0009",
+          "status": "pass"
+        },
+        "rust": {
+          "engine": "rust",
+          "exit_code": 1,
+          "wall_ms": 2727,
+          "log": "out/correctness-work/n6-rust.log",
+          "error": "exit 1, no receipt:       at seed (eval/runner/n6-visibility-fuzz.ts:579:52) |       at async runN6Hermetic (eval/runner/n6-visibility-fuzz.ts:790:28) |       at async withHermeticEnv (eval/runner/hermetic-env.ts:120:26)",
+          "contracts": {
+            "content_leak_probes": {
+              "value": null
+            },
+            "existence_leak_probes": {
+              "value": null
+            },
+            "oracle_probes": {
+              "value": null
+            },
+            "gate_bypasses": {
+              "value": null
+            },
+            "sealed_chunk_violations": {
+              "value": null
+            }
+          },
+          "not_applicable": [],
+          "status": "error"
+        }
+      },
+      "typescript": {
+        "compared": [
+          "pglite",
+          "postgres"
+        ],
+        "differences": []
+      },
+      "rust": {
+        "verdict": "fail",
+        "reasons": [
+          "runner error: exit 1, no receipt:       at seed (eval/runner/n6-visibility-fuzz.ts:579:52) |       at async runN6Hermetic (eval/runner/n6-visibility-fuzz.ts:790:28) |       at async withHermeticEnv (eval/runner/hermetic-env.ts:120:26)"
+        ],
+        "gaps": []
+      }
+    },
+    {
+      "id": "n6-http",
+      "label": "N6 over HTTP (gbrain serve --http)",
+      "runner": "eval/runner/n6-postgres-http.ts",
+      "args": [],
+      "contracts": [
+        {
+          "id": "leaks",
+          "path": "data.verdict.leaks"
+        },
+        {
+          "id": "oracles",
+          "path": "data.verdict.oracles"
+        },
+        {
+          "id": "accepted_invalid_principals",
+          "path": "data.verdict.accepted"
+        }
+      ],
+      "engines": {
+        "pglite": {
+          "engine": "pglite",
+          "exit_code": 69,
+          "wall_ms": 1044,
+          "log": "out/correctness-work/n6-http-pglite.log",
+          "refusal_reason": "engine_not_supported_by_runner",
+          "refusal_message": "N6 Postgres over HTTP did not run on engine pglite. EvalEngineUnavailable (engine_not_supported_by_runner): n6-postgres-http seeds the brain and runs the trusted local replays in process while `gbrain serve --http` holds the same database, because the server's persistence consumer drains the journaled seed writes; PGLite admits one process, so that order needs the pause-and-restart pattern of lifecycle/slice.ts. The pooled-connection condition also samples pg_stat_activity, and the database is created and dropped with Postgres admin SQL. Use n6-visibility-fuzz.ts (in process) for PGLite. No receipt or verdict was written (exit 69).",
+          "contracts": {
+            "leaks": {
+              "value": null
+            },
+            "oracles": {
+              "value": null
+            },
+            "accepted_invalid_principals": {
+              "value": null
+            }
+          },
+          "not_applicable": [],
+          "status": "refused"
+        },
+        "postgres": {
+          "engine": "postgres",
+          "exit_code": 0,
+          "wall_ms": 229760,
+          "log": "out/correctness-work/n6-http-postgres.log",
+          "receipt": "out/correctness-work/n6-http-postgres/receipt.json",
+          "contracts": {
+            "leaks": {
+              "value": 0
+            },
+            "oracles": {
+              "value": 0
+            },
+            "accepted_invalid_principals": {
+              "value": 0
+            }
+          },
+          "not_applicable": [],
+          "receipt_verdict": "pass",
+          "gbrain_commit": "d8eb35769120cf0b60704478aaef96a412ee0009",
+          "status": "pass"
+        },
+        "rust": {
+          "engine": "rust",
+          "exit_code": 69,
+          "wall_ms": 2271,
+          "log": "out/correctness-work/n6-http-rust.log",
+          "refusal_reason": "engine_not_supported_by_runner",
+          "refusal_message": "N6 Postgres over HTTP did not run on engine rust. EvalEngineUnavailable (engine_not_supported_by_runner): gbrain init has no Rust flag (users reach Rust through gbrain migrate --to rust), so the CLI-initialised brain this runner serves cannot be a Rust brain yet; its pooled-connection condition (pg_stat_activity) and its database provisioning (CREATE DATABASE) are Postgres-only raw SQL that Rust refuses. No receipt or verdict was written (exit 69).",
+          "contracts": {
+            "leaks": {
+              "value": null
+            },
+            "oracles": {
+              "value": null
+            },
+            "accepted_invalid_principals": {
+              "value": null
+            }
+          },
+          "not_applicable": [],
+          "status": "refused"
+        }
+      },
+      "typescript": {
+        "compared": [
+          "postgres"
+        ],
+        "differences": []
+      },
+      "rust": {
+        "verdict": "refused",
+        "reasons": [
+          "refused (engine_not_supported_by_runner)"
+        ],
+        "gaps": []
+      }
+    },
+    {
+      "id": "n12",
+      "label": "N12 format fidelity",
+      "runner": "eval/runner/n12-format-fidelity.ts",
+      "args": [],
+      "contracts": [
+        {
+          "id": "fabricated_turns",
+          "path": "data.honesty.fabricated"
+        },
+        {
+          "id": "noise_leaks",
+          "path": "data.adapters.noise_leaks"
+        },
+        {
+          "id": "invented_timestamps",
+          "path": "data.adapters.invented_timestamps"
+        },
+        {
+          "id": "false_attended",
+          "path": "data.attendance.false_attended"
+        }
+      ],
+      "engines": {
+        "pglite": {
+          "engine": "pglite",
+          "exit_code": 0,
+          "wall_ms": 10148,
+          "log": "out/correctness-work/n12-pglite.log",
+          "receipt": "out/correctness-work/n12-pglite/receipt.json",
+          "contracts": {
+            "fabricated_turns": {
+              "value": 0
+            },
+            "noise_leaks": {
+              "value": 0
+            },
+            "invented_timestamps": {
+              "value": 0
+            },
+            "false_attended": {
+              "value": 0
+            }
+          },
+          "not_applicable": [],
+          "receipt_verdict": "pass",
+          "gbrain_commit": "d8eb35769120cf0b60704478aaef96a412ee0009",
+          "status": "pass"
+        },
+        "postgres": {
+          "engine": "postgres",
+          "exit_code": 0,
+          "wall_ms": 17870,
+          "log": "out/correctness-work/n12-postgres.log",
+          "receipt": "out/correctness-work/n12-postgres/receipt.json",
+          "contracts": {
+            "fabricated_turns": {
+              "value": 0
+            },
+            "noise_leaks": {
+              "value": 0
+            },
+            "invented_timestamps": {
+              "value": 0
+            },
+            "false_attended": {
+              "value": 0
+            }
+          },
+          "not_applicable": [],
+          "receipt_verdict": "pass",
+          "gbrain_commit": "d8eb35769120cf0b60704478aaef96a412ee0009",
+          "status": "pass"
+        },
+        "rust": {
+          "engine": "rust",
+          "exit_code": 3,
+          "wall_ms": 4549,
+          "log": "out/correctness-work/n12-rust.log",
+          "receipt": "out/correctness-work/n12-rust/receipt.json",
+          "error": "exit 3: run error: harness: This brain's engine does not support getLinks (option temporal) yet (it needs the links capability), so nothing ran. | runtime: 4.5s | receipt: out/correctness-work/n12-rust/receipt.json",
+          "contracts": {
+            "fabricated_turns": {
+              "value": null
+            },
+            "noise_leaks": {
+              "value": null
+            },
+            "invented_timestamps": {
+              "value": null
+            },
+            "false_attended": {
+              "value": null
+            }
+          },
+          "not_applicable": [],
+          "gbrain_commit": "d8eb35769120cf0b60704478aaef96a412ee0009",
+          "status": "error"
+        }
+      },
+      "typescript": {
+        "compared": [
+          "pglite",
+          "postgres"
+        ],
+        "differences": []
+      },
+      "rust": {
+        "verdict": "fail",
+        "reasons": [
+          "runner error: exit 3: run error: harness: This brain's engine does not support getLinks (option temporal) yet (it needs the links capability), so nothing ran. | runtime: 4.5s | receipt: out/correctness-work/n12-rust/receipt.json"
+        ],
+        "gaps": []
+      }
+    },
+    {
+      "id": "n14",
+      "label": "N14 large-page fidelity",
+      "runner": "eval/runner/n14-large-page-fidelity.ts",
+      "args": [
+        "--tiers",
+        "2mb"
+      ],
+      "contracts": [
+        {
+          "id": "crashes",
+          "path": "data.safety.crashes"
+        },
+        {
+          "id": "responses_over_cap",
+          "path": "data.safety.responses_over_cap"
+        },
+        {
+          "id": "roundtrip_byte_loss",
+          "path": "data.safety.roundtrip_byte_loss"
+        },
+        {
+          "id": "presence_failures",
+          "path": "data.safety.presence_failures"
+        }
+      ],
+      "engines": {
+        "pglite": {
+          "engine": "pglite",
+          "exit_code": 0,
+          "wall_ms": 85677,
+          "log": "out/correctness-work/n14-pglite.log",
+          "receipt": "out/correctness-work/n14-pglite/receipt.json",
+          "contracts": {
+            "crashes": {
+              "value": 0
+            },
+            "responses_over_cap": {
+              "value": 0
+            },
+            "roundtrip_byte_loss": {
+              "value": 0
+            },
+            "presence_failures": {
+              "value": 0
+            }
+          },
+          "not_applicable": [],
+          "receipt_verdict": "pass",
+          "gbrain_commit": "d8eb35769120cf0b60704478aaef96a412ee0009",
+          "status": "pass"
+        },
+        "postgres": {
+          "engine": "postgres",
+          "exit_code": 0,
+          "wall_ms": 108943,
+          "log": "out/correctness-work/n14-postgres.log",
+          "receipt": "out/correctness-work/n14-postgres/receipt.json",
+          "contracts": {
+            "crashes": {
+              "value": 0
+            },
+            "responses_over_cap": {
+              "value": 0
+            },
+            "roundtrip_byte_loss": {
+              "value": 0
+            },
+            "presence_failures": {
+              "value": 0
+            }
+          },
+          "not_applicable": [],
+          "receipt_verdict": "pass",
+          "gbrain_commit": "d8eb35769120cf0b60704478aaef96a412ee0009",
+          "status": "pass"
+        },
+        "rust": {
+          "engine": "rust",
+          "exit_code": 1,
+          "wall_ms": 11969,
+          "log": "out/correctness-work/n14-rust.log",
+          "receipt": "out/correctness-work/n14-rust/receipt.json",
+          "contracts": {
+            "crashes": {
+              "value": 0
+            },
+            "responses_over_cap": {
+              "value": 0
+            },
+            "roundtrip_byte_loss": {
+              "value": 0
+            },
+            "presence_failures": {
+              "value": 0
+            }
+          },
+          "not_applicable": [
+            {
+              "status": "not_applicable",
+              "engine": "rust",
+              "check": "N14 ingest outcome: stored page and chunk counts",
+              "reason": "N14 ingest outcome: stored page and chunk counts uses raw SQL to count the stored pages and their content_chunks rows (on rust the ingest status comes from write errors alone). The rust engine has no SQL dialect and refuses executeRaw with engine_capability_missing (reason raw_sql; gbrain RUST_ENGINE.md decision D18), so the check cannot run on it."
+            },
+            {
+              "status": "not_applicable",
+              "engine": "rust",
+              "check": "N14 stored needles (storedContains)",
+              "reason": "N14 stored needles (storedContains) uses raw SQL to search compiled_truth and the segment texts for each needle answer. The rust engine has no SQL dialect and refuses executeRaw with engine_capability_missing (reason raw_sql; gbrain RUST_ENGINE.md decision D18), so the check cannot run on it."
+            },
+            {
+              "status": "not_applicable",
+              "engine": "rust",
+              "check": "N14 append cost: chunks rewritten and deleted, and the quality rule native_append_embed_ratio_max",
+              "reason": "N14 append cost: chunks rewritten and deleted, and the quality rule native_append_embed_ratio_max uses raw SQL to snapshot the content_chunks hashes before and after the append. The rust engine has no SQL dialect and refuses executeRaw with engine_capability_missing (reason raw_sql; gbrain RUST_ENGINE.md decision D18), so the check cannot run on it."
+            },
+            {
+              "status": "not_applicable",
+              "engine": "rust",
+              "check": "N14 segmented storage: body storage, projection settle, segment round trip and segment writes",
+              "reason": "N14 segmented storage: body storage, projection settle, segment round trip and segment writes uses raw SQL to read pages, page_body_manifest and page_segment_texts. The rust engine has no SQL dialect and refuses executeRaw with engine_capability_missing (reason raw_sql; gbrain RUST_ENGINE.md decision D18), so the check cannot run on it."
+            },
+            {
+              "status": "not_applicable",
+              "engine": "rust",
+              "check": "N14 lifecycle residue (--lifecycle, exploratory)",
+              "reason": "N14 lifecycle residue (--lifecycle, exploratory) uses raw SQL to find the fence fact row and count residue rows after the purge. The rust engine has no SQL dialect and refuses executeRaw with engine_capability_missing (reason raw_sql; gbrain RUST_ENGINE.md decision D18), so the check cannot run on it."
+            }
+          ],
+          "receipt_verdict": "fail",
+          "gbrain_commit": "d8eb35769120cf0b60704478aaef96a412ee0009",
+          "status": "fail"
+        }
+      },
+      "typescript": {
+        "compared": [
+          "pglite",
+          "postgres"
+        ],
+        "differences": []
+      },
+      "rust": {
+        "verdict": "fail",
+        "reasons": [
+          "verdict fail"
+        ],
+        "gaps": [
+          {
+            "status": "not_applicable",
+            "engine": "rust",
+            "check": "N14 ingest outcome: stored page and chunk counts",
+            "reason": "N14 ingest outcome: stored page and chunk counts uses raw SQL to count the stored pages and their content_chunks rows (on rust the ingest status comes from write errors alone). The rust engine has no SQL dialect and refuses executeRaw with engine_capability_missing (reason raw_sql; gbrain RUST_ENGINE.md decision D18), so the check cannot run on it."
+          },
+          {
+            "status": "not_applicable",
+            "engine": "rust",
+            "check": "N14 stored needles (storedContains)",
+            "reason": "N14 stored needles (storedContains) uses raw SQL to search compiled_truth and the segment texts for each needle answer. The rust engine has no SQL dialect and refuses executeRaw with engine_capability_missing (reason raw_sql; gbrain RUST_ENGINE.md decision D18), so the check cannot run on it."
+          },
+          {
+            "status": "not_applicable",
+            "engine": "rust",
+            "check": "N14 append cost: chunks rewritten and deleted, and the quality rule native_append_embed_ratio_max",
+            "reason": "N14 append cost: chunks rewritten and deleted, and the quality rule native_append_embed_ratio_max uses raw SQL to snapshot the content_chunks hashes before and after the append. The rust engine has no SQL dialect and refuses executeRaw with engine_capability_missing (reason raw_sql; gbrain RUST_ENGINE.md decision D18), so the check cannot run on it."
+          },
+          {
+            "status": "not_applicable",
+            "engine": "rust",
+            "check": "N14 segmented storage: body storage, projection settle, segment round trip and segment writes",
+            "reason": "N14 segmented storage: body storage, projection settle, segment round trip and segment writes uses raw SQL to read pages, page_body_manifest and page_segment_texts. The rust engine has no SQL dialect and refuses executeRaw with engine_capability_missing (reason raw_sql; gbrain RUST_ENGINE.md decision D18), so the check cannot run on it."
+          },
+          {
+            "status": "not_applicable",
+            "engine": "rust",
+            "check": "N14 lifecycle residue (--lifecycle, exploratory)",
+            "reason": "N14 lifecycle residue (--lifecycle, exploratory) uses raw SQL to find the fence fact row and count residue rows after the purge. The rust engine has no SQL dialect and refuses executeRaw with engine_capability_missing (reason raw_sql; gbrain RUST_ENGINE.md decision D18), so the check cannot run on it."
+          }
+        ]
+      }
+    }
+  ],
+  "findings": [],
+  "summary": {
+    "rust": "fail",
+    "errored": [
+      "n1:rust",
+      "n5:rust",
+      "n6:rust",
+      "n12:rust"
+    ],
+    "findings": 0,
+    "wall_ms": {
+      "n1": {
+        "pglite": 337751,
+        "postgres": 247400,
+        "rust": 5813
+      },
+      "n5": {
+        "pglite": 527439,
+        "postgres": 398691,
+        "rust": 4620
+      },
+      "n6": {
+        "pglite": 144728,
+        "postgres": 818201,
+        "rust": 2727
+      },
+      "n6-http": {
+        "pglite": 1044,
+        "postgres": 229760,
+        "rust": 2271
+      },
+      "n12": {
+        "pglite": 10148,
+        "postgres": 17870,
+        "rust": 4549
+      },
+      "n14": {
+        "pglite": 85677,
+        "postgres": 108943,
+        "rust": 11969
+      }
+    },
+    "total_wall_ms": 2960366
+  },
+  "environment": {
+    "platform": "linux-x64",
+    "bun": "1.4.4",
+    "postgres": {
+      "source": "--pg-url"
+    }
+  },
+  "counted": true,
+  "preregistration_attestation": {
+    "preregistration": "docs/benchmarks/2026-11-17-engine-bench-preregistration.md",
+    "preregistration_commit": "8e36959c52cf4f327d1a20f634cde2e20b9069ae",
+    "runner_commit": "8e36959c52cf4f327d1a20f634cde2e20b9069ae",
+    "worktree_clean_for_preregistration": true,
+    "on_origin": true,
+    "attested_at": "2026-11-27T02:51:33.377Z"
+  }
+}

@@ -1,0 +1,19 @@
+cat13/ndcg5: FAIL (Reported, not gating, for Dec 1 (plan D24). Rust run did not complete (error): adapter init/teardown failed: OperationError: This brain's engine does not suppor)
+cat13b/top1: FAIL (Rust run did not complete (error): adapter init/teardown failed: OperationError: This brain's engine does not support readManagedModeRows yet (it needs the pers)
+cat10: PASS
+cat12: FAIL (18/24 on Rust (verdict fail). traverse_graph depth=1000 over a 16-node chain stops at the 10-hop cap: rejected: This brain's engine does not support traversePat)
+cat7: PASS
+brainbench/cats-1-2: FAIL (Rust wrote no receipt: its runner failed (exit 1) without one, where both TypeScript engines completed. Log tail: 
+
+Generated: 2026-11-27T06:42:04
+Corpus: 240 r)
+brainbench/cat3: FAIL (Rust wrote no receipt: its runner failed (exit 1) without one, where both TypeScript engines completed. Log tail: a412ee0009/src/core/ops/contract.ts:204:13)
+  )
+brainbench/cat4: PASS
+brainbench/type-accuracy: FAIL (Rust wrote no receipt: its runner failed (exit 1) without one, where both TypeScript engines completed. Log tail: # BrainBench — type accuracy on rich-prose cor)
+brainbench/cat24: FAIL (1/7 on Rust (verdict fail). content-import: content-import (inbox/2026-05-23-content-import): ingestion path threw: This brain's engine does not support readMan)
+memory-verb-conformance: FAIL (0/24 on Rust (verdict fail). remember rejects missing provenance (provenance_required + suggestion): remember rejects missing provenance (provenance_required + )
+cat22: FAIL (Rust run did not complete (error): This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran. |)
+cat19: FAIL (the Rust receipt has no brain_score (verdict fail) | Rust undefined vs pglite 85: more than 0.5 points apart | Rust 0 vs pglite 5: counts differ | Rust undefine)
+cat27: FAIL (the Rust receipt has no probes_scored (verdict fail) | Rust 0 vs pglite 52.67597369506041: more than 0.5 points apart | Rust 0 vs pglite 1: counts differ | Rust)
+cat23: FAIL (Rust run did not complete (error): This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran. |)

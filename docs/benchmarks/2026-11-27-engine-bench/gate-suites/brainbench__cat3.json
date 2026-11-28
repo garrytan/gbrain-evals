@@ -1,0 +1,57 @@
+{
+  "schema": "engine-bench.gate-suite/1",
+  "suite": "brainbench/cat3",
+  "gate": "E2",
+  "counted": true,
+  "amendment_text": "brainbench/cat3 (E2, Cat 3 alias lookup through keyword search, R@5 and P@5 (top-1 beside); eval/runner/identity.ts): Rust is at least the PGLite and the Postgres value. Ember's reading of RUST_ENGINE.md (lines 489 and 498, and plan D24) at gbrain master 5c9f3051, fixed 2026-11-23 after the keyless b66e4077 pilot had produced Rust numbers: Cat 3 is read on R@5 and P@5 from the same ranks (P@5 = top-5 hits / 5), each at least both TypeScript values, per alias category, with top-1 beside. Any value that differs from either TypeScript value is listed as a divergence with the queries that differ, never counted as a win.",
+  "gbrain": {
+    "overlay": {
+      "commit": "d8eb35769120cf0b60704478aaef96a412ee0009",
+      "ref": "d8eb35769120cf0b60704478aaef96a412ee0009",
+      "checkout_dirty": false
+    },
+    "rust_addon": {
+      "sha256": "d325d17502bda4dd3ebcd73ff73a45e15016e87823a0c50cd4bb9261d4748d74",
+      "target": "linux-x64-glibc"
+    }
+  },
+  "verdict": "FAIL",
+  "reason": "Rust wrote no receipt: its runner failed (exit 1) without one, where both TypeScript engines completed. Log tail: a412ee0009/src/core/ops/contract.ts:204:13)\n      at refuse (.gbrain-overlays/d8eb35769120cf0b60704478aaef96a412ee0009/src/core/rust-engine.ts:340:29)\n      at <anonymous> (eval/runner/eval-engine.ts:258:58)\n      at readProjectionSnapshot (.gbrain-overlays/d8eb35769120cf0b60704478aaef96a412ee0009/src/core/page-state/projections.ts:136:17)\n      at main (eval/runner/identity.ts:138:28) | The Rust run refused 1 engine calls at: core/page-state/projections.ts:136 (transaction, transactions) x1",
+  "rows": [
+    {
+      "id": "brainbench/cat3",
+      "benchmark": "Cat 3 alias lookup through keyword search, R@5 and P@5 (top-1 beside)",
+      "verdict": "FAIL",
+      "measured": {
+        "pglite": {
+          "r5_documented": 1,
+          "p5_documented": 0.2,
+          "top1_documented": 0.975,
+          "r5_undocumented": 0.1125,
+          "p5_undocumented": 0.0225,
+          "top1_undocumented": 0.0875
+        },
+        "postgres": {
+          "r5_documented": 1,
+          "p5_documented": 0.2,
+          "top1_documented": 0.975,
+          "r5_undocumented": 0.1125,
+          "p5_undocumented": 0.0225,
+          "top1_undocumented": 0.0875
+        },
+        "rust": null
+      },
+      "reason": "Rust wrote no receipt: its runner failed (exit 1) without one, where both TypeScript engines completed. Log tail: a412ee0009/src/core/ops/contract.ts:204:13)\n      at refuse (.gbrain-overlays/d8eb35769120cf0b60704478aaef96a412ee0009/src/core/rust-engine.ts:340:29)\n      at <anonymous> (eval/runner/eval-engine.ts:258:58)\n      at readProjectionSnapshot (.gbrain-overlays/d8eb35769120cf0b60704478aaef96a412ee0009/src/core/page-state/projections.ts:136:17)\n      at main (eval/runner/identity.ts:138:28) | The Rust run refused 1 engine calls at: core/page-state/projections.ts:136 (transaction, transactions) x1"
+    }
+  ],
+  "losses": [
+    {
+      "id": "brainbench/cat3",
+      "reason": "Rust wrote no receipt: its runner failed (exit 1) without one, where both TypeScript engines completed. Log tail: a412ee0009/src/core/ops/contract.ts:204:13)\n      at refuse (.gbrain-overlays/d8eb35769120cf0b60704478aaef96a412ee0009/src/core/rust-engine.ts:340:29)\n      at <anonymous> (eval/runner/eval-engine.ts:258:58)\n      at readProjectionSnapshot (.gbrain-overlays/d8eb35769120cf0b60704478aaef96a412ee0009/src/core/page-state/projections.ts:136:17)\n      at main (eval/runner/identity.ts:138:28)"
+    },
+    {
+      "id": "brainbench/cat3:refusal-sites",
+      "reason": "The Rust run refused 1 engine calls at: core/page-state/projections.ts:136 (transaction, transactions) x1"
+    }
+  ]
+}

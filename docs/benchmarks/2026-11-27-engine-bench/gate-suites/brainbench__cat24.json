@@ -1,0 +1,52 @@
+{
+  "schema": "engine-bench.gate-suite/1",
+  "suite": "brainbench/cat24",
+  "gate": "E2",
+  "counted": true,
+  "amendment_text": "brainbench/cat24 (E2, Cat 24 capture provenance; eval/runner/cat24-capture-provenance.ts): Rust passes every case of its own run. Our reading of RUST_ENGINE.md at gbrain 09b9ac5c, which Ember kept on 2026-11-23: RUST_ENGINE.md says 5/5; the runner has 7 probes, so the gate reads 7/7.",
+  "gbrain": {
+    "overlay": {
+      "commit": "d8eb35769120cf0b60704478aaef96a412ee0009",
+      "ref": "d8eb35769120cf0b60704478aaef96a412ee0009",
+      "checkout_dirty": false
+    },
+    "rust_addon": {
+      "sha256": "d325d17502bda4dd3ebcd73ff73a45e15016e87823a0c50cd4bb9261d4748d74",
+      "target": "linux-x64-glibc"
+    }
+  },
+  "verdict": "FAIL",
+  "reason": "1/7 on Rust (verdict fail). content-import: content-import (inbox/2026-05-23-content-import): ingestion path threw: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran. | file-import-no-channel-provenance: file-import-no-channel-provenance (inbox/2026-05-23-file-import): ingestion path threw: This brain's engine does not support executeRaw yet (it needs the raw_sql capability), so nothing ran. | op-put-page-local-trusted: op-put-page-local-trusted (inbox/2026-05-23-op-local): ingestion path threw: This brain's engine does not support readPersistenceBrainId yet (it needs the persistence_journal capability), so nothing r | op-put-page-remote-spoof-override: op-put-page-remote-spoof-override (inbox/2026-05-23-op-remote): ingestion path threw: This brain's engine does not support executeRaw yet (it needs the raw_sql capability), so nothing ran. | dedup-hash-short-circuit: expected exactly 1 pre-existing row with chunks for inbox/2026-05-23-content-import, found 0 row(s), 0 chunk(s) | provenance-preserved-on-reimport: precondition failed: content-import row missing its provenance | The Rust run refused 4 engine calls at: core/persistence/maintenance.ts:59 (readManagedModeRows, persistence_journal, from core/import-file.ts:347) x1; core/trust/channel.ts:251 (executeRaw, raw_sql, from core/import-file.ts:1171) x1; core/persistence/identity.ts:207 (readPersistenceBrainId, persistence_journal, from core/persistence/identity.ts:221) x1; core/persistence/large-page-guard.ts:35 (executeRaw, raw_sql, from core/ops/pa",
+  "rows": [
+    {
+      "id": "brainbench/cat24",
+      "benchmark": "Cat 24 capture provenance",
+      "verdict": "FAIL",
+      "measured": {
+        "pglite": {
+          "passed": 7,
+          "total": 7
+        },
+        "postgres": {
+          "passed": 7,
+          "total": 7
+        },
+        "rust": {
+          "passed": 1,
+          "total": 7
+        }
+      },
+      "reason": "1/7 on Rust (verdict fail). content-import: content-import (inbox/2026-05-23-content-import): ingestion path threw: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran. | file-import-no-channel-provenance: file-import-no-channel-provenance (inbox/2026-05-23-file-import): ingestion path threw: This brain's engine does not support executeRaw yet (it needs the raw_sql capability), so nothing ran. | op-put-page-local-trusted: op-put-page-local-trusted (inbox/2026-05-23-op-local): ingestion path threw: This brain's engine does not support readPersistenceBrainId yet (it needs the persistence_journal capability), so nothing r | op-put-page-remote-spoof-override: op-put-page-remote-spoof-override (inbox/2026-05-23-op-remote): ingestion path threw: This brain's engine does not support executeRaw yet (it needs the raw_sql capability), so nothing ran. | dedup-hash-short-circuit: expected exactly 1 pre-existing row with chunks for inbox/2026-05-23-content-import, found 0 row(s), 0 chunk(s) | provenance-preserved-on-reimport: precondition failed: content-import row missing its provenance | The Rust run refused 4 engine calls at: core/persistence/maintenance.ts:59 (readManagedModeRows, persistence_journal, from core/import-file.ts:347) x1; core/trust/channel.ts:251 (executeRaw, raw_sql, from core/import-file.ts:1171) x1; core/persistence/identity.ts:207 (readPersistenceBrainId, persistence_journal, from core/persistence/identity.ts:221) x1; core/persistence/large-page-guard.ts:35 (executeRaw, raw_sql, from core/ops/pa"
+    }
+  ],
+  "losses": [
+    {
+      "id": "brainbench/cat24",
+      "reason": "1/7 on Rust (verdict fail). content-import: content-import (inbox/2026-05-23-content-import): ingestion path threw: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran. | file-import-no-channel-provenance: file-import-no-channel-provenance (inbox/2026-05-23-file-import): ingestion path threw: This brain's engine does not support executeRaw yet (it needs the raw_sql capability), so nothing ran. | op-put-page-local-trusted: op-put-page-local-trusted (inbox/2026-05-23-op-local): ingestion path threw: This brain's engine does not support readPersistenceBrainId yet (it needs the persistence_journal capability), so nothing r | op-put-page-remote-spoof-override: op-put-page-remote-spoof-override (inbox/2026-05-23-op-remote): ingestion path threw: This brain's engine does not support executeRaw yet (it needs the raw_sql capability), so nothing ran. | dedup-hash-short-circuit: expected exactly 1 pre-existing row with chunks for inbox/2026-05-23-content-import, found 0 row(s), 0 chunk(s) | provenance-preserved-on-reimport: precondition failed: content-import row missing its provenance"
+    },
+    {
+      "id": "brainbench/cat24:refusal-sites",
+      "reason": "The Rust run refused 4 engine calls at: core/persistence/maintenance.ts:59 (readManagedModeRows, persistence_journal, from core/import-file.ts:347) x1; core/trust/channel.ts:251 (executeRaw, raw_sql, from core/import-file.ts:1171) x1; core/persistence/identity.ts:207 (readPersistenceBrainId, persistence_journal, from core/persistence/identity.ts:221) x1; core/persistence/large-page-guard.ts:35 (executeRaw, raw_sql, from core/ops/pages.ts:392) x1"
+    }
+  ]
+}

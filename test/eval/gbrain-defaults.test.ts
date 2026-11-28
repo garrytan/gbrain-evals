@@ -297,3 +297,148 @@ describe('fake_upstream.py (keyless provider stand-in)', () => {
     expect((await post('/voyage/v1/rerank', { query: 'a', documents: ['a'] })).status).toBe(200);
   });
 });
+
+describe('starter-surface parameters', () => {
+  test('outbox_pending pages list_write_requests with only the parameters a starter caller may pass in the pinned gbrain', async () => {
+    const { paramCallable } = await import('../../node_modules/gbrain/src/mcp/surface.ts');
+    const { OPERATION_MANIFEST } = await import('../../node_modules/gbrain/src/core/operation-manifest.generated.ts');
+    const code = [
+      'import importlib.util, json, types',
+      `spec = importlib.util.spec_from_file_location("gbrain_defaults_shim", ${JSON.stringify(`${ROOT}/${BUNDLE}/shim.py`)})`,
+      'shim = importlib.util.module_from_spec(spec)',
+      'spec.loader.exec_module(shim)',
+      'state = next(iter(shim.PENDING_EFFECT_STATES))',
+      'pages = [{"requests": [{"effects": [{"state": state, "kind": "embed"}]}], "next": "c1"}, {"requests": [{"effects": [{"state": "done", "kind": "embed"}]}], "next": None}]',
+      'calls = []',
+      'def call(op, params):',
+      '    calls.append({"op": op, "params": params})',
+      '    return pages[len(calls) - 1], {}, [], 0.0',
+      'stub = types.SimpleNamespace(call=call)',
+      'pending = shim.GbrainDefaultsAdapter.outbox_pending(stub)',
+      'print(json.dumps({"pending": pending, "calls": calls}))',
+    ].join('\n');
+    const r = Bun.spawnSync(['python3', '-c', code], { cwd: ROOT });
+    if (r.exitCode !== 0) throw new Error(r.stderr.toString());
+    const out = JSON.parse(r.stdout.toString()) as { pending: Record<string, number>; calls: Array<{ op: string; params: Record<string, unknown> }> };
+    expect(out.pending).toEqual({ embed: 1 });
+    expect(out.calls.map(c => c.params)).toEqual([{}, { before: 'c1' }]);
+    const op = OPERATION_MANIFEST.find(o => o.name === 'list_write_requests')!;
+    for (const c of out.calls) for (const p of Object.keys(c.params)) expect([p, paramCallable(op, p, 'starter')]).toEqual([p, true]);
+  });
+
+  // Value: protects=a fixed-evidence read (the readiness probe's) runs on gbrain's starter surface; fails_when=the shim sends a knob the pinned gbrain refuses on starter, so every readiness probe misses and the cell is marked degraded; why_new=cost-speed capacity recheck (readiness_probe missed at v0.60.771.0); seam=GbrainDefaultsAdapter.query_on_surface over a stub that refuses like gbrain; no_claim=what the full surface returns
+  test('a fixed-evidence query drops each knob the starter surface refuses, records it, and sends only starter parameters', async () => {
+    const { paramCallable } = await import('../../node_modules/gbrain/src/mcp/surface.ts');
+    const { OPERATION_MANIFEST } = await import('../../node_modules/gbrain/src/core/operation-manifest.generated.ts');
+    const op = OPERATION_MANIFEST.find(o => o.name === 'query')!;
+    const code = [
+      'import importlib.util, json, sys, types',
+      `spec = importlib.util.spec_from_file_location("gbrain_defaults_shim", ${JSON.stringify(`${ROOT}/${BUNDLE}/shim.py`)})`,
+      'shim = importlib.util.module_from_spec(spec)',
+      'spec.loader.exec_module(shim)',
+      'callable_ = set(json.loads(sys.argv[1]))',
+      'calls = []',
+      'def call(name, args):',
+      '    calls.append(dict(args))',
+      '    bad = [k for k in args if k not in callable_]',
+      '    if bad: raise shim.GbrainError("gbrain returned an error: {\\n  \\"error\\": \\"param_not_on_surface\\",\\n  \\"message\\": \\"query: parameter %s is not on this connection\'s starter tool surface; nothing was read.\\"" % bad[0])',
+      '    return [], {}, [], 1.0',
+      'stub = types.SimpleNamespace(call=call)',
+      'rec = json.load(open(sys.argv[2]))',
+      'args = shim.GbrainDefaultsAdapter.query_args(types.SimpleNamespace(record=rec), "q?", {"mode": "fixed-evidence"})',
+      'out = shim.GbrainDefaultsAdapter.query_on_surface(stub, args)',
+      'print(json.dumps({"sent": out[4], "dropped": out[5], "calls": len(calls)}))',
+    ].join("\n");
+    const starter = ['query', 'limit', 'autocut', 'expand'].filter(p => paramCallable(op, p, 'starter'));
+    const r = Bun.spawnSync(['python3', '-c', code, JSON.stringify(starter), `${ROOT}/${BUNDLE}/capability.json`], { cwd: ROOT });
+    if (r.exitCode !== 0) throw new Error(r.stderr.toString());
+    const out = JSON.parse(r.stdout.toString()) as { sent: Record<string, unknown>; dropped: string[]; calls: number };
+    for (const p of Object.keys(out.sent)) expect([p, paramCallable(op, p, 'starter')]).toEqual([p, true]);
+    expect(out.dropped.sort()).toEqual(['autocut', 'limit'].filter(p => !starter.includes(p)).sort());
+    expect(out.dropped.length).toBeGreaterThan(0);
+    expect(out.calls).toBe(out.dropped.length + 1);
+  });
+
+  test('a read that had to drop a fixed-evidence knob is not scored, and is refused when the caller asks for errors', () => {
+    const code = [
+      'import importlib.util, json, sys, threading',
+      `spec = importlib.util.spec_from_file_location("gbrain_defaults_shim", ${JSON.stringify(`${ROOT}/${BUNDLE}/shim.py`)})`,
+      'shim = importlib.util.module_from_spec(spec)',
+      'spec.loader.exec_module(shim)',
+      'def adapter(refused):',
+      '    a = shim.GbrainDefaultsAdapter.__new__(shim.GbrainDefaultsAdapter)',
+      '    a.record = json.load(open(sys.argv[1]))',
+      '    a.lock = threading.RLock()',
+      '    a.shipped_counts = {}',
+      '    a.serve_session = None',
+      '    a.activate = lambda ns: None',
+      '    a.state = lambda: {"sessions": {}}',
+      '    a.require_reference = lambda: {"resolved": {"search": {}}}',
+      '    a.receipt = lambda kind, **f: None',
+      '    def call(name, args):',
+      '        bad = [k for k in args if k in refused]',
+      '        if bad: raise shim.GbrainError("gbrain returned an error: query: parameter %s is not on this connection\'s starter tool surface; nothing was read." % bad[0])',
+      '        return [], {"retrieval": {}}, [], 1.0',
+      '    a.call = call',
+      '    return a',
+      'out = {}',
+      'for name, refused, policy in (("starter", {"limit", "autocut"}, {"mode": "fixed-evidence", "settings": {"on_degraded": "record"}}), ("full", set(), {"mode": "fixed-evidence", "settings": {"on_degraded": "record"}}), ("vendor", {"limit", "autocut"}, {"mode": "vendor-default", "settings": {"on_degraded": "record"}})):',
+      '    r = shim.GbrainDefaultsAdapter.retrieve(adapter(refused), "ns", "q?", None, policy)',
+      '    out[name] = r["raw"]["classification"]',
+      'try:',
+      '    shim.GbrainDefaultsAdapter.retrieve(adapter({"limit", "autocut"}), "ns", "q?", None, {"mode": "fixed-evidence", "settings": {"on_degraded": "error"}})',
+      '    out["error"] = None',
+      'except shim.ShimError as e:',
+      '    out["error"] = str(e)',
+      'print(json.dumps(out))',
+    ].join("\n");
+    const r = Bun.spawnSync(['python3', '-c', code, `${ROOT}/${BUNDLE}/capability.json`], { cwd: ROOT });
+    if (r.exitCode !== 0) throw new Error(r.stderr.toString());
+    const out = JSON.parse(r.stdout.toString()) as Record<string, { outcome: string; reasons: string[] }> & { error: string | null };
+    expect(out.starter.outcome).toBe('harness_invalid');
+    expect(out.starter.reasons).toContain('settings_not_on_surface:autocut,limit');
+    expect(out.full.outcome).toBe('scored');
+    expect(out.vendor.outcome).toBe('scored');
+    expect(out.error).toContain('degraded read');
+  });
+});
+
+describe('POST /trigger', () => {
+  test('runs gbrain maintain --unattended once with serve stopped, reads the status after, and always starts serve again', () => {
+    const code = [
+      'import importlib.util, json, threading, types, subprocess',
+      `spec = importlib.util.spec_from_file_location("gbrain_defaults_shim", ${JSON.stringify(`${ROOT}/${BUNDLE}/shim.py`)})`,
+      'shim = importlib.util.module_from_spec(spec)',
+      'spec.loader.exec_module(shim)',
+      'log = []',
+      'def cli(*args, timeout_s=600, check=True):',
+      '    log.append(["cli", list(args), timeout_s])',
+      '    if stub.fail: raise subprocess.TimeoutExpired(args, timeout_s)',
+      '    return types.SimpleNamespace(returncode=0, stdout=\'{"status": "applied"}\', stderr="")',
+      'stub = types.SimpleNamespace(lock=threading.Lock(), fail=False, cli=cli,',
+      '    place=lambda ns: log.append(["place", ns]), start_serve=lambda: log.append(["start_serve"]),',
+      '    cli_json=lambda *a, timeout_s=600: (log.append(["cli_json", list(a)]), {"due": False})[1], receipt=lambda kind, **f: log.append(["receipt", kind, f["job"], f["exit"]]))',
+      'out = shim.GbrainDefaultsAdapter.trigger(stub, "ns-a", "maintain", 60)',
+      'ok_log = list(log); log.clear(); stub.fail = True',
+      'try:',
+      '    shim.GbrainDefaultsAdapter.trigger(stub, "ns-a", "maintain", 60)',
+      'except subprocess.TimeoutExpired:',
+      '    pass',
+      'fail_log = list(log); log.clear()',
+      'try:',
+      '    shim.GbrainDefaultsAdapter.trigger(stub, "ns-a", "dream", 60)',
+      '    refused = None',
+      'except shim.ShimError as e:',
+      '    refused = [e.kind, e.status]',
+      'print(json.dumps({"out": {k: out[k] for k in ("job", "command", "exit", "report", "status")}, "ok": ok_log, "fail": fail_log, "refused": refused, "other": log}))',
+    ].join('\n');
+    const r = Bun.spawnSync(['python3', '-c', code], { cwd: ROOT });
+    if (r.exitCode !== 0) throw new Error(r.stderr.toString());
+    const o = JSON.parse(r.stdout.toString());
+    expect(o.out).toEqual({ job: 'maintain', command: 'gbrain maintain --unattended --json', exit: 0, report: { status: 'applied' }, status: { due: false } });
+    expect(o.ok).toEqual([['place', 'ns-a'], ['cli', ['maintain', '--unattended', '--json'], 60], ['cli_json', ['maintain', '--status', '--json']], ['start_serve'], ['receipt', 'trigger', 'maintain', 0]]);
+    expect(o.fail).toEqual([['place', 'ns-a'], ['cli', ['maintain', '--unattended', '--json'], 60], ['start_serve']]);
+    expect(o.refused).toEqual(['invalid_request', 400]);
+    expect(o.other).toEqual([]);
+  });
+});

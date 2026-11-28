@@ -1,0 +1,61 @@
+{
+  "schema": "engine-bench.gate-suite/1",
+  "suite": "brainbench/type-accuracy",
+  "gate": "E2",
+  "counted": true,
+  "amendment_text": "brainbench/type-accuracy (E2, Link type accuracy of the links the engine stores (world-v1); eval/runner/type-accuracy.ts): Rust is at least the PGLite and the Postgres value. Ember's reading of RUST_ENGINE.md (lines 489 and 498, and plan D24) at gbrain master 5c9f3051, fixed 2026-11-23 after the keyless b66e4077 pilot had produced Rust numbers: type-accuracy has no P@5 or R@5; it is read on strict F1, type accuracy and every per-type F1 of the links the engine stores, each at least both TypeScript values. Any value that differs from either TypeScript value is listed as a divergence with its differing edges, never counted as a win.",
+  "gbrain": {
+    "overlay": {
+      "commit": "d8eb35769120cf0b60704478aaef96a412ee0009",
+      "ref": "d8eb35769120cf0b60704478aaef96a412ee0009",
+      "checkout_dirty": false
+    },
+    "rust_addon": {
+      "sha256": "d325d17502bda4dd3ebcd73ff73a45e15016e87823a0c50cd4bb9261d4748d74",
+      "target": "linux-x64-glibc"
+    }
+  },
+  "verdict": "FAIL",
+  "reason": "Rust wrote no receipt: its runner failed (exit 1) without one, where both TypeScript engines completed. Log tail: # BrainBench — type accuracy on rich-prose corpus\n\nGenerated: 2026-11-27T06:48:44\nCorpus: eval/data/world-v1/\nLoaded 240 pages.\n\nError [engine_capability_missing]: This brain's engine does not support executeRaw yet (it needs the raw_sql capability), so nothing ran.\nFix: Run it on a pglite or postgres brain, or wait for a gbrain release whose Rust engine supports it.\nDocs: https://github.com/garrytan/gbrain/blob/v0.60.777.0/docs/ENGINES.md#the-rust-engine-shell | The Rust run refused 1 engine calls at: core/wanted-links-store.ts:36 (executeRaw, raw_sql, from commands/extract.ts:1900) x1",
+  "rows": [
+    {
+      "id": "brainbench/type-accuracy",
+      "benchmark": "Link type accuracy of the links the engine stores (world-v1)",
+      "verdict": "FAIL",
+      "measured": {
+        "pglite": {
+          "strict_f1": 0.2591743119266055,
+          "type_accuracy": 0.773972602739726,
+          "f1.attended": 0,
+          "f1.invested_in": 0.7239263803680981,
+          "f1.founded": 0.5470085470085471,
+          "f1.advises": 0.4705882352941177,
+          "f1.works_at": 0.5405405405405406,
+          "f1.mentions": 0
+        },
+        "postgres": {
+          "strict_f1": 0.2591743119266055,
+          "type_accuracy": 0.773972602739726,
+          "f1.attended": 0,
+          "f1.invested_in": 0.7239263803680981,
+          "f1.founded": 0.5470085470085471,
+          "f1.advises": 0.4705882352941177,
+          "f1.works_at": 0.5405405405405406,
+          "f1.mentions": 0
+        },
+        "rust": null
+      },
+      "reason": "Rust wrote no receipt: its runner failed (exit 1) without one, where both TypeScript engines completed. Log tail: # BrainBench — type accuracy on rich-prose corpus\n\nGenerated: 2026-11-27T06:48:44\nCorpus: eval/data/world-v1/\nLoaded 240 pages.\n\nError [engine_capability_missing]: This brain's engine does not support executeRaw yet (it needs the raw_sql capability), so nothing ran.\nFix: Run it on a pglite or postgres brain, or wait for a gbrain release whose Rust engine supports it.\nDocs: https://github.com/garrytan/gbrain/blob/v0.60.777.0/docs/ENGINES.md#the-rust-engine-shell | The Rust run refused 1 engine calls at: core/wanted-links-store.ts:36 (executeRaw, raw_sql, from commands/extract.ts:1900) x1"
+    }
+  ],
+  "losses": [
+    {
+      "id": "brainbench/type-accuracy",
+      "reason": "Rust wrote no receipt: its runner failed (exit 1) without one, where both TypeScript engines completed. Log tail: # BrainBench — type accuracy on rich-prose corpus\n\nGenerated: 2026-11-27T06:48:44\nCorpus: eval/data/world-v1/\nLoaded 240 pages.\n\nError [engine_capability_missing]: This brain's engine does not support executeRaw yet (it needs the raw_sql capability), so nothing ran.\nFix: Run it on a pglite or postgres brain, or wait for a gbrain release whose Rust engine supports it.\nDocs: https://github.com/garrytan/gbrain/blob/v0.60.777.0/docs/ENGINES.md#the-rust-engine-shell"
+    },
+    {
+      "id": "brainbench/type-accuracy:refusal-sites",
+      "reason": "The Rust run refused 1 engine calls at: core/wanted-links-store.ts:36 (executeRaw, raw_sql, from commands/extract.ts:1900) x1"
+    }
+  ]
+}

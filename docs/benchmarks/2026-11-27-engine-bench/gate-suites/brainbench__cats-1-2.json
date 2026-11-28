@@ -1,0 +1,58 @@
+{
+  "schema": "engine-bench.gate-suite/1",
+  "suite": "brainbench/cats-1-2",
+  "gate": "E2",
+  "counted": true,
+  "amendment_text": "brainbench/cats-1-2 (E2, BrainBench Cat 1 relational retrieval, graph-first (before-after.ts AFTER column, 145 relational questions), P@5 and R@5; eval/runner/before-after.ts): Rust is at least the PGLite and the Postgres value. Ember's reading of RUST_ENGINE.md (lines 489 and 498, and plan D24) at gbrain master 5c9f3051, fixed 2026-11-23 after the keyless b66e4077 pilot had produced Rust numbers: The gate row is Cat 1 relational graph-first (before-after.ts, graph-first column): P@5 and R@5 on the 145 relational questions, each at least both PGLite and Postgres. graph-oracle-parse and the gbrain product adapter row (multi-adapter.ts) are reported beside it and do not gate.",
+  "gbrain": {
+    "overlay": {
+      "commit": "d8eb35769120cf0b60704478aaef96a412ee0009",
+      "ref": "d8eb35769120cf0b60704478aaef96a412ee0009",
+      "checkout_dirty": false
+    },
+    "rust_addon": {
+      "sha256": "d325d17502bda4dd3ebcd73ff73a45e15016e87823a0c50cd4bb9261d4748d74",
+      "target": "linux-x64-glibc"
+    }
+  },
+  "verdict": "FAIL",
+  "reason": "Rust wrote no receipt: its runner failed (exit 1) without one, where both TypeScript engines completed. Log tail: \n\nGenerated: 2026-11-27T06:42:04\nCorpus: 240 rich-prose pages from eval/data/world-v1/\nRelational queries: 145\n\n## Seeding corpus + running extract (v0.10.4 stack)\nError [engine_capability_missing]: This brain's engine does not support executeRaw yet (it needs the raw_sql capability), so nothing ran.\nFix: Run it on a pglite or postgres brain, or wait for a gbrain release whose Rust engine supports it.\nDocs: https://github.com/garrytan/gbrain/blob/v0.60.777.0/docs/ENGINES.md#the-rust-engine-shell | The Rust run refused 1 engine calls at: core/wanted-links-store.ts:36 (executeRaw, raw_sql, from commands/extract.ts:1900) x1",
+  "rows": [
+    {
+      "id": "brainbench/cats-1-2",
+      "benchmark": "BrainBench Cat 1 relational retrieval, graph-first (before-after.ts AFTER column, 145 relational questions), P@5 and R@5",
+      "verdict": "FAIL",
+      "measured": {
+        "pglite": {
+          "p5": 0.33655172413793105,
+          "r5": 0.9348659003831418,
+          "questions": 145
+        },
+        "postgres": {
+          "p5": 0.33655172413793105,
+          "r5": 0.9348659003831418,
+          "questions": 145
+        },
+        "rust": null
+      },
+      "reason": "Rust wrote no receipt: its runner failed (exit 1) without one, where both TypeScript engines completed. Log tail: \n\nGenerated: 2026-11-27T06:42:04\nCorpus: 240 rich-prose pages from eval/data/world-v1/\nRelational queries: 145\n\n## Seeding corpus + running extract (v0.10.4 stack)\nError [engine_capability_missing]: This brain's engine does not support executeRaw yet (it needs the raw_sql capability), so nothing ran.\nFix: Run it on a pglite or postgres brain, or wait for a gbrain release whose Rust engine supports it.\nDocs: https://github.com/garrytan/gbrain/blob/v0.60.777.0/docs/ENGINES.md#the-rust-engine-shell | The Rust run refused 1 engine calls at: core/wanted-links-store.ts:36 (executeRaw, raw_sql, from commands/extract.ts:1900) x1"
+    },
+    {
+      "id": "brainbench/cats-1-2:beside",
+      "benchmark": "BrainBench Cats 1+2 relational retrieval, multi-adapter graph-oracle-parse and the gbrain product row on hash embeddings (reported beside, never gates)",
+      "verdict": "NOT_RUN",
+      "measured": {},
+      "reason": "Rust wrote no receipt: its runner failed (exit 1) without one, where both TypeScript engines completed. Log tail: \n\nGenerated: 2026-11-27T06:42:04\nCorpus: 240 rich-prose pages from eval/data/world-v1/\nRelational queries: 145\n\n## Seeding corpus + running extract (v0.10.4 stack)\nError [engine_capability_missing]: This brain's engine does not support executeRaw yet (it needs the raw_sql capability), so nothing ran.\nFix: Run it on a pglite or postgres brain, or wait for a gbrain release whose Rust engine supports it.\nDocs: https://github.com/garrytan/gbrain/blob/v0.60.777.0/docs/ENGINES.md#the-rust-engine-shell | The Rust run refused 1 engine calls at: core/wanted-links-store.ts:36 (executeRaw, raw_sql, from commands/extract.ts:1900) x1"
+    }
+  ],
+  "losses": [
+    {
+      "id": "brainbench/cats-1-2",
+      "reason": "Rust wrote no receipt: its runner failed (exit 1) without one, where both TypeScript engines completed. Log tail: \n\nGenerated: 2026-11-27T06:42:04\nCorpus: 240 rich-prose pages from eval/data/world-v1/\nRelational queries: 145\n\n## Seeding corpus + running extract (v0.10.4 stack)\nError [engine_capability_missing]: This brain's engine does not support executeRaw yet (it needs the raw_sql capability), so nothing ran.\nFix: Run it on a pglite or postgres brain, or wait for a gbrain release whose Rust engine supports it.\nDocs: https://github.com/garrytan/gbrain/blob/v0.60.777.0/docs/ENGINES.md#the-rust-engine-shell"
+    },
+    {
+      "id": "brainbench/cats-1-2:refusal-sites",
+      "reason": "The Rust run refused 1 engine calls at: core/wanted-links-store.ts:36 (executeRaw, raw_sql, from commands/extract.ts:1900) x1"
+    }
+  ]
+}

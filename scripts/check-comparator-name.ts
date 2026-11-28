@@ -56,6 +56,9 @@ export const ALLOWED: Record<string, Needle['id'][]> = {
   'docs/benchmarks/2026-10-08-beam-1m-failure-analysis/arms/a1-nomem-opus55/shard-1/rows.ndjson.gz': ['maker'],
   // Raw model answer text, where the product name is the idiom "In hindsight" after an escaped newline (\n), so the idiom rule's letter check sees the n.
   'docs/benchmarks/2026-11-23-weekly-outcome-line/pilot/named-1m/gbrain/answers.ndjson': ['product'],
+  // Cost-and-speed records: hosting samples name the memory-bank stack's containers by the compose project name its
+  // bundle above pins, and its cells' receipts carry that pinned identity.
+  'docs/benchmarks/2026-11-24-cost-speed/records.tar.gz': ['product', 'maker'],
   // Dated history (a 2026-10-05 plan review); dated history and third-party leaderboard rows stay until Garry decides.
   'docs/plans/2026-10-05-oss-memory-shootout/reviews/ceo-claude.md': ['maker'],
   // Raw receipts of earlier runs: gbrain research file paths inside agent transcripts.

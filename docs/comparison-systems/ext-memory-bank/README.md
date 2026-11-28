@@ -98,7 +98,9 @@ does not ingest through the server, so it is not used. The full list is in `capa
 - Retrieval amounts follow the shootout's two policies (client defaults; an 8,000-token cap) instead of AMB's
   per-dataset settings, which `capability.json` records under `vendor_benchmark_reference`.
 - Observations (consolidated facts) are off in both configs, `enable_observations=false` per bank, as AMB sets for
-  every dataset. The server default is on.
+  every dataset. The server default is on. The `observations` stack ([observations/](observations/), started with
+  `bootstrap.sh --config observations`) is the recipe with observations at the server default, for the cost-and-speed
+  experiment, which prices the product as shipped.
 - The server skips its boot-time LLM key check.
 
 ## Phase 2 pilot

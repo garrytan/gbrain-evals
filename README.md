@@ -203,6 +203,7 @@ behaviour, such as `forget` leaving nothing behind or a sync catching up, where 
 | Graph walks on fictional graphs of 10,000 to 1,000,000 pages: Postgres against HydraDB as the walk engine | Postgres faster at every size, same answer on all 54,842 compared calls: 95th-percentile warm time **1.44 s vs 6.28 s** at 100,000 pages and 3.45 s vs 6.28 s at 1,000,000⁹ | `fc1121cae58` | [Graph backend](docs/benchmarks/2026-10-17-graph-backend.md) |
 | **Keeping memory correct, private and safe** | | | |
 | Serving the new value after an update | **388 of 388** probes, never stale, on PGLite and Postgres through the CLI and MCP¹⁰ | `6ce7195b4` (v0.60.733.0) | [Knowledge updates](docs/benchmarks/2026-10-01-n1-knowledge-update.md) |
+| gbrain's opt-in Rust storage engine against PGLite and Postgres (counted: correctness, output bytes, 470 LongMemEval-S questions and the 15 gate suites gbrain's design plan names) | **Not ready yet**: on this release a Rust brain refuses gbrain's own page write, and Rust passed 3 of 15 gate suites; PGLite and Postgres matched on all 470 questions and on the 14 scored suites | `d8eb35769` (v0.60.777.0) | [Engine-bench counted wave](docs/benchmarks/2026-11-27-engine-bench.md) |
 | Nothing left behind after `forget` | **0** prohibited outputs, 6 of 6 reinstatements¹⁰ | `6ce7195b4` (v0.60.733.0) | [Forget residue](docs/benchmarks/2026-10-01-n5-forget-residue.md) |
 | Flagging the sentences of a pinned answer whose evidence changed, and refreshing the answer, after one note changes (240 synthetic questions per model) | **90 of 90** edited, superseded or deleted claims flagged, and every refreshed answer after them right except six gpt-6.2-sol answers its judge marked wrongly; **0 of 60** contradictions flagged, and 25.9% of unchanged sentences flagged. Refreshed answers right: claude-opus-5-5 217 of 240, particle-1 199 of 240, gpt-6.2-sol 233 of 240; every miss by Opus and particle-1 is a contradiction answer giving both the old and new city, which the judge scored inconsistently, so the models are not yet told apart. A rescore added afterwards, with a rule for those answers written after the labels were seen, puts particle-1 4.2 points below Opus (interval 0.8 to 7.5 lower); it is a sensitivity check and settles nothing | `38831bb6` (v0.60.769.0) | [Pinned questions](docs/benchmarks/pinned-questions-results.md) |
 | Leaks: private pages reaching agent callers or remote callers not granted them (fewer is better) | **0**, in process and on Postgres over real HTTP (155 of 155 cells, 5 kinds of caller)¹⁰ | `6ce7195b4` (v0.60.733.0) | [Privacy on Postgres](docs/benchmarks/2026-10-06-n6-postgres-http.md) |
@@ -317,7 +318,9 @@ questions than a memory-bank server at the same budget. On sealed histories wher
 behind the memory-bank and extract-first servers on questions about the past, ahead of the memory-bank server on what is
 true now and level with the extract-first server there. On the largest sealed
 head-to-head, below, the set is too small
-to rank any system, and an agent with grep and read tools over plain files has the highest score. Other systems publish
+to rank any system, and an agent with grep and read tools over plain files has the highest score. For a personal agent's
+month, gbrain at its shipped defaults costs less than most compared systems and more than that file agent, and a saved
+chat is searchable in gbrain after 1.2 seconds at the median. Other systems publish
 different metrics on different protocols, so this section uses only published numbers we can put on the same footing,
 and says so where we cannot. Systems are named by kind; their names, versions, sources and every row we could not match
 are in [comparisons and their protocols](docs/comparison-systems.md).
@@ -389,6 +392,38 @@ Descriptive, not tested: correct-abstention rate (abstention-question answers th
 - Measured 2026-10-09 to 2026-10-27 with gbrain 0.60.138.0 (`f05943e`); pinned systems: `ext-extract-first` bundle lock 9777b7a8, capabilities 0acaff3a; `ext-memory-bank` bundle lock f54d89df, capabilities 23a033f4; `ext-graph-pipeline` bundle lock 59af44d5, capabilities e00e4600; `ext-temporal-graph` bundle lock 4ce9b216, capabilities 0ae56345; `ext-markdown-kb` bundle lock e1a14a19, capabilities 4e95f8ef; `ext-agent-runtime` bundle capabilities d55c28c9; `ext-verbatim-session` bundle lock e2e066bf, capabilities ffd48dae.
 - Full tables, cohorts and exclusions: [scoreboard report](docs/benchmarks/2026-10-06-scoreboard/scoreboard.md).
 <!-- scoreboard:headline:end -->
+
+**Cost and speed for a personal agent, measured 2026-11-26 and 27.** The block's "Dollars per month, personal agent"
+and "Write to queryable, p50" columns say "not measured" because the October campaign didn't measure them; the table
+below does, for gbrain v0.60.776.0 at its shipped defaults and every compared system that still runs, on ten public
+synthetic chat histories and a heavy user's month of 2,000 saved messages and 300 questions
+([results](docs/benchmarks/2026-11-24-cost-speed.md), [preregistration](docs/benchmarks/2026-11-24-cost-speed-preregistration.md)).
+The memory systems' own provider calls cost $0 to $6.49 a month; the server and the answer model set the bill, and
+hosting is gbrain's largest line. gbrain's own calls cost $0.21 a month, and its write cost of about 0.11 dollars per
+million tokens reflects storing and embedding chat sessions without extracting facts from them, which is what gbrain
+ships for conversation pages. A session saved to gbrain was searchable after 1.2 seconds at the median and 1.7 seconds
+at the 95th percentile, and all 210 timed saves were found. With claude-opus-5-5 reading, gbrain's month costs less than
+the memory-bank and verbatim-session servers' and hybrid search's, can't be told apart from the extract-first server's,
+and costs more than the file agent's. Run without a rented server, the totals at claude-opus-5-5 are $12.70 for gbrain,
+$7.08 for the file agent, $12.77 for extract-first, $20.79 for memory-bank, $25.70 for hybrid search and $29.69 for
+verbatim-session. Cost per correct answer uses an exact key match that counts an answer naming an earlier value as not
+correct, and most answers from systems that find the history do, so that column doesn't rank these systems: the
+no-memory floor has the lowest.
+
+| System | System cost a month | Answer model a month, claude-opus-5-5 | Answer model a month, particle-1 | Total a month, claude-opus-5-5 | Cost per correct answer, claude-opus-5-5 | Cost per correct answer, particle-1 | Write to queryable, p50 | Write to queryable, p95 | Build | Measured |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| gbrain-defaults | $73.85 ($73.85 to $73.85) | $12.48 ($11.96 to $12.99) | $0.55 ($0.51 to $0.58) | $86.33 ($85.80 to $86.84) | $2.50 ($1.92 to $3.39) | $2.16 ($1.77 to $2.75) | 1.2 s (1.2 s to 1.3 s) | 1.7 s (1.7 s to 1.8 s) | gbrain v0.60.776.0 (3a360389f), shipped defaults | 2026-11-26 |
+| ext-extract-first | $80.39 ($80.35 to $80.44) | $6.28 ($6.17 to $6.39) | $0.43 ($0.39 to $0.46) | $86.67 ($86.56 to $86.78) | $3.85 ($3.21 to $4.82) | $3.37 ($2.69 to $4.49) | 2.1 min (1.9 min to 2.3 min) | 8.7 min (5.8 min to more than 10 minutes) | bundle lock 9777b7a8, recipe | 2026-11-26 to 2026-11-27 |
+| ext-memory-bank | $74.56 ($74.50 to $74.61) | $19.86 ($19.67 to $20.03) | $0.95 ($0.93 to $0.97) | $94.42 ($94.23 to $94.60) | $4.50 ($3.70 to $5.72) | $2.80 ($2.29 to $3.59) | 17.8 s (16.9 s to 18.8 s) | 24.4 s (21.2 s to 26.3 s) | bundle lock f54d89df, recipe, observations on | 2026-11-26 to 2026-11-27 |
+| ext-verbatim-session | $73.59 ($73.59 to $73.59) | $29.69 ($28.02 to $31.14) | $1.23 ($1.15 to $1.31) | $103 ($102 to $105) | $2.99 ($2.22 to $4.36) | $2.77 ($1.92 to $4.99) | 462 ms (439 ms to 477 ms) | more than 10 minutes (more than 10 minutes to more than 10 minutes) | bundle lock e2e066bf, recipe | 2026-11-26 |
+| baseline-hybrid | $73.60 ($73.60 to $73.60) | $25.68 ($25.05 to $26.27) | $1.08 ($1.05 to $1.10) | $99.28 ($98.64 to $99.87) | $2.45 ($1.83 to $3.67) | $1.91 ($1.42 to $2.77) | 476 ms (466 ms to 486 ms) | 604 ms (557 ms to 650 ms) | gbrain-evals 46a975b4 | 2026-11-26 |
+| baseline-file-agent | $73.58 ($73.58 to $73.58) | $7.08 ($6.59 to $7.52) | $1.27 ($1.19 to $1.36) | $80.67 ($80.17 to $81.10) | $3.59 ($2.99 to $4.48) | $2.94 ($2.38 to $3.84) | 33 ms (30 ms to 36 ms) | 56 ms (53 ms to 61 ms) | gbrain-evals 46a975b4, uncapped grep, 40 turns | 2026-11-26 |
+| baseline-none | $0 ($0 to $0) | $1.52 ($1.49 to $1.54) | $0.057 ($0.056 to $0.058) | $1.52 ($1.49 to $1.54) | $0.056 ($0.05 to $0.067) | $0.0095 (interval not defined) | not measured | not measured | gbrain-evals 46a975b4 | 2026-11-26 |
+| baseline-full-context | $0 | doesn't fit | doesn't fit | doesn't fit | doesn't fit | doesn't fit | no write | no write | gbrain-evals 46a975b4, prompt caching | 2026-11-26 |
+| ext-temporal-graph | not run: its pinned configuration calls a reranker and an ingest model its provider retired, and a compared system's settings are never changed |  |  |  |  |  |  |  | bundle lock 4ce9b216 |  |
+| ext-graph-pipeline | not run: left out of this experiment's scope; its published limit was measured at BEAM-10M scale, so a run at this size is follow-up work |  |  |  |  |  |  |  | bundle lock 59af44d5 |  |
+| ext-markdown-kb | not run: left out of this experiment's scope; its published limit was measured at BEAM-10M scale, so a run at this size is follow-up work |  |  |  |  |  |  |  | bundle lock e1a14a19 |  |
+| ext-agent-runtime | not run: it has no passive write and search interface: its agent edits its own memory, so a per-write cost and a write-to-queryable time aren't defined the same way |  |  |  |  |  |  |  | bundle capabilities d55c28c9 |  |
 
 The block's LoCoMo loss bullet (84.2% against 80.0%) is graded by `gpt-4o-2024-08-06`, the campaign's canonical LoCoMo judge. New runs no longer use gpt-4o in any role (suspended 2026-11-21), so that number stands as measured but isn't directly comparable with a run graded by a current frontier judge.
 
@@ -537,10 +572,16 @@ the same reranker 128 ([matched comparison](docs/benchmarks/2026-10-02-concept-v
 
 ## Known limits
 
-- gbrain trails plain files on hard company questions whose sources disagree: 66 against 79 of 80 right at v0.60.742.0
-  (-16.25 points), as at earlier builds, `09d21554d` included (-11.25 on the same tasks)
+- On its shipping defaults, gbrain trails plain files on hard company questions whose sources disagree: 66 against 79
+  of 80 right at v0.60.742.0 (-16.25 points), as at earlier builds, `09d21554d` included (-11.25 on the same tasks)
   ([hard company questions, newest build](docs/benchmarks/2026-11-19-cat40-hard-newest.md);
-  [old-build control](docs/benchmarks/2026-11-19-cat40-hard-old-build-control.md)).
+  [old-build control](docs/benchmarks/2026-11-19-cat40-hard-old-build-control.md)). Turning on
+  `search.long_page_unit=section`, which is off by default, wins most of a gap like it back on other worlds where the
+  deciding documents are long: on six unseen worlds at v0.60.775.0, Opus 5.5 answers 9.58 points more of these questions
+  (+5.0 to +14.58) with no harm on other questions, and its gap to files is +0.42 (-4.17 to +5.42), so that run can't
+  tell level from behind.
+  GPT-6.2 Sol stays behind files with it on (-4.58, -8.75 to -0.83)
+  ([section delivery confirmation](docs/benchmarks/2026-11-24-cat40-h4-fix-confirmation.md)).
 - A timeline read on a 1,000-page brain took about 0.075 ms at `77cf8e111` against 0.045 ms before gbrain's Foundations
   1 release (0.075 and 0.078 ms on the two hosts measured). It has not been measured at the pin. This and the next three
   items are open entries in the [bug ledger](docs/benchmarks/2026-10-01-wave-bugs.md).
@@ -698,6 +739,27 @@ Garry Tan runs Y Combinator.
 [Disclosures](docs/disclosures.md) lists every relationship and where each line goes.
 
 ## Changelog
+
+### 2026-11-27: Cost and speed for a personal agent
+
+How gbrain compares adds the [cost-and-speed table](docs/benchmarks/2026-11-24-cost-speed.md) under the October block,
+which fills that block's "Dollars per month, personal agent" and "Write to queryable, p50" columns for gbrain
+v0.60.776.0 and every compared system that still runs, and the section's opening paragraph says where gbrain lands. The
+rented server and the answer model set the bill; gbrain's low write cost reflects saving chat sessions without
+extracting facts from them; a session saved to gbrain was searchable after 1.2 seconds at the median. The October block
+is unchanged.
+
+### 2026-11-27: Rust engine counted wave
+
+The results table adds the [engine-bench counted wave](docs/benchmarks/2026-11-27-engine-bench.md) on gbrain
+v0.60.777.0: the opt-in Rust engine is not ready yet, and PGLite and Postgres give the same answers.
+
+### 2026-11-26: Section delivery where sources disagree
+
+The known limit on questions where sources disagree adds the
+[section delivery confirmation](docs/benchmarks/2026-11-24-cat40-h4-fix-confirmation.md): with
+`search.long_page_unit=section` on, gbrain v0.60.775.0 answers more of those questions on six unseen worlds with long
+deciding documents, and for Opus 5.5 its gap to plain files can't be told from level.
 
 ### 2026-11-26: Weekly line judges described as never checked
 

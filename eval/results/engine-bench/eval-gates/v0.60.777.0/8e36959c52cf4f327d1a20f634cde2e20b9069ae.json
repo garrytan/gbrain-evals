@@ -1,0 +1,1342 @@
+{
+  "schema_version": "engine-bench.eval-gates/1",
+  "status": "FINAL",
+  "provisional": false,
+  "gbrain_commit": "d8eb35769120cf0b60704478aaef96a412ee0009",
+  "gbrain_tag": "v0.60.777.0",
+  "target": "linux-x64-glibc",
+  "rust_addon_sha256": "d325d17502bda4dd3ebcd73ff73a45e15016e87823a0c50cd4bb9261d4748d74",
+  "engine_format_version": "7",
+  "evals_commit": "8e36959c52cf4f327d1a20f634cde2e20b9069ae",
+  "generated_at": "2026-11-27T06:55:08.007Z",
+  "design_source": "docs/designs/RUST_ENGINE.md at garrytan/gbrain 09b9ac5c, \"Eval gates\" and \"Swap readiness\"",
+  "gates": {
+    "E1": {
+      "verdict": "FAIL",
+      "threshold": "R@5 per adapter at least both the PGLite and the Postgres value, per-question top-5 differences listed; Cat 13 nDCG@5 and Cat 13b top-1 at least both values; Cat 10 133/133; Cat 12 50/50; Cat 7 reported. For ranked-search recall, \"at least both\" is D24: the 95% paired lower bound against each TypeScript engine is at least -0.018 (N = 470); identical top-k ids count as exact ties; the point estimate is reported and does not gate.",
+      "measured": [
+        {
+          "id": "lme-s/keyword/vs-pglite",
+          "point_estimate": -0.8106382978723404,
+          "lower_bound_95": -0.8468085106382979,
+          "n": 470,
+          "exact_ties": 0,
+          "rust_errors": 470,
+          "top5_differences": 0,
+          "top5_difference_list": [],
+          "secondary": {
+            "lower_bound_at_least_0": "fail",
+            "non_inferiority_minus_0_02": "fail"
+          }
+        },
+        {
+          "id": "lme-s/keyword/vs-postgres",
+          "point_estimate": -0.8106382978723404,
+          "lower_bound_95": -0.8468085106382979,
+          "n": 470,
+          "exact_ties": 0,
+          "rust_errors": 470,
+          "top5_differences": 0,
+          "top5_difference_list": [],
+          "secondary": {
+            "lower_bound_at_least_0": "fail",
+            "non_inferiority_minus_0_02": "fail"
+          }
+        },
+        {
+          "id": "lme-s/vector/vs-pglite",
+          "point_estimate": -0.9170212765957447,
+          "lower_bound_95": -0.9404255319148936,
+          "n": 470,
+          "exact_ties": 0,
+          "rust_errors": 470,
+          "top5_differences": 0,
+          "top5_difference_list": [],
+          "secondary": {
+            "lower_bound_at_least_0": "fail",
+            "non_inferiority_minus_0_02": "fail"
+          }
+        },
+        {
+          "id": "lme-s/vector/vs-postgres",
+          "point_estimate": -0.9170212765957447,
+          "lower_bound_95": -0.9404255319148936,
+          "n": 470,
+          "exact_ties": 0,
+          "rust_errors": 470,
+          "top5_differences": 0,
+          "top5_difference_list": [],
+          "secondary": {
+            "lower_bound_at_least_0": "fail",
+            "non_inferiority_minus_0_02": "fail"
+          }
+        },
+        {
+          "id": "lme-s/hybrid/vs-pglite",
+          "point_estimate": -0.9063829787234042,
+          "lower_bound_95": -0.9319148936170213,
+          "n": 470,
+          "exact_ties": 0,
+          "rust_errors": 470,
+          "top5_differences": 0,
+          "top5_difference_list": [],
+          "secondary": {
+            "lower_bound_at_least_0": "fail",
+            "non_inferiority_minus_0_02": "fail"
+          }
+        },
+        {
+          "id": "lme-s/hybrid/vs-postgres",
+          "point_estimate": -0.9063829787234042,
+          "lower_bound_95": -0.9319148936170213,
+          "n": 470,
+          "exact_ties": 0,
+          "rust_errors": 470,
+          "top5_differences": 0,
+          "top5_difference_list": [],
+          "secondary": {
+            "lower_bound_at_least_0": "fail",
+            "non_inferiority_minus_0_02": "fail"
+          }
+        }
+      ],
+      "rows": [
+        {
+          "id": "lme-s/keyword/vs-pglite",
+          "benchmark": "LongMemEval-S recall_all@5, keyword arm, Rust against pglite",
+          "gating": true,
+          "verdict": "FAIL",
+          "reason": "Rust errored on 470 question(s) pglite answered",
+          "measured": {
+            "point_estimate": -0.8106382978723404,
+            "lower_bound_95": -0.8468085106382979,
+            "n": 470,
+            "exact_ties": 0,
+            "rust_errors": 470,
+            "top5_differences": 0,
+            "top5_difference_list": [],
+            "secondary": {
+              "lower_bound_at_least_0": "fail",
+              "non_inferiority_minus_0_02": "fail"
+            }
+          }
+        },
+        {
+          "id": "lme-s/keyword/vs-postgres",
+          "benchmark": "LongMemEval-S recall_all@5, keyword arm, Rust against postgres",
+          "gating": true,
+          "verdict": "FAIL",
+          "reason": "Rust errored on 470 question(s) postgres answered",
+          "measured": {
+            "point_estimate": -0.8106382978723404,
+            "lower_bound_95": -0.8468085106382979,
+            "n": 470,
+            "exact_ties": 0,
+            "rust_errors": 470,
+            "top5_differences": 0,
+            "top5_difference_list": [],
+            "secondary": {
+              "lower_bound_at_least_0": "fail",
+              "non_inferiority_minus_0_02": "fail"
+            }
+          }
+        },
+        {
+          "id": "lme-s/vector/vs-pglite",
+          "benchmark": "LongMemEval-S recall_all@5, vector arm, Rust against pglite",
+          "gating": true,
+          "verdict": "FAIL",
+          "reason": "Rust errored on 470 question(s) pglite answered",
+          "measured": {
+            "point_estimate": -0.9170212765957447,
+            "lower_bound_95": -0.9404255319148936,
+            "n": 470,
+            "exact_ties": 0,
+            "rust_errors": 470,
+            "top5_differences": 0,
+            "top5_difference_list": [],
+            "secondary": {
+              "lower_bound_at_least_0": "fail",
+              "non_inferiority_minus_0_02": "fail"
+            }
+          }
+        },
+        {
+          "id": "lme-s/vector/vs-postgres",
+          "benchmark": "LongMemEval-S recall_all@5, vector arm, Rust against postgres",
+          "gating": true,
+          "verdict": "FAIL",
+          "reason": "Rust errored on 470 question(s) postgres answered",
+          "measured": {
+            "point_estimate": -0.9170212765957447,
+            "lower_bound_95": -0.9404255319148936,
+            "n": 470,
+            "exact_ties": 0,
+            "rust_errors": 470,
+            "top5_differences": 0,
+            "top5_difference_list": [],
+            "secondary": {
+              "lower_bound_at_least_0": "fail",
+              "non_inferiority_minus_0_02": "fail"
+            }
+          }
+        },
+        {
+          "id": "lme-s/hybrid/vs-pglite",
+          "benchmark": "LongMemEval-S recall_all@5, hybrid arm, Rust against pglite",
+          "gating": true,
+          "verdict": "FAIL",
+          "reason": "Rust errored on 470 question(s) pglite answered",
+          "measured": {
+            "point_estimate": -0.9063829787234042,
+            "lower_bound_95": -0.9319148936170213,
+            "n": 470,
+            "exact_ties": 0,
+            "rust_errors": 470,
+            "top5_differences": 0,
+            "top5_difference_list": [],
+            "secondary": {
+              "lower_bound_at_least_0": "fail",
+              "non_inferiority_minus_0_02": "fail"
+            }
+          }
+        },
+        {
+          "id": "lme-s/hybrid/vs-postgres",
+          "benchmark": "LongMemEval-S recall_all@5, hybrid arm, Rust against postgres",
+          "gating": true,
+          "verdict": "FAIL",
+          "reason": "Rust errored on 470 question(s) postgres answered",
+          "measured": {
+            "point_estimate": -0.9063829787234042,
+            "lower_bound_95": -0.9319148936170213,
+            "n": 470,
+            "exact_ties": 0,
+            "rust_errors": 470,
+            "top5_differences": 0,
+            "top5_difference_list": [],
+            "secondary": {
+              "lower_bound_at_least_0": "fail",
+              "non_inferiority_minus_0_02": "fail"
+            }
+          }
+        },
+        {
+          "id": "cat13/ndcg5",
+          "benchmark": "gbrain-evals Cat 13 nDCG@5 at least both values; reported, not gating, for Dec 1 (plan D24)",
+          "gating": false,
+          "verdict": "FAIL",
+          "reason": "Reported, not gating, for Dec 1 (plan D24). Rust run did not complete (error): adapter init/teardown failed: OperationError: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.; adapter init/teardown failed: OperationError: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.; adapter init/teardown failed: OperationError: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.; adapter init/teardown failed: OperationError: This brain's engine does not support read | The Rust run refused 1 engine calls at: core/persistence/maintenance.ts:59 (readManagedModeRows, persistence_journal, from core/import-file.ts:347) x1",
+          "measured": {
+            "pglite": {
+              "ndcg5": 0.5565097736720215
+            },
+            "postgres": {
+              "ndcg5": 0.5565097736720215
+            },
+            "rust": null
+          },
+          "reading": "cat13/ndcg5 (E1, Cat 13 conceptual search, gbrain arm, nDCG@5; eval/runner/cat13-conceptual.ts): the per-query 95% paired lower bound of Rust minus each TypeScript engine is at least -0.018. Ember's reading of RUST_ENGINE.md (lines 489 and 498, and plan D24) at gbrain master 5c9f3051, fixed 2026-11-23 after the keyless b66e4077 pilot had produced Rust numbers: nDCG@5 is read as the per-query 95% paired lower bound of Rust minus each TypeScript engine, at least -0.018, with identical top-5 ids counted as ties. The strict point comparison (Rust's mean at least both) is a secondary row listing the queries whose tie order flips. Reported, not gating, for Dec 1 (plan D24).",
+          "losses": [
+            {
+              "id": "cat13/ndcg5",
+              "reason": "Rust run did not complete (error): adapter init/teardown failed: OperationError: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.; adapter init/teardown failed: OperationError: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.; adapter init/teardown failed: OperationError: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.; adapter init/teardown failed: OperationError: This brain's engine does not support read"
+            },
+            {
+              "id": "cat13/ndcg5:refusal-sites",
+              "reason": "The Rust run refused 1 engine calls at: core/persistence/maintenance.ts:59 (readManagedModeRows, persistence_journal, from core/import-file.ts:347) x1"
+            }
+          ]
+        },
+        {
+          "id": "cat13b/top1",
+          "benchmark": "gbrain-evals Cat 13b top-1 at least both values",
+          "gating": true,
+          "verdict": "FAIL",
+          "reason": "Rust run did not complete (error): adapter init/teardown failed: OperationError: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.; adapter init/teardown failed: OperationError: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.; adapter init/teardown failed: OperationError: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.; adapter init/teardown failed: OperationError: This brain's engine does not support read | The Rust run refused 2 engine calls at: core/persistence/maintenance.ts:59 (readManagedModeRows, persistence_journal, from core/import-file.ts:347) x2",
+          "measured": {
+            "pglite": {
+              "top1": 0.9333333333333333
+            },
+            "postgres": {
+              "top1": 0.9333333333333333
+            },
+            "rust": null
+          },
+          "reading": "cat13b/top1 (E1, Cat 13b source swamp, gbrain arm, top-1; eval/runner/cat13b-source-swamp.ts): Rust is at least the PGLite and the Postgres value.",
+          "losses": [
+            {
+              "id": "cat13b/top1",
+              "reason": "Rust run did not complete (error): adapter init/teardown failed: OperationError: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.; adapter init/teardown failed: OperationError: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.; adapter init/teardown failed: OperationError: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.; adapter init/teardown failed: OperationError: This brain's engine does not support read"
+            },
+            {
+              "id": "cat13b/top1:refusal-sites",
+              "reason": "The Rust run refused 2 engine calls at: core/persistence/maintenance.ts:59 (readManagedModeRows, persistence_journal, from core/import-file.ts:347) x2"
+            }
+          ]
+        },
+        {
+          "id": "cat10",
+          "benchmark": "gbrain-evals Cat 10 133/133",
+          "gating": true,
+          "verdict": "PASS",
+          "measured": {
+            "pglite": {
+              "ops_succeeded": 133,
+              "ops_attempted": 133
+            },
+            "postgres": {
+              "ops_succeeded": 133,
+              "ops_attempted": 133
+            },
+            "rust": {
+              "ops_succeeded": 133,
+              "ops_attempted": 133
+            }
+          },
+          "reading": "cat10 (E1, Cat 10 adversarial input, ops succeeded; eval/runner/adversarial.ts): Rust passes every case of its own run.",
+          "losses": []
+        },
+        {
+          "id": "cat12",
+          "benchmark": "gbrain-evals Cat 12 50/50",
+          "gating": true,
+          "verdict": "FAIL",
+          "reason": "18/24 on Rust (verdict fail). traverse_graph depth=1000 over a 16-node chain stops at the 10-hop cap: rejected: This brain's engine does not support traversePathsDetailed (option excludePrivate) yet (it needs the | traverse_graph depth=5 (under cap) is honored exactly: GraphPath frontier at 5 hops: unexpected error: This brain's engine does not support traversePathsDetailed (option excludePrivate) yet (it needs the | traverse_graph remote call with depth AND direction defaulted walks exactly 2 hops: unexpected error: This brain's engine does not support traversePathsDetailed (option excludePrivate) yet (it needs the | traverse_graph remote no-direction call defaults to direction=both (inbound edge into the start page is returned): unexpected error: This brain's engine does not support traversePathsDetailed (option excludePrivate) yet (it needs the | list_pages limit=1M from remote is clamped: errored: This brain's engine does not support listPages (option excludePrivate) yet (it needs the pages capab | list_pages limit=120: honored locally, clamped remotely: local: This brain's engine does not support listPages (option listC; remote: This brain's engine does not support listPages (option exclu | The Rust run refused 54 engine calls at: core/ops/links.ts:636 (traversePathsDetailed, graph, from core/guests/marker.ts:147) x3; core/ops/pages.ts:635 (listPages, pages, from core/guests/marker.ts:147) x3; core/ops/pages.ts:161 (readPageSnapshot, pages, from core/guests/marker.ts:147) x6; core/search/keyword-paging.ts:132 (countKeywordPages, keyword_search, from core/search/keyword",
+          "measured": {
+            "pglite": {
+              "passed": 24,
+              "total": 24,
+              "operations": 224,
+              "operations_missing": 0
+            },
+            "postgres": {
+              "passed": 24,
+              "total": 24,
+              "operations": 224,
+              "operations_missing": 0
+            },
+            "rust": {
+              "passed": 18,
+              "total": 24,
+              "operations": 224,
+              "operations_missing": 0
+            }
+          },
+          "reading": "cat12 (E1, Cat 12 MCP operation contract, behavioural assertions; eval/runner/mcp-contract.ts): Rust passes every case of its own run and matches each TypeScript engine on operations and operations_missing. Our reading of RUST_ENGINE.md at gbrain 09b9ac5c, which Ember kept on 2026-11-23: RUST_ENGINE.md says 50/50; the runner has 24 behavioural assertions, so the gate reads 24/24, and the MCP handler walk must reach the same operation count, with the same number missing, on all three engines.",
+          "losses": [
+            {
+              "id": "cat12",
+              "reason": "18/24 on Rust (verdict fail). traverse_graph depth=1000 over a 16-node chain stops at the 10-hop cap: rejected: This brain's engine does not support traversePathsDetailed (option excludePrivate) yet (it needs the | traverse_graph depth=5 (under cap) is honored exactly: GraphPath frontier at 5 hops: unexpected error: This brain's engine does not support traversePathsDetailed (option excludePrivate) yet (it needs the | traverse_graph remote call with depth AND direction defaulted walks exactly 2 hops: unexpected error: This brain's engine does not support traversePathsDetailed (option excludePrivate) yet (it needs the | traverse_graph remote no-direction call defaults to direction=both (inbound edge into the start page is returned): unexpected error: This brain's engine does not support traversePathsDetailed (option excludePrivate) yet (it needs the | list_pages limit=1M from remote is clamped: errored: This brain's engine does not support listPages (option excludePrivate) yet (it needs the pages capab | list_pages limit=120: honored locally, clamped remotely: local: This brain's engine does not support listPages (option listC; remote: This brain's engine does not support listPages (option exclu"
+            },
+            {
+              "id": "cat12:refusal-sites",
+              "reason": "The Rust run refused 54 engine calls at: core/ops/links.ts:636 (traversePathsDetailed, graph, from core/guests/marker.ts:147) x3; core/ops/pages.ts:635 (listPages, pages, from core/guests/marker.ts:147) x3; core/ops/pages.ts:161 (readPageSnapshot, pages, from core/guests/marker.ts:147) x6; core/search/keyword-paging.ts:132 (countKeywordPages, keyword_search, from core/search/keyword-paging.ts:159) x6; core/ops/search.ts:258 (hasUnsealedPages, chunks, from core/ops/search.ts:407) x6; core/search/projection-readiness.ts:47 (executeRaw, raw_sql, from core/search/projection-readiness.ts:68) x6; core/persistence/held-reads.ts:103 (executeRaw, raw_sql, from core/persistence/held-reads.ts:73) x6; core/notifier/status.ts:95 (hasNotifierCoverage, persistence_journal, from core/notifier/status.ts:109) x6; core/search/projection-readiness.ts:106 (executeRaw, raw_sql, from core/search/projection-readiness.ts:69) x6; core/search/retrieval-coverage.ts:131 (executeRaw, raw_sql, from core/search/retrieval-coverage.ts:164) x6"
+            }
+          ]
+        },
+        {
+          "id": "cat7",
+          "benchmark": "gbrain-evals Cat 7, reported",
+          "gating": false,
+          "verdict": "PASS",
+          "measured": {
+            "pglite": {
+              "get_page@1000.p50_ms": 0.4279390000001513,
+              "get_links@1000.p50_ms": 1.0965919999998732,
+              "get_backlinks@1000.p50_ms": 0.13584499999979016,
+              "get_backlinks_hub@1000.p50_ms": 0.7014735000002474,
+              "get_timeline@1000.p50_ms": 0.0745230000002266,
+              "get_stats@1000.p50_ms": 2.1371320000002925,
+              "list_pages_50@1000.p50_ms": 1.2746325000002798,
+              "search_keyword@1000.p50_ms": 0.1582799999996496,
+              "traverse_paths_d1@1000.p50_ms": 1.3339045000002443,
+              "traverse_paths_d2@1000.p50_ms": 24.48865700000033,
+              "putPage_single@1000.p50_ms": 1.029815000000326,
+              "get_page@10000.p50_ms": 1.662284500001988,
+              "get_links@10000.p50_ms": 1.464577000002464,
+              "get_backlinks@10000.p50_ms": 0.55763499999739,
+              "get_backlinks_hub@10000.p50_ms": 1.133485499998642,
+              "get_timeline@10000.p50_ms": 0.07115250000060769,
+              "get_stats@10000.p50_ms": 7.297698999998829,
+              "list_pages_50@10000.p50_ms": 1.195303000000422,
+              "search_keyword@10000.p50_ms": 0.13282900000194786,
+              "traverse_paths_d1@10000.p50_ms": 1.409740499999316,
+              "traverse_paths_d2@10000.p50_ms": 110.27986750000127,
+              "putPage_single@10000.p50_ms": 1.0175204999977723,
+              "putPage_bulk@1000.ops_per_sec": 657.6303408900659,
+              "addLink_bulk@1000.ops_per_sec": 4307.033616359591,
+              "putPage_bulk@10000.ops_per_sec": 301.9912154083381,
+              "addLink_bulk@10000.ops_per_sec": 4394.911284457287
+            },
+            "postgres": {
+              "get_page@1000.p50_ms": 0.5750959999995757,
+              "get_links@1000.p50_ms": 1.934860000000299,
+              "get_backlinks@1000.p50_ms": 1.9239644999997836,
+              "get_backlinks_hub@1000.p50_ms": 2.7220829999996567,
+              "get_timeline@1000.p50_ms": 0.44568100000014965,
+              "get_stats@1000.p50_ms": 4.6293569999998,
+              "list_pages_50@1000.p50_ms": 4.285404999999628,
+              "search_keyword@1000.p50_ms": 4.5061424999994415,
+              "traverse_paths_d1@1000.p50_ms": 10.193183000000317,
+              "traverse_paths_d2@1000.p50_ms": 105.66595749999942,
+              "putPage_single@1000.p50_ms": 4.322682499998336,
+              "get_page@10000.p50_ms": 0.7913899999985006,
+              "get_links@10000.p50_ms": 0.4368664999929024,
+              "get_backlinks@10000.p50_ms": 0.45953300000110175,
+              "get_backlinks_hub@10000.p50_ms": 1.1354284999979427,
+              "get_timeline@10000.p50_ms": 0.5260200000047917,
+              "get_stats@10000.p50_ms": 10.778236499994819,
+              "list_pages_50@10000.p50_ms": 1.8015340000056312,
+              "search_keyword@10000.p50_ms": 4.147383499999705,
+              "traverse_paths_d1@10000.p50_ms": 61.851110000003246,
+              "traverse_paths_d2@10000.p50_ms": 241.06547500000306,
+              "putPage_single@10000.p50_ms": 5.837918499993975,
+              "putPage_bulk@1000.ops_per_sec": 220.98087560876996,
+              "addLink_bulk@1000.ops_per_sec": 1510.7179955492556,
+              "putPage_bulk@10000.ops_per_sec": 242.06323739250624,
+              "addLink_bulk@10000.ops_per_sec": 1135.416825537459
+            },
+            "rust": {
+              "get_page@1000.p50_ms": 0.20208750000028886,
+              "get_links@1000.p50_ms": 0.1532710000001316,
+              "get_backlinks@1000.p50_ms": 0.13731000000007043,
+              "get_backlinks_hub@1000.p50_ms": 2.185308999999961,
+              "get_timeline@1000.p50_ms": 0.09268800000018018,
+              "get_stats@1000.p50_ms": 21.799613000000136,
+              "list_pages_50@1000.p50_ms": 7.191087000000152,
+              "search_keyword@1000.p50_ms": 0.20377800000005664,
+              "traverse_paths_d1@1000.p50_ms": 2.3114789999990535,
+              "traverse_paths_d2@1000.p50_ms": 37.66674849999981,
+              "putPage_single@1000.p50_ms": 1.5594950000004246,
+              "get_page@10000.p50_ms": 0.14706549999391427,
+              "get_links@10000.p50_ms": 0.06296850000217091,
+              "get_backlinks@10000.p50_ms": 0.06629850000172155,
+              "get_backlinks_hub@10000.p50_ms": 0.8769529999990482,
+              "get_timeline@10000.p50_ms": 0.05089849999785656,
+              "get_stats@10000.p50_ms": 109.97219549999863,
+              "list_pages_50@10000.p50_ms": 24.360393999995722,
+              "search_keyword@10000.p50_ms": 0.12771199999406235,
+              "traverse_paths_d1@10000.p50_ms": 1.0683534999989206,
+              "traverse_paths_d2@10000.p50_ms": 56.927050999998755,
+              "putPage_single@10000.p50_ms": 1.913682999998855,
+              "putPage_bulk@1000.ops_per_sec": 405.13252330280454,
+              "addLink_bulk@1000.ops_per_sec": 1253.0178969021042,
+              "putPage_bulk@10000.ops_per_sec": 292.65877159085056,
+              "addLink_bulk@10000.ops_per_sec": 667.740282344176
+            }
+          },
+          "reading": "cat7 (E1, Cat 7 latency and throughput, 1K and 10K pages; eval/runner/perf.ts): reported: it ran on every engine and each metric Rust loses is listed.",
+          "losses": [
+            {
+              "id": "cat7:get_backlinks@1000.p50_ms:vs-pglite",
+              "reason": "Rust 0.137 vs pglite 0.136"
+            },
+            {
+              "id": "cat7:get_backlinks_hub@1000.p50_ms:vs-pglite",
+              "reason": "Rust 2.185 vs pglite 0.701"
+            },
+            {
+              "id": "cat7:get_timeline@1000.p50_ms:vs-pglite",
+              "reason": "Rust 0.093 vs pglite 0.075"
+            },
+            {
+              "id": "cat7:get_stats@1000.p50_ms:vs-pglite",
+              "reason": "Rust 21.800 vs pglite 2.137"
+            },
+            {
+              "id": "cat7:get_stats@1000.p50_ms:vs-postgres",
+              "reason": "Rust 21.800 vs postgres 4.629"
+            },
+            {
+              "id": "cat7:list_pages_50@1000.p50_ms:vs-pglite",
+              "reason": "Rust 7.191 vs pglite 1.275"
+            },
+            {
+              "id": "cat7:list_pages_50@1000.p50_ms:vs-postgres",
+              "reason": "Rust 7.191 vs postgres 4.285"
+            },
+            {
+              "id": "cat7:search_keyword@1000.p50_ms:vs-pglite",
+              "reason": "Rust 0.204 vs pglite 0.158"
+            },
+            {
+              "id": "cat7:traverse_paths_d1@1000.p50_ms:vs-pglite",
+              "reason": "Rust 2.311 vs pglite 1.334"
+            },
+            {
+              "id": "cat7:traverse_paths_d2@1000.p50_ms:vs-pglite",
+              "reason": "Rust 37.667 vs pglite 24.489"
+            },
+            {
+              "id": "cat7:putPage_single@1000.p50_ms:vs-pglite",
+              "reason": "Rust 1.559 vs pglite 1.030"
+            },
+            {
+              "id": "cat7:get_stats@10000.p50_ms:vs-pglite",
+              "reason": "Rust 109.972 vs pglite 7.298"
+            },
+            {
+              "id": "cat7:get_stats@10000.p50_ms:vs-postgres",
+              "reason": "Rust 109.972 vs postgres 10.778"
+            },
+            {
+              "id": "cat7:list_pages_50@10000.p50_ms:vs-pglite",
+              "reason": "Rust 24.360 vs pglite 1.195"
+            },
+            {
+              "id": "cat7:list_pages_50@10000.p50_ms:vs-postgres",
+              "reason": "Rust 24.360 vs postgres 1.802"
+            },
+            {
+              "id": "cat7:putPage_single@10000.p50_ms:vs-pglite",
+              "reason": "Rust 1.914 vs pglite 1.018"
+            },
+            {
+              "id": "cat7:putPage_bulk@1000.ops_per_sec:vs-pglite",
+              "reason": "Rust 405.133 vs pglite 657.630"
+            },
+            {
+              "id": "cat7:addLink_bulk@1000.ops_per_sec:vs-pglite",
+              "reason": "Rust 1253.018 vs pglite 4307.034"
+            },
+            {
+              "id": "cat7:addLink_bulk@1000.ops_per_sec:vs-postgres",
+              "reason": "Rust 1253.018 vs postgres 1510.718"
+            },
+            {
+              "id": "cat7:putPage_bulk@10000.ops_per_sec:vs-pglite",
+              "reason": "Rust 292.659 vs pglite 301.991"
+            },
+            {
+              "id": "cat7:addLink_bulk@10000.ops_per_sec:vs-pglite",
+              "reason": "Rust 667.740 vs pglite 4394.911"
+            },
+            {
+              "id": "cat7:addLink_bulk@10000.ops_per_sec:vs-postgres",
+              "reason": "Rust 667.740 vs postgres 1135.417"
+            }
+          ]
+        }
+      ],
+      "losses": [
+        {
+          "id": "lme-s/keyword/vs-pglite",
+          "reason": "Rust errored on 470 question(s) pglite answered",
+          "gating": true
+        },
+        {
+          "id": "lme-s/keyword/vs-postgres",
+          "reason": "Rust errored on 470 question(s) postgres answered",
+          "gating": true
+        },
+        {
+          "id": "lme-s/vector/vs-pglite",
+          "reason": "Rust errored on 470 question(s) pglite answered",
+          "gating": true
+        },
+        {
+          "id": "lme-s/vector/vs-postgres",
+          "reason": "Rust errored on 470 question(s) postgres answered",
+          "gating": true
+        },
+        {
+          "id": "lme-s/hybrid/vs-pglite",
+          "reason": "Rust errored on 470 question(s) pglite answered",
+          "gating": true
+        },
+        {
+          "id": "lme-s/hybrid/vs-postgres",
+          "reason": "Rust errored on 470 question(s) postgres answered",
+          "gating": true
+        },
+        {
+          "id": "cat13/ndcg5",
+          "reason": "Rust run did not complete (error): adapter init/teardown failed: OperationError: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.; adapter init/teardown failed: OperationError: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.; adapter init/teardown failed: OperationError: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.; adapter init/teardown failed: OperationError: This brain's engine does not support read",
+          "gating": false
+        },
+        {
+          "id": "cat13/ndcg5:refusal-sites",
+          "reason": "The Rust run refused 1 engine calls at: core/persistence/maintenance.ts:59 (readManagedModeRows, persistence_journal, from core/import-file.ts:347) x1",
+          "gating": false
+        },
+        {
+          "id": "cat13b/top1",
+          "reason": "Rust run did not complete (error): adapter init/teardown failed: OperationError: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.; adapter init/teardown failed: OperationError: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.; adapter init/teardown failed: OperationError: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.; adapter init/teardown failed: OperationError: This brain's engine does not support read",
+          "gating": true
+        },
+        {
+          "id": "cat13b/top1:refusal-sites",
+          "reason": "The Rust run refused 2 engine calls at: core/persistence/maintenance.ts:59 (readManagedModeRows, persistence_journal, from core/import-file.ts:347) x2",
+          "gating": true
+        },
+        {
+          "id": "cat12",
+          "reason": "18/24 on Rust (verdict fail). traverse_graph depth=1000 over a 16-node chain stops at the 10-hop cap: rejected: This brain's engine does not support traversePathsDetailed (option excludePrivate) yet (it needs the | traverse_graph depth=5 (under cap) is honored exactly: GraphPath frontier at 5 hops: unexpected error: This brain's engine does not support traversePathsDetailed (option excludePrivate) yet (it needs the | traverse_graph remote call with depth AND direction defaulted walks exactly 2 hops: unexpected error: This brain's engine does not support traversePathsDetailed (option excludePrivate) yet (it needs the | traverse_graph remote no-direction call defaults to direction=both (inbound edge into the start page is returned): unexpected error: This brain's engine does not support traversePathsDetailed (option excludePrivate) yet (it needs the | list_pages limit=1M from remote is clamped: errored: This brain's engine does not support listPages (option excludePrivate) yet (it needs the pages capab | list_pages limit=120: honored locally, clamped remotely: local: This brain's engine does not support listPages (option listC; remote: This brain's engine does not support listPages (option exclu",
+          "gating": true
+        },
+        {
+          "id": "cat12:refusal-sites",
+          "reason": "The Rust run refused 54 engine calls at: core/ops/links.ts:636 (traversePathsDetailed, graph, from core/guests/marker.ts:147) x3; core/ops/pages.ts:635 (listPages, pages, from core/guests/marker.ts:147) x3; core/ops/pages.ts:161 (readPageSnapshot, pages, from core/guests/marker.ts:147) x6; core/search/keyword-paging.ts:132 (countKeywordPages, keyword_search, from core/search/keyword-paging.ts:159) x6; core/ops/search.ts:258 (hasUnsealedPages, chunks, from core/ops/search.ts:407) x6; core/search/projection-readiness.ts:47 (executeRaw, raw_sql, from core/search/projection-readiness.ts:68) x6; core/persistence/held-reads.ts:103 (executeRaw, raw_sql, from core/persistence/held-reads.ts:73) x6; core/notifier/status.ts:95 (hasNotifierCoverage, persistence_journal, from core/notifier/status.ts:109) x6; core/search/projection-readiness.ts:106 (executeRaw, raw_sql, from core/search/projection-readiness.ts:69) x6; core/search/retrieval-coverage.ts:131 (executeRaw, raw_sql, from core/search/retrieval-coverage.ts:164) x6",
+          "gating": true
+        },
+        {
+          "id": "cat7:get_backlinks@1000.p50_ms:vs-pglite",
+          "reason": "Rust 0.137 vs pglite 0.136",
+          "gating": false
+        },
+        {
+          "id": "cat7:get_backlinks_hub@1000.p50_ms:vs-pglite",
+          "reason": "Rust 2.185 vs pglite 0.701",
+          "gating": false
+        },
+        {
+          "id": "cat7:get_timeline@1000.p50_ms:vs-pglite",
+          "reason": "Rust 0.093 vs pglite 0.075",
+          "gating": false
+        },
+        {
+          "id": "cat7:get_stats@1000.p50_ms:vs-pglite",
+          "reason": "Rust 21.800 vs pglite 2.137",
+          "gating": false
+        },
+        {
+          "id": "cat7:get_stats@1000.p50_ms:vs-postgres",
+          "reason": "Rust 21.800 vs postgres 4.629",
+          "gating": false
+        },
+        {
+          "id": "cat7:list_pages_50@1000.p50_ms:vs-pglite",
+          "reason": "Rust 7.191 vs pglite 1.275",
+          "gating": false
+        },
+        {
+          "id": "cat7:list_pages_50@1000.p50_ms:vs-postgres",
+          "reason": "Rust 7.191 vs postgres 4.285",
+          "gating": false
+        },
+        {
+          "id": "cat7:search_keyword@1000.p50_ms:vs-pglite",
+          "reason": "Rust 0.204 vs pglite 0.158",
+          "gating": false
+        },
+        {
+          "id": "cat7:traverse_paths_d1@1000.p50_ms:vs-pglite",
+          "reason": "Rust 2.311 vs pglite 1.334",
+          "gating": false
+        },
+        {
+          "id": "cat7:traverse_paths_d2@1000.p50_ms:vs-pglite",
+          "reason": "Rust 37.667 vs pglite 24.489",
+          "gating": false
+        },
+        {
+          "id": "cat7:putPage_single@1000.p50_ms:vs-pglite",
+          "reason": "Rust 1.559 vs pglite 1.030",
+          "gating": false
+        },
+        {
+          "id": "cat7:get_stats@10000.p50_ms:vs-pglite",
+          "reason": "Rust 109.972 vs pglite 7.298",
+          "gating": false
+        },
+        {
+          "id": "cat7:get_stats@10000.p50_ms:vs-postgres",
+          "reason": "Rust 109.972 vs postgres 10.778",
+          "gating": false
+        },
+        {
+          "id": "cat7:list_pages_50@10000.p50_ms:vs-pglite",
+          "reason": "Rust 24.360 vs pglite 1.195",
+          "gating": false
+        },
+        {
+          "id": "cat7:list_pages_50@10000.p50_ms:vs-postgres",
+          "reason": "Rust 24.360 vs postgres 1.802",
+          "gating": false
+        },
+        {
+          "id": "cat7:putPage_single@10000.p50_ms:vs-pglite",
+          "reason": "Rust 1.914 vs pglite 1.018",
+          "gating": false
+        },
+        {
+          "id": "cat7:putPage_bulk@1000.ops_per_sec:vs-pglite",
+          "reason": "Rust 405.133 vs pglite 657.630",
+          "gating": false
+        },
+        {
+          "id": "cat7:addLink_bulk@1000.ops_per_sec:vs-pglite",
+          "reason": "Rust 1253.018 vs pglite 4307.034",
+          "gating": false
+        },
+        {
+          "id": "cat7:addLink_bulk@1000.ops_per_sec:vs-postgres",
+          "reason": "Rust 1253.018 vs postgres 1510.718",
+          "gating": false
+        },
+        {
+          "id": "cat7:putPage_bulk@10000.ops_per_sec:vs-pglite",
+          "reason": "Rust 292.659 vs pglite 301.991",
+          "gating": false
+        },
+        {
+          "id": "cat7:addLink_bulk@10000.ops_per_sec:vs-pglite",
+          "reason": "Rust 667.740 vs pglite 4394.911",
+          "gating": false
+        },
+        {
+          "id": "cat7:addLink_bulk@10000.ops_per_sec:vs-postgres",
+          "reason": "Rust 667.740 vs postgres 1135.417",
+          "gating": false
+        }
+      ]
+    },
+    "E2": {
+      "verdict": "FAIL",
+      "threshold": "P@5 and R@5 at least both the PGLite and the Postgres value; Cat 4 100%; Cat 24 5/5; conformance 24/24",
+      "measured": null,
+      "rows": [
+        {
+          "id": "brainbench/cats-1-2",
+          "benchmark": "BrainBench Cats 1+2 (graph on), P@5 and R@5 at least both values",
+          "gating": true,
+          "verdict": "FAIL",
+          "reason": "Rust wrote no receipt: its runner failed (exit 1) without one, where both TypeScript engines completed. Log tail: \n\nGenerated: 2026-11-27T06:42:04\nCorpus: 240 rich-prose pages from eval/data/world-v1/\nRelational queries: 145\n\n## Seeding corpus + running extract (v0.10.4 stack)\nError [engine_capability_missing]: This brain's engine does not support executeRaw yet (it needs the raw_sql capability), so nothing ran.\nFix: Run it on a pglite or postgres brain, or wait for a gbrain release whose Rust engine supports it.\nDocs: https://github.com/garrytan/gbrain/blob/v0.60.777.0/docs/ENGINES.md#the-rust-engine-shell | The Rust run refused 1 engine calls at: core/wanted-links-store.ts:36 (executeRaw, raw_sql, from commands/extract.ts:1900) x1",
+          "measured": {
+            "pglite": {
+              "p5": 0.33655172413793105,
+              "r5": 0.9348659003831418,
+              "questions": 145
+            },
+            "postgres": {
+              "p5": 0.33655172413793105,
+              "r5": 0.9348659003831418,
+              "questions": 145
+            },
+            "rust": null
+          },
+          "reading": "brainbench/cats-1-2 (E2, BrainBench Cat 1 relational retrieval, graph-first (before-after.ts AFTER column, 145 relational questions), P@5 and R@5; eval/runner/before-after.ts): Rust is at least the PGLite and the Postgres value. Ember's reading of RUST_ENGINE.md (lines 489 and 498, and plan D24) at gbrain master 5c9f3051, fixed 2026-11-23 after the keyless b66e4077 pilot had produced Rust numbers: The gate row is Cat 1 relational graph-first (before-after.ts, graph-first column): P@5 and R@5 on the 145 relational questions, each at least both PGLite and Postgres. graph-oracle-parse and the gbrain product adapter row (multi-adapter.ts) are reported beside it and do not gate.",
+          "losses": [
+            {
+              "id": "brainbench/cats-1-2",
+              "reason": "Rust wrote no receipt: its runner failed (exit 1) without one, where both TypeScript engines completed. Log tail: \n\nGenerated: 2026-11-27T06:42:04\nCorpus: 240 rich-prose pages from eval/data/world-v1/\nRelational queries: 145\n\n## Seeding corpus + running extract (v0.10.4 stack)\nError [engine_capability_missing]: This brain's engine does not support executeRaw yet (it needs the raw_sql capability), so nothing ran.\nFix: Run it on a pglite or postgres brain, or wait for a gbrain release whose Rust engine supports it.\nDocs: https://github.com/garrytan/gbrain/blob/v0.60.777.0/docs/ENGINES.md#the-rust-engine-shell"
+            },
+            {
+              "id": "brainbench/cats-1-2:refusal-sites",
+              "reason": "The Rust run refused 1 engine calls at: core/wanted-links-store.ts:36 (executeRaw, raw_sql, from commands/extract.ts:1900) x1"
+            }
+          ]
+        },
+        {
+          "id": "brainbench/cats-1-2:beside",
+          "benchmark": "BrainBench Cats 1+2 relational retrieval, multi-adapter graph-oracle-parse and the gbrain product row on hash embeddings (reported beside, never gates)",
+          "gating": false,
+          "verdict": "NOT_RUN",
+          "reason": "Rust wrote no receipt: its runner failed (exit 1) without one, where both TypeScript engines completed. Log tail: \n\nGenerated: 2026-11-27T06:42:04\nCorpus: 240 rich-prose pages from eval/data/world-v1/\nRelational queries: 145\n\n## Seeding corpus + running extract (v0.10.4 stack)\nError [engine_capability_missing]: This brain's engine does not support executeRaw yet (it needs the raw_sql capability), so nothing ran.\nFix: Run it on a pglite or postgres brain, or wait for a gbrain release whose Rust engine supports it.\nDocs: https://github.com/garrytan/gbrain/blob/v0.60.777.0/docs/ENGINES.md#the-rust-engine-shell | The Rust run refused 1 engine calls at: core/wanted-links-store.ts:36 (executeRaw, raw_sql, from commands/extract.ts:1900) x1",
+          "measured": {},
+          "losses": []
+        },
+        {
+          "id": "brainbench/cat3",
+          "benchmark": "BrainBench Cat 3, P@5 and R@5 at least both values",
+          "gating": true,
+          "verdict": "FAIL",
+          "reason": "Rust wrote no receipt: its runner failed (exit 1) without one, where both TypeScript engines completed. Log tail: a412ee0009/src/core/ops/contract.ts:204:13)\n      at refuse (.gbrain-overlays/d8eb35769120cf0b60704478aaef96a412ee0009/src/core/rust-engine.ts:340:29)\n      at <anonymous> (eval/runner/eval-engine.ts:258:58)\n      at readProjectionSnapshot (.gbrain-overlays/d8eb35769120cf0b60704478aaef96a412ee0009/src/core/page-state/projections.ts:136:17)\n      at main (eval/runner/identity.ts:138:28) | The Rust run refused 1 engine calls at: core/page-state/projections.ts:136 (transaction, transactions) x1",
+          "measured": {
+            "pglite": {
+              "r5_documented": 1,
+              "p5_documented": 0.2,
+              "top1_documented": 0.975,
+              "r5_undocumented": 0.1125,
+              "p5_undocumented": 0.0225,
+              "top1_undocumented": 0.0875
+            },
+            "postgres": {
+              "r5_documented": 1,
+              "p5_documented": 0.2,
+              "top1_documented": 0.975,
+              "r5_undocumented": 0.1125,
+              "p5_undocumented": 0.0225,
+              "top1_undocumented": 0.0875
+            },
+            "rust": null
+          },
+          "reading": "brainbench/cat3 (E2, Cat 3 alias lookup through keyword search, R@5 and P@5 (top-1 beside); eval/runner/identity.ts): Rust is at least the PGLite and the Postgres value. Ember's reading of RUST_ENGINE.md (lines 489 and 498, and plan D24) at gbrain master 5c9f3051, fixed 2026-11-23 after the keyless b66e4077 pilot had produced Rust numbers: Cat 3 is read on R@5 and P@5 from the same ranks (P@5 = top-5 hits / 5), each at least both TypeScript values, per alias category, with top-1 beside. Any value that differs from either TypeScript value is listed as a divergence with the queries that differ, never counted as a win.",
+          "losses": [
+            {
+              "id": "brainbench/cat3",
+              "reason": "Rust wrote no receipt: its runner failed (exit 1) without one, where both TypeScript engines completed. Log tail: a412ee0009/src/core/ops/contract.ts:204:13)\n      at refuse (.gbrain-overlays/d8eb35769120cf0b60704478aaef96a412ee0009/src/core/rust-engine.ts:340:29)\n      at <anonymous> (eval/runner/eval-engine.ts:258:58)\n      at readProjectionSnapshot (.gbrain-overlays/d8eb35769120cf0b60704478aaef96a412ee0009/src/core/page-state/projections.ts:136:17)\n      at main (eval/runner/identity.ts:138:28)"
+            },
+            {
+              "id": "brainbench/cat3:refusal-sites",
+              "reason": "The Rust run refused 1 engine calls at: core/page-state/projections.ts:136 (transaction, transactions) x1"
+            }
+          ]
+        },
+        {
+          "id": "brainbench/cat4",
+          "benchmark": "BrainBench Cat 4 100%",
+          "gating": true,
+          "verdict": "PASS",
+          "measured": {
+            "pglite": {
+              "passed": 114,
+              "total": 114
+            },
+            "postgres": {
+              "passed": 114,
+              "total": 114
+            },
+            "rust": {
+              "passed": 114,
+              "total": 114
+            }
+          },
+          "reading": "brainbench/cat4 (E2, Cat 4 timeline round-trip; eval/runner/temporal.ts): Rust passes every case of its own run.",
+          "losses": []
+        },
+        {
+          "id": "brainbench/type-accuracy",
+          "benchmark": "type-accuracy, at least both values",
+          "gating": true,
+          "verdict": "FAIL",
+          "reason": "Rust wrote no receipt: its runner failed (exit 1) without one, where both TypeScript engines completed. Log tail: # BrainBench — type accuracy on rich-prose corpus\n\nGenerated: 2026-11-27T06:48:44\nCorpus: eval/data/world-v1/\nLoaded 240 pages.\n\nError [engine_capability_missing]: This brain's engine does not support executeRaw yet (it needs the raw_sql capability), so nothing ran.\nFix: Run it on a pglite or postgres brain, or wait for a gbrain release whose Rust engine supports it.\nDocs: https://github.com/garrytan/gbrain/blob/v0.60.777.0/docs/ENGINES.md#the-rust-engine-shell | The Rust run refused 1 engine calls at: core/wanted-links-store.ts:36 (executeRaw, raw_sql, from commands/extract.ts:1900) x1",
+          "measured": {
+            "pglite": {
+              "strict_f1": 0.2591743119266055,
+              "type_accuracy": 0.773972602739726,
+              "f1.attended": 0,
+              "f1.invested_in": 0.7239263803680981,
+              "f1.founded": 0.5470085470085471,
+              "f1.advises": 0.4705882352941177,
+              "f1.works_at": 0.5405405405405406,
+              "f1.mentions": 0
+            },
+            "postgres": {
+              "strict_f1": 0.2591743119266055,
+              "type_accuracy": 0.773972602739726,
+              "f1.attended": 0,
+              "f1.invested_in": 0.7239263803680981,
+              "f1.founded": 0.5470085470085471,
+              "f1.advises": 0.4705882352941177,
+              "f1.works_at": 0.5405405405405406,
+              "f1.mentions": 0
+            },
+            "rust": null
+          },
+          "reading": "brainbench/type-accuracy (E2, Link type accuracy of the links the engine stores (world-v1); eval/runner/type-accuracy.ts): Rust is at least the PGLite and the Postgres value. Ember's reading of RUST_ENGINE.md (lines 489 and 498, and plan D24) at gbrain master 5c9f3051, fixed 2026-11-23 after the keyless b66e4077 pilot had produced Rust numbers: type-accuracy has no P@5 or R@5; it is read on strict F1, type accuracy and every per-type F1 of the links the engine stores, each at least both TypeScript values. Any value that differs from either TypeScript value is listed as a divergence with its differing edges, never counted as a win.",
+          "losses": [
+            {
+              "id": "brainbench/type-accuracy",
+              "reason": "Rust wrote no receipt: its runner failed (exit 1) without one, where both TypeScript engines completed. Log tail: # BrainBench — type accuracy on rich-prose corpus\n\nGenerated: 2026-11-27T06:48:44\nCorpus: eval/data/world-v1/\nLoaded 240 pages.\n\nError [engine_capability_missing]: This brain's engine does not support executeRaw yet (it needs the raw_sql capability), so nothing ran.\nFix: Run it on a pglite or postgres brain, or wait for a gbrain release whose Rust engine supports it.\nDocs: https://github.com/garrytan/gbrain/blob/v0.60.777.0/docs/ENGINES.md#the-rust-engine-shell"
+            },
+            {
+              "id": "brainbench/type-accuracy:refusal-sites",
+              "reason": "The Rust run refused 1 engine calls at: core/wanted-links-store.ts:36 (executeRaw, raw_sql, from commands/extract.ts:1900) x1"
+            }
+          ]
+        },
+        {
+          "id": "brainbench/cat24",
+          "benchmark": "Cat 24 5/5",
+          "gating": true,
+          "verdict": "FAIL",
+          "reason": "1/7 on Rust (verdict fail). content-import: content-import (inbox/2026-05-23-content-import): ingestion path threw: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran. | file-import-no-channel-provenance: file-import-no-channel-provenance (inbox/2026-05-23-file-import): ingestion path threw: This brain's engine does not support executeRaw yet (it needs the raw_sql capability), so nothing ran. | op-put-page-local-trusted: op-put-page-local-trusted (inbox/2026-05-23-op-local): ingestion path threw: This brain's engine does not support readPersistenceBrainId yet (it needs the persistence_journal capability), so nothing r | op-put-page-remote-spoof-override: op-put-page-remote-spoof-override (inbox/2026-05-23-op-remote): ingestion path threw: This brain's engine does not support executeRaw yet (it needs the raw_sql capability), so nothing ran. | dedup-hash-short-circuit: expected exactly 1 pre-existing row with chunks for inbox/2026-05-23-content-import, found 0 row(s), 0 chunk(s) | provenance-preserved-on-reimport: precondition failed: content-import row missing its provenance | The Rust run refused 4 engine calls at: core/persistence/maintenance.ts:59 (readManagedModeRows, persistence_journal, from core/import-file.ts:347) x1; core/trust/channel.ts:251 (executeRaw, raw_sql, from core/import-file.ts:1171) x1; core/persistence/identity.ts:207 (readPersistenceBrainId, persistence_journal, from core/persistence/identity.ts:221) x1; core/persistence/large-page-guard.ts:35 (executeRaw, raw_sql, from core/ops/pa",
+          "measured": {
+            "pglite": {
+              "passed": 7,
+              "total": 7
+            },
+            "postgres": {
+              "passed": 7,
+              "total": 7
+            },
+            "rust": {
+              "passed": 1,
+              "total": 7
+            }
+          },
+          "reading": "brainbench/cat24 (E2, Cat 24 capture provenance; eval/runner/cat24-capture-provenance.ts): Rust passes every case of its own run. Our reading of RUST_ENGINE.md at gbrain 09b9ac5c, which Ember kept on 2026-11-23: RUST_ENGINE.md says 5/5; the runner has 7 probes, so the gate reads 7/7.",
+          "losses": [
+            {
+              "id": "brainbench/cat24",
+              "reason": "1/7 on Rust (verdict fail). content-import: content-import (inbox/2026-05-23-content-import): ingestion path threw: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran. | file-import-no-channel-provenance: file-import-no-channel-provenance (inbox/2026-05-23-file-import): ingestion path threw: This brain's engine does not support executeRaw yet (it needs the raw_sql capability), so nothing ran. | op-put-page-local-trusted: op-put-page-local-trusted (inbox/2026-05-23-op-local): ingestion path threw: This brain's engine does not support readPersistenceBrainId yet (it needs the persistence_journal capability), so nothing r | op-put-page-remote-spoof-override: op-put-page-remote-spoof-override (inbox/2026-05-23-op-remote): ingestion path threw: This brain's engine does not support executeRaw yet (it needs the raw_sql capability), so nothing ran. | dedup-hash-short-circuit: expected exactly 1 pre-existing row with chunks for inbox/2026-05-23-content-import, found 0 row(s), 0 chunk(s) | provenance-preserved-on-reimport: precondition failed: content-import row missing its provenance"
+            },
+            {
+              "id": "brainbench/cat24:refusal-sites",
+              "reason": "The Rust run refused 4 engine calls at: core/persistence/maintenance.ts:59 (readManagedModeRows, persistence_journal, from core/import-file.ts:347) x1; core/trust/channel.ts:251 (executeRaw, raw_sql, from core/import-file.ts:1171) x1; core/persistence/identity.ts:207 (readPersistenceBrainId, persistence_journal, from core/persistence/identity.ts:221) x1; core/persistence/large-page-guard.ts:35 (executeRaw, raw_sql, from core/ops/pages.ts:392) x1"
+            }
+          ]
+        },
+        {
+          "id": "memory-verb-conformance",
+          "benchmark": "memory-verb conformance 24/24",
+          "gating": true,
+          "verdict": "FAIL",
+          "reason": "0/24 on Rust (verdict fail). remember rejects missing provenance (provenance_required + suggestion): remember rejects missing provenance (provenance_required + suggestion): fail (expected error=invalid_params, got engine_capability_missing) | remember rejects empty provenance (provenance_required + suggestion): remember rejects empty provenance (provenance_required + suggestion): fail (expected error=provenance_required, got engine_capability_missing) | remember rejects ISO-8601 duration ttl with a fix (P30D trap): remember rejects ISO-8601 duration ttl with a fix (P30D trap): fail (expected error=invalid_params, got engine_capability_missing) | remember writes a fact (string id, enum status, echoed nulls): remember writes a fact (string id, enum status, echoed nulls): fail (unexpected error: {\n  \"error\": \"engine_capability_missing\",\n  \"code\": \"engine_capability_missing\",\n  \"message\": \"This brain's engin | remember with ttl returns ISO valid_until: remember with ttl returns ISO valid_until: fail (unexpected error: {\n  \"error\": \"engine_capability_missing\",\n  \"code\": \"engine_capability_missing\",\n  \"message\": \"This brain's engine does not support r | remember private fact (fence test setup): remember private fact (fence test setup): fail (unexpected error: {\n  \"error\": \"engine_capability_missing\",\n  \"code\": \"engine_capability_missing\",\n  \"message\": \"This brain's engine does not support re | recall by entity round-trips the remembered fact (superset envelope): recall by entity round-trips the remembered fact (superset envelope): fail (unexpected error: {\n  \"error\": \"engine_capa",
+          "measured": {
+            "pglite": {
+              "passed": 24,
+              "total": 24
+            },
+            "postgres": {
+              "passed": 24,
+              "total": 24
+            },
+            "rust": {
+              "passed": 0,
+              "total": 24
+            }
+          },
+          "reading": "memory-verb-conformance (E2, gbrain MEMORY_VERBS v1 conformance through dispatchToolCall; eval/runner/memory-verb-conformance.ts): Rust passes every case of its own run.",
+          "losses": [
+            {
+              "id": "memory-verb-conformance",
+              "reason": "0/24 on Rust (verdict fail). remember rejects missing provenance (provenance_required + suggestion): remember rejects missing provenance (provenance_required + suggestion): fail (expected error=invalid_params, got engine_capability_missing) | remember rejects empty provenance (provenance_required + suggestion): remember rejects empty provenance (provenance_required + suggestion): fail (expected error=provenance_required, got engine_capability_missing) | remember rejects ISO-8601 duration ttl with a fix (P30D trap): remember rejects ISO-8601 duration ttl with a fix (P30D trap): fail (expected error=invalid_params, got engine_capability_missing) | remember writes a fact (string id, enum status, echoed nulls): remember writes a fact (string id, enum status, echoed nulls): fail (unexpected error: {\n  \"error\": \"engine_capability_missing\",\n  \"code\": \"engine_capability_missing\",\n  \"message\": \"This brain's engin | remember with ttl returns ISO valid_until: remember with ttl returns ISO valid_until: fail (unexpected error: {\n  \"error\": \"engine_capability_missing\",\n  \"code\": \"engine_capability_missing\",\n  \"message\": \"This brain's engine does not support r | remember private fact (fence test setup): remember private fact (fence test setup): fail (unexpected error: {\n  \"error\": \"engine_capability_missing\",\n  \"code\": \"engine_capability_missing\",\n  \"message\": \"This brain's engine does not support re | recall by entity round-trips the remembered fact (superset envelope): recall by entity round-trips the remembered fact (superset envelope): fail (unexpected error: {\n  \"error\": \"engine_capability_missing\",\n  \"code\": \"engine_capability_missing\",\n  \"message\": \"This brain' | recall with budget reports consistent budget meta: recall with budget reports consistent budget meta: fail (unexpected error: {\n  \"error\": \"engine_capability_missing\",\n  \"code\": \"engine_capability_missing\",\n  \"message\": \"This brain's engine does not s | recall with budget smaller than the first item drops everything: recall with budget smaller than the first item drops everything: fail (unexpected error: {\n  \"error\": \"engine_capability_missing\",\n  \"code\": \"engine_capability_missing\",\n  \"message\": \"This brain's eng | recall with query returns the search arm (degradation allowed, never an error): recall with query returns the search arm (degradation allowed, never an error): fail (unexpected error: {\n  \"error\": \"engine_capability_missing\",\n  \"code\": \"engine_capability_missing\",\n  \"message\": \"T | entity resolves the round-trip entity to a card: entity resolves the round-trip entity to a card: skip (entity seed is unavailable or has not committed) | entity miss returns found:false + suggestions (never an error): entity miss returns found:false + suggestions (never an error): fail (unexpected error: {\n  \"error\": \"engine_capability_missing\",\n  \"code\": \"engine_capability_missing\",\n  \"message\": \"This brain's engi | entity card never leaks private facts to remote callers (fence test): entity card never leaks private facts to remote callers (fence test): skip (entity seed is unavailable or has not committed) | entity without the required name param is invalid_params with a suggestion: entity without the required name param is invalid_params with a suggestion: fail (expected error=invalid_params, got engine_capability_missing) | forget expires the remembered fact: forget expires the remembered fact: fail (unexpected error: {\n  \"error\": \"engine_capability_missing\",\n  \"code\": \"engine_capability_missing\",\n  \"message\": \"This brain's engine does not support forget f | forget again is idempotent (expired:false, success): forget again is idempotent (expired:false, success): fail (unexpected error: {\n  \"error\": \"engine_capability_missing\",\n  \"code\": \"engine_capability_missing\",\n  \"message\": \"This brain's engine does not | remember of the forgotten claim is refused invalid_params with a suggestion (a withdrawn object, when present, is schema-valid): remember of the forgotten claim is refused invalid_params with a suggestion (a withdrawn object, when present, is schema-valid): fail (expected error=invalid_params, got engine_capability_missing) | forget unknown id returns not_found with a suggestion: forget unknown id returns not_found with a suggestion: fail (expected error=not_found, got engine_capability_missing) | synthesize answers (or reports unavailable) — cost-gated, pass --synthesize: synthesize answers (or reports unavailable) — cost-gated, pass --synthesize: fail (expected unavailable, got error=engine_capability_missing; $err.error: \"engine_capability_missing\" not in enum [inval | synthesize without an LLM is a clean unavailable error (never a raw throw) — cost-gated, pass --synthesize: synthesize without an LLM is a clean unavailable error (never a raw throw) — cost-gated, pass --synthesize: fail (expected unavailable, got error=engine_capability_missing; $err.error: \"engine_capabil | context_pack returns a schema-valid bundle for unknown entities (empty, not an error): context_pack returns a schema-valid bundle for unknown entities (empty, not an error): fail (unexpected error: {\n  \"error\": \"engine_capability_missing\",\n  \"code\": \"engine_capability_missing\",\n  \"messa | context_pack with a malformed since is invalid_params with a suggestion: context_pack with a malformed since is invalid_params with a suggestion: fail (expected error=invalid_params, got engine_capability_missing) | delta with an explicit epoch since returns a schema-valid delta: delta with an explicit epoch since returns a schema-valid delta: fail (unexpected error: {\n  \"error\": \"engine_capability_missing\",\n  \"code\": \"engine_capability_missing\",\n  \"message\": \"This brain's eng | delta without since or session_id is invalid_params with a suggestion: delta without since or session_id is invalid_params with a suggestion: fail (expected error=invalid_params, got engine_capability_missing)"
+            }
+          ]
+        }
+      ],
+      "losses": [
+        {
+          "id": "brainbench/cats-1-2",
+          "reason": "Rust wrote no receipt: its runner failed (exit 1) without one, where both TypeScript engines completed. Log tail: \n\nGenerated: 2026-11-27T06:42:04\nCorpus: 240 rich-prose pages from eval/data/world-v1/\nRelational queries: 145\n\n## Seeding corpus + running extract (v0.10.4 stack)\nError [engine_capability_missing]: This brain's engine does not support executeRaw yet (it needs the raw_sql capability), so nothing ran.\nFix: Run it on a pglite or postgres brain, or wait for a gbrain release whose Rust engine supports it.\nDocs: https://github.com/garrytan/gbrain/blob/v0.60.777.0/docs/ENGINES.md#the-rust-engine-shell",
+          "gating": true
+        },
+        {
+          "id": "brainbench/cats-1-2:refusal-sites",
+          "reason": "The Rust run refused 1 engine calls at: core/wanted-links-store.ts:36 (executeRaw, raw_sql, from commands/extract.ts:1900) x1",
+          "gating": true
+        },
+        {
+          "id": "brainbench/cat3",
+          "reason": "Rust wrote no receipt: its runner failed (exit 1) without one, where both TypeScript engines completed. Log tail: a412ee0009/src/core/ops/contract.ts:204:13)\n      at refuse (.gbrain-overlays/d8eb35769120cf0b60704478aaef96a412ee0009/src/core/rust-engine.ts:340:29)\n      at <anonymous> (eval/runner/eval-engine.ts:258:58)\n      at readProjectionSnapshot (.gbrain-overlays/d8eb35769120cf0b60704478aaef96a412ee0009/src/core/page-state/projections.ts:136:17)\n      at main (eval/runner/identity.ts:138:28)",
+          "gating": true
+        },
+        {
+          "id": "brainbench/cat3:refusal-sites",
+          "reason": "The Rust run refused 1 engine calls at: core/page-state/projections.ts:136 (transaction, transactions) x1",
+          "gating": true
+        },
+        {
+          "id": "brainbench/type-accuracy",
+          "reason": "Rust wrote no receipt: its runner failed (exit 1) without one, where both TypeScript engines completed. Log tail: # BrainBench — type accuracy on rich-prose corpus\n\nGenerated: 2026-11-27T06:48:44\nCorpus: eval/data/world-v1/\nLoaded 240 pages.\n\nError [engine_capability_missing]: This brain's engine does not support executeRaw yet (it needs the raw_sql capability), so nothing ran.\nFix: Run it on a pglite or postgres brain, or wait for a gbrain release whose Rust engine supports it.\nDocs: https://github.com/garrytan/gbrain/blob/v0.60.777.0/docs/ENGINES.md#the-rust-engine-shell",
+          "gating": true
+        },
+        {
+          "id": "brainbench/type-accuracy:refusal-sites",
+          "reason": "The Rust run refused 1 engine calls at: core/wanted-links-store.ts:36 (executeRaw, raw_sql, from commands/extract.ts:1900) x1",
+          "gating": true
+        },
+        {
+          "id": "brainbench/cat24",
+          "reason": "1/7 on Rust (verdict fail). content-import: content-import (inbox/2026-05-23-content-import): ingestion path threw: This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran. | file-import-no-channel-provenance: file-import-no-channel-provenance (inbox/2026-05-23-file-import): ingestion path threw: This brain's engine does not support executeRaw yet (it needs the raw_sql capability), so nothing ran. | op-put-page-local-trusted: op-put-page-local-trusted (inbox/2026-05-23-op-local): ingestion path threw: This brain's engine does not support readPersistenceBrainId yet (it needs the persistence_journal capability), so nothing r | op-put-page-remote-spoof-override: op-put-page-remote-spoof-override (inbox/2026-05-23-op-remote): ingestion path threw: This brain's engine does not support executeRaw yet (it needs the raw_sql capability), so nothing ran. | dedup-hash-short-circuit: expected exactly 1 pre-existing row with chunks for inbox/2026-05-23-content-import, found 0 row(s), 0 chunk(s) | provenance-preserved-on-reimport: precondition failed: content-import row missing its provenance",
+          "gating": true
+        },
+        {
+          "id": "brainbench/cat24:refusal-sites",
+          "reason": "The Rust run refused 4 engine calls at: core/persistence/maintenance.ts:59 (readManagedModeRows, persistence_journal, from core/import-file.ts:347) x1; core/trust/channel.ts:251 (executeRaw, raw_sql, from core/import-file.ts:1171) x1; core/persistence/identity.ts:207 (readPersistenceBrainId, persistence_journal, from core/persistence/identity.ts:221) x1; core/persistence/large-page-guard.ts:35 (executeRaw, raw_sql, from core/ops/pages.ts:392) x1",
+          "gating": true
+        },
+        {
+          "id": "memory-verb-conformance",
+          "reason": "0/24 on Rust (verdict fail). remember rejects missing provenance (provenance_required + suggestion): remember rejects missing provenance (provenance_required + suggestion): fail (expected error=invalid_params, got engine_capability_missing) | remember rejects empty provenance (provenance_required + suggestion): remember rejects empty provenance (provenance_required + suggestion): fail (expected error=provenance_required, got engine_capability_missing) | remember rejects ISO-8601 duration ttl with a fix (P30D trap): remember rejects ISO-8601 duration ttl with a fix (P30D trap): fail (expected error=invalid_params, got engine_capability_missing) | remember writes a fact (string id, enum status, echoed nulls): remember writes a fact (string id, enum status, echoed nulls): fail (unexpected error: {\n  \"error\": \"engine_capability_missing\",\n  \"code\": \"engine_capability_missing\",\n  \"message\": \"This brain's engin | remember with ttl returns ISO valid_until: remember with ttl returns ISO valid_until: fail (unexpected error: {\n  \"error\": \"engine_capability_missing\",\n  \"code\": \"engine_capability_missing\",\n  \"message\": \"This brain's engine does not support r | remember private fact (fence test setup): remember private fact (fence test setup): fail (unexpected error: {\n  \"error\": \"engine_capability_missing\",\n  \"code\": \"engine_capability_missing\",\n  \"message\": \"This brain's engine does not support re | recall by entity round-trips the remembered fact (superset envelope): recall by entity round-trips the remembered fact (superset envelope): fail (unexpected error: {\n  \"error\": \"engine_capability_missing\",\n  \"code\": \"engine_capability_missing\",\n  \"message\": \"This brain' | recall with budget reports consistent budget meta: recall with budget reports consistent budget meta: fail (unexpected error: {\n  \"error\": \"engine_capability_missing\",\n  \"code\": \"engine_capability_missing\",\n  \"message\": \"This brain's engine does not s | recall with budget smaller than the first item drops everything: recall with budget smaller than the first item drops everything: fail (unexpected error: {\n  \"error\": \"engine_capability_missing\",\n  \"code\": \"engine_capability_missing\",\n  \"message\": \"This brain's eng | recall with query returns the search arm (degradation allowed, never an error): recall with query returns the search arm (degradation allowed, never an error): fail (unexpected error: {\n  \"error\": \"engine_capability_missing\",\n  \"code\": \"engine_capability_missing\",\n  \"message\": \"T | entity resolves the round-trip entity to a card: entity resolves the round-trip entity to a card: skip (entity seed is unavailable or has not committed) | entity miss returns found:false + suggestions (never an error): entity miss returns found:false + suggestions (never an error): fail (unexpected error: {\n  \"error\": \"engine_capability_missing\",\n  \"code\": \"engine_capability_missing\",\n  \"message\": \"This brain's engi | entity card never leaks private facts to remote callers (fence test): entity card never leaks private facts to remote callers (fence test): skip (entity seed is unavailable or has not committed) | entity without the required name param is invalid_params with a suggestion: entity without the required name param is invalid_params with a suggestion: fail (expected error=invalid_params, got engine_capability_missing) | forget expires the remembered fact: forget expires the remembered fact: fail (unexpected error: {\n  \"error\": \"engine_capability_missing\",\n  \"code\": \"engine_capability_missing\",\n  \"message\": \"This brain's engine does not support forget f | forget again is idempotent (expired:false, success): forget again is idempotent (expired:false, success): fail (unexpected error: {\n  \"error\": \"engine_capability_missing\",\n  \"code\": \"engine_capability_missing\",\n  \"message\": \"This brain's engine does not | remember of the forgotten claim is refused invalid_params with a suggestion (a withdrawn object, when present, is schema-valid): remember of the forgotten claim is refused invalid_params with a suggestion (a withdrawn object, when present, is schema-valid): fail (expected error=invalid_params, got engine_capability_missing) | forget unknown id returns not_found with a suggestion: forget unknown id returns not_found with a suggestion: fail (expected error=not_found, got engine_capability_missing) | synthesize answers (or reports unavailable) — cost-gated, pass --synthesize: synthesize answers (or reports unavailable) — cost-gated, pass --synthesize: fail (expected unavailable, got error=engine_capability_missing; $err.error: \"engine_capability_missing\" not in enum [inval | synthesize without an LLM is a clean unavailable error (never a raw throw) — cost-gated, pass --synthesize: synthesize without an LLM is a clean unavailable error (never a raw throw) — cost-gated, pass --synthesize: fail (expected unavailable, got error=engine_capability_missing; $err.error: \"engine_capabil | context_pack returns a schema-valid bundle for unknown entities (empty, not an error): context_pack returns a schema-valid bundle for unknown entities (empty, not an error): fail (unexpected error: {\n  \"error\": \"engine_capability_missing\",\n  \"code\": \"engine_capability_missing\",\n  \"messa | context_pack with a malformed since is invalid_params with a suggestion: context_pack with a malformed since is invalid_params with a suggestion: fail (expected error=invalid_params, got engine_capability_missing) | delta with an explicit epoch since returns a schema-valid delta: delta with an explicit epoch since returns a schema-valid delta: fail (unexpected error: {\n  \"error\": \"engine_capability_missing\",\n  \"code\": \"engine_capability_missing\",\n  \"message\": \"This brain's eng | delta without since or session_id is invalid_params with a suggestion: delta without since or session_id is invalid_params with a suggestion: fail (expected error=invalid_params, got engine_capability_missing)",
+          "gating": true
+        }
+      ]
+    },
+    "E3": {
+      "verdict": "FAIL",
+      "threshold": "Cat 22 zero leaks; others within 0.5 points or equal counts",
+      "measured": null,
+      "rows": [
+        {
+          "id": "cat22",
+          "benchmark": "Cat 22 zero leaks",
+          "gating": true,
+          "verdict": "FAIL",
+          "reason": "Rust run did not complete (error): This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran. | The Rust run refused 1 engine calls at: core/persistence/managed-mode.ts:74 (readManagedModeRows, persistence_journal, from core/persistence/ownership.ts:72) x1",
+          "measured": {
+            "pglite": {
+              "leaks": 0,
+              "controls_detect_leak": 1
+            },
+            "postgres": {
+              "leaks": 0,
+              "controls_detect_leak": 1
+            },
+            "rust": null
+          },
+          "reading": "cat22 (E3, Cat 22 source isolation, cross-source leaks; eval/runner/cat22-source-isolation.ts): Rust passes every case of its own run.",
+          "losses": [
+            {
+              "id": "cat22",
+              "reason": "Rust run did not complete (error): This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+            },
+            {
+              "id": "cat22:refusal-sites",
+              "reason": "The Rust run refused 1 engine calls at: core/persistence/managed-mode.ts:74 (readManagedModeRows, persistence_journal, from core/persistence/ownership.ts:72) x1"
+            }
+          ]
+        },
+        {
+          "id": "cat19",
+          "benchmark": "Cat 19 within 0.5 points or equal counts",
+          "gating": true,
+          "verdict": "FAIL",
+          "reason": "the Rust receipt has no brain_score (verdict fail) | Rust undefined vs pglite 85: more than 0.5 points apart | Rust 0 vs pglite 5: counts differ | Rust undefined vs postgres 85: more than 0.5 points apart | Rust 0 vs postgres 5: counts differ | The Rust run refused 1 engine calls at: core/persistence/maintenance.ts:59 (readManagedModeRows, persistence_journal, from core/import-file.ts:347) x1",
+          "measured": {
+            "pglite": {
+              "brain_score": 85,
+              "gates_passed": 5
+            },
+            "postgres": {
+              "brain_score": 85,
+              "gates_passed": 5
+            },
+            "rust": {
+              "gates_passed": 0
+            }
+          },
+          "reading": "cat19 (E3, Cat 19 sick-brain remediation (hash embeddings); eval/runner/cat19-doctor-remediate.ts): Rust is within 0.5 points of, or equal in count to, each TypeScript engine.",
+          "losses": [
+            {
+              "id": "cat19:brain_score",
+              "reason": "the Rust receipt has no brain_score (verdict fail)"
+            },
+            {
+              "id": "cat19:brain_score:vs-pglite",
+              "reason": "Rust undefined vs pglite 85: more than 0.5 points apart"
+            },
+            {
+              "id": "cat19:gates_passed:vs-pglite",
+              "reason": "Rust 0 vs pglite 5: counts differ"
+            },
+            {
+              "id": "cat19:brain_score:vs-postgres",
+              "reason": "Rust undefined vs postgres 85: more than 0.5 points apart"
+            },
+            {
+              "id": "cat19:gates_passed:vs-postgres",
+              "reason": "Rust 0 vs postgres 5: counts differ"
+            },
+            {
+              "id": "cat19:refusal-sites",
+              "reason": "The Rust run refused 1 engine calls at: core/persistence/maintenance.ts:59 (readManagedModeRows, persistence_journal, from core/import-file.ts:347) x1"
+            }
+          ]
+        },
+        {
+          "id": "cat27",
+          "benchmark": "Cat 27 within 0.5 points or equal counts",
+          "gating": true,
+          "verdict": "FAIL",
+          "reason": "the Rust receipt has no probes_scored (verdict fail) | Rust 0 vs pglite 52.67597369506041: more than 0.5 points apart | Rust 0 vs pglite 1: counts differ | Rust NaN vs pglite 4: counts differ | Rust 4 vs pglite 0: counts differ | Rust 0 vs postgres 52.67597369506041: more than 0.5 points apart | Rust 0 vs postgres 1: counts differ | Rust NaN vs postgres 4: counts differ | Rust 4 vs postgres 0: counts differ | The Rust run refused 4 engine calls at: core/persistence/maintenance.ts:59 (readManagedModeRows, persistence_journal, from core/import-file.ts:347) x3; core/persistence/managed-mode.ts:74 (readManagedModeRows, persistence_journal, from core/persistence/ownership.ts:72) x1",
+          "measured": {
+            "pglite": {
+              "ndcg10_points": 52.67597369506041,
+              "top1_hits": 1,
+              "probes_scored": 4,
+              "errors": 0
+            },
+            "postgres": {
+              "ndcg10_points": 52.67597369506041,
+              "top1_hits": 1,
+              "probes_scored": 4,
+              "errors": 0
+            },
+            "rust": {
+              "ndcg10_points": 0,
+              "top1_hits": 0,
+              "probes_scored": null,
+              "errors": 4
+            }
+          },
+          "reading": "cat27 (E3, Cat 27 graph signals on; eval/runner/cat27-graph-signals.ts): Rust is within 0.5 points of, or equal in count to, each TypeScript engine.",
+          "losses": [
+            {
+              "id": "cat27:probes_scored",
+              "reason": "the Rust receipt has no probes_scored (verdict fail)"
+            },
+            {
+              "id": "cat27:ndcg10_points:vs-pglite",
+              "reason": "Rust 0 vs pglite 52.67597369506041: more than 0.5 points apart"
+            },
+            {
+              "id": "cat27:top1_hits:vs-pglite",
+              "reason": "Rust 0 vs pglite 1: counts differ"
+            },
+            {
+              "id": "cat27:probes_scored:vs-pglite",
+              "reason": "Rust NaN vs pglite 4: counts differ"
+            },
+            {
+              "id": "cat27:errors:vs-pglite",
+              "reason": "Rust 4 vs pglite 0: counts differ"
+            },
+            {
+              "id": "cat27:ndcg10_points:vs-postgres",
+              "reason": "Rust 0 vs postgres 52.67597369506041: more than 0.5 points apart"
+            },
+            {
+              "id": "cat27:top1_hits:vs-postgres",
+              "reason": "Rust 0 vs postgres 1: counts differ"
+            },
+            {
+              "id": "cat27:probes_scored:vs-postgres",
+              "reason": "Rust NaN vs postgres 4: counts differ"
+            },
+            {
+              "id": "cat27:errors:vs-postgres",
+              "reason": "Rust 4 vs postgres 0: counts differ"
+            },
+            {
+              "id": "cat27:refusal-sites",
+              "reason": "The Rust run refused 4 engine calls at: core/persistence/maintenance.ts:59 (readManagedModeRows, persistence_journal, from core/import-file.ts:347) x3; core/persistence/managed-mode.ts:74 (readManagedModeRows, persistence_journal, from core/persistence/ownership.ts:72) x1"
+            }
+          ]
+        },
+        {
+          "id": "cat23",
+          "benchmark": "Cat 23 within 0.5 points or equal counts (scored against PGLite pg_trgm behavior)",
+          "gating": true,
+          "verdict": "FAIL",
+          "reason": "Rust run did not complete (error): This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran. | The Rust run refused 1 engine calls at: core/persistence/maintenance.ts:59 (readManagedModeRows, persistence_journal, from core/import-file.ts:347) x1",
+          "measured": {
+            "pglite": {
+              "redirects_correct": 6,
+              "refusals_correct": 3,
+              "resolver_errors": 0
+            },
+            "postgres": {
+              "redirects_correct": 6,
+              "refusals_correct": 3,
+              "resolver_errors": 0
+            },
+            "rust": null
+          },
+          "reading": "cat23 (E3, Cat 23 phantom to canonical redirect (scored against PGLite's pg_trgm decisions); eval/runner/cat23-phantom-redirect.ts): Rust is within 0.5 points of, or equal in count to, each TypeScript engine.",
+          "losses": [
+            {
+              "id": "cat23",
+              "reason": "Rust run did not complete (error): This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran."
+            },
+            {
+              "id": "cat23:refusal-sites",
+              "reason": "The Rust run refused 1 engine calls at: core/persistence/maintenance.ts:59 (readManagedModeRows, persistence_journal, from core/import-file.ts:347) x1"
+            }
+          ]
+        }
+      ],
+      "losses": [
+        {
+          "id": "cat22",
+          "reason": "Rust run did not complete (error): This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.",
+          "gating": true
+        },
+        {
+          "id": "cat22:refusal-sites",
+          "reason": "The Rust run refused 1 engine calls at: core/persistence/managed-mode.ts:74 (readManagedModeRows, persistence_journal, from core/persistence/ownership.ts:72) x1",
+          "gating": true
+        },
+        {
+          "id": "cat19:brain_score",
+          "reason": "the Rust receipt has no brain_score (verdict fail)",
+          "gating": true
+        },
+        {
+          "id": "cat19:brain_score:vs-pglite",
+          "reason": "Rust undefined vs pglite 85: more than 0.5 points apart",
+          "gating": true
+        },
+        {
+          "id": "cat19:gates_passed:vs-pglite",
+          "reason": "Rust 0 vs pglite 5: counts differ",
+          "gating": true
+        },
+        {
+          "id": "cat19:brain_score:vs-postgres",
+          "reason": "Rust undefined vs postgres 85: more than 0.5 points apart",
+          "gating": true
+        },
+        {
+          "id": "cat19:gates_passed:vs-postgres",
+          "reason": "Rust 0 vs postgres 5: counts differ",
+          "gating": true
+        },
+        {
+          "id": "cat19:refusal-sites",
+          "reason": "The Rust run refused 1 engine calls at: core/persistence/maintenance.ts:59 (readManagedModeRows, persistence_journal, from core/import-file.ts:347) x1",
+          "gating": true
+        },
+        {
+          "id": "cat27:probes_scored",
+          "reason": "the Rust receipt has no probes_scored (verdict fail)",
+          "gating": true
+        },
+        {
+          "id": "cat27:ndcg10_points:vs-pglite",
+          "reason": "Rust 0 vs pglite 52.67597369506041: more than 0.5 points apart",
+          "gating": true
+        },
+        {
+          "id": "cat27:top1_hits:vs-pglite",
+          "reason": "Rust 0 vs pglite 1: counts differ",
+          "gating": true
+        },
+        {
+          "id": "cat27:probes_scored:vs-pglite",
+          "reason": "Rust NaN vs pglite 4: counts differ",
+          "gating": true
+        },
+        {
+          "id": "cat27:errors:vs-pglite",
+          "reason": "Rust 4 vs pglite 0: counts differ",
+          "gating": true
+        },
+        {
+          "id": "cat27:ndcg10_points:vs-postgres",
+          "reason": "Rust 0 vs postgres 52.67597369506041: more than 0.5 points apart",
+          "gating": true
+        },
+        {
+          "id": "cat27:top1_hits:vs-postgres",
+          "reason": "Rust 0 vs postgres 1: counts differ",
+          "gating": true
+        },
+        {
+          "id": "cat27:probes_scored:vs-postgres",
+          "reason": "Rust NaN vs postgres 4: counts differ",
+          "gating": true
+        },
+        {
+          "id": "cat27:errors:vs-postgres",
+          "reason": "Rust 4 vs postgres 0: counts differ",
+          "gating": true
+        },
+        {
+          "id": "cat27:refusal-sites",
+          "reason": "The Rust run refused 4 engine calls at: core/persistence/maintenance.ts:59 (readManagedModeRows, persistence_journal, from core/import-file.ts:347) x3; core/persistence/managed-mode.ts:74 (readManagedModeRows, persistence_journal, from core/persistence/ownership.ts:72) x1",
+          "gating": true
+        },
+        {
+          "id": "cat23",
+          "reason": "Rust run did not complete (error): This brain's engine does not support readManagedModeRows yet (it needs the persistence_journal capability), so nothing ran.",
+          "gating": true
+        },
+        {
+          "id": "cat23:refusal-sites",
+          "reason": "The Rust run refused 1 engine calls at: core/persistence/maintenance.ts:59 (readManagedModeRows, persistence_journal, from core/import-file.ts:347) x1",
+          "gating": true
+        }
+      ]
+    }
+  },
+  "swap_readiness_criterion_8": {
+    "gating": false,
+    "threshold": "In paired bench samples (at least 100 pairs each, with confidence intervals), Rust p50 and p99 are no worse than the primary's on every operation class, and better on filtered vector search by the margin D14 sets. Measured and reported, not gating (D23).",
+    "verdict": "not_run",
+    "reason": "the speed stage has no Rust pair",
+    "rows": [],
+    "losing_classes": [],
+    "unmeasured_classes": []
+  },
+  "receipt_links": [
+    {
+      "role": "answers",
+      "path": "docs/benchmarks/2026-11-27-engine-bench/lme-recall/aggregate.json",
+      "sha256": "f6a817d24364344227ce9f43273b23a4f95e84040479861a6ff1feee30b5e9e0"
+    },
+    {
+      "role": "speed",
+      "path": "docs/benchmarks/2026-11-27-engine-bench/speed/speed-2026-11-27T05-44-01-10000.json",
+      "sha256": "2fdebd09ff9e40c4c3b8cdea1fd52d6f7f738c3cd8d09e5677f8b5bc913e4cd8"
+    },
+    {
+      "role": "correctness",
+      "path": "docs/benchmarks/2026-11-27-engine-bench/correctness/out/correctness-2026-11-27T03-40-56-724Z.json",
+      "sha256": "0fa9cbe8cc29ef282fc78e7c5f82eb2d8185e26b38427634ce93ea52d9d9e319"
+    },
+    {
+      "role": "surface-parity",
+      "path": "docs/benchmarks/2026-11-27-engine-bench/surface-parity/surface-parity-2026-11-27T03-43-47-126Z.json",
+      "sha256": "e4d6ec89e2cc2b733255659e2ff71f0b34bde504ec7415b5af5e551aacc737c3"
+    },
+    {
+      "role": "suite",
+      "path": "docs/benchmarks/2026-11-27-engine-bench/gate-suites/brainbench__cat24.json",
+      "sha256": "3148207aad5681191b626c548ab373fbcfe5caf8092141090c5640e0776e4e62"
+    },
+    {
+      "role": "suite",
+      "path": "docs/benchmarks/2026-11-27-engine-bench/gate-suites/brainbench__cat3.json",
+      "sha256": "69bda0cf8d00408412a4a1356c29c11143cf7767a2eefaf1e47faa44313d797a"
+    },
+    {
+      "role": "suite",
+      "path": "docs/benchmarks/2026-11-27-engine-bench/gate-suites/brainbench__cat4.json",
+      "sha256": "1258315215fd8e81049205c3dc1a34b0e3546f99ce475054239903dae24e7953"
+    },
+    {
+      "role": "suite",
+      "path": "docs/benchmarks/2026-11-27-engine-bench/gate-suites/brainbench__cats-1-2.json",
+      "sha256": "4ada3fca36cd38587107b19cd72bf0ebd9aa55ecdd1132695b03264bc77d2efd"
+    },
+    {
+      "role": "suite",
+      "path": "docs/benchmarks/2026-11-27-engine-bench/gate-suites/brainbench__type-accuracy.json",
+      "sha256": "5dccd491f90ddad39059e1f5bd4543032594c33336d193f7f018d173b4a870ea"
+    },
+    {
+      "role": "suite",
+      "path": "docs/benchmarks/2026-11-27-engine-bench/gate-suites/cat10.json",
+      "sha256": "d5be042b2bc976dd418952f03326d6893e01f652150520d8bd886350d5bf6c64"
+    },
+    {
+      "role": "suite",
+      "path": "docs/benchmarks/2026-11-27-engine-bench/gate-suites/cat12.json",
+      "sha256": "216121a606bbb3a0b1413ba04adc46b2921d1fddbc52d7a8ece8965206647b2c"
+    },
+    {
+      "role": "suite",
+      "path": "docs/benchmarks/2026-11-27-engine-bench/gate-suites/cat13__ndcg5.json",
+      "sha256": "245077ee97d6ccf5777d333440dbdcffe7b294a455352abcc24d3daa79ec86ed"
+    },
+    {
+      "role": "suite",
+      "path": "docs/benchmarks/2026-11-27-engine-bench/gate-suites/cat13b__top1.json",
+      "sha256": "df6aec0c3795639e6758b37d802c5c2c4d26eba2bbb9e49de10755255a625c29"
+    },
+    {
+      "role": "suite",
+      "path": "docs/benchmarks/2026-11-27-engine-bench/gate-suites/cat19.json",
+      "sha256": "b9c50a8085e6e791eb6ac3bb6bac1dcfc5cb559dc1f0445933d2964b9e2ae488"
+    },
+    {
+      "role": "suite",
+      "path": "docs/benchmarks/2026-11-27-engine-bench/gate-suites/cat22.json",
+      "sha256": "1b5069b3eed5cf776b73acac0fcc0f2b601c0b105ff9224b56bdf1e116d7d048"
+    },
+    {
+      "role": "suite",
+      "path": "docs/benchmarks/2026-11-27-engine-bench/gate-suites/cat23.json",
+      "sha256": "0065a02dd1114c12659177c1c47e8f936bfd9719b397a10939d359a9d889fb2c"
+    },
+    {
+      "role": "suite",
+      "path": "docs/benchmarks/2026-11-27-engine-bench/gate-suites/cat27.json",
+      "sha256": "ffb96d66b422ce34fa3fb4e9edd46fb645f6d6afb604026233629145a336e56d"
+    },
+    {
+      "role": "suite",
+      "path": "docs/benchmarks/2026-11-27-engine-bench/gate-suites/cat7.json",
+      "sha256": "f31c069bc0a5801274ec1c2b8db9f1498a94882d5c781a007be9a11204075a68"
+    },
+    {
+      "role": "suite",
+      "path": "docs/benchmarks/2026-11-27-engine-bench/gate-suites/memory-verb-conformance.json",
+      "sha256": "91ad9b04d63386881107b816ffdfbe0966edd167d6350858c02b2b5a4a1fc3ed"
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+- cs1-load refuses a world whose cell declares an idle window but wrote no idle record, for example after a cell died during its idle sleep and a resume skipped it, instead of pricing idle from the other worlds ([eval/runner/cs1-load.ts](eval/runner/cs1-load.ts)). The published cost-and-speed results rebuild unchanged.

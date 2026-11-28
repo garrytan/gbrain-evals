@@ -1,0 +1,90 @@
+{
+  "schema": "engine-bench.gate-suite/1",
+  "suite": "cat27",
+  "gate": "E3",
+  "counted": true,
+  "amendment_text": "cat27 (E3, Cat 27 graph signals on; eval/runner/cat27-graph-signals.ts): Rust is within 0.5 points of, or equal in count to, each TypeScript engine.",
+  "gbrain": {
+    "overlay": {
+      "commit": "d8eb35769120cf0b60704478aaef96a412ee0009",
+      "ref": "d8eb35769120cf0b60704478aaef96a412ee0009",
+      "checkout_dirty": false
+    },
+    "rust_addon": {
+      "sha256": "d325d17502bda4dd3ebcd73ff73a45e15016e87823a0c50cd4bb9261d4748d74",
+      "target": "linux-x64-glibc"
+    }
+  },
+  "verdict": "FAIL",
+  "reason": "the Rust receipt has no probes_scored (verdict fail) | Rust 0 vs pglite 52.67597369506041: more than 0.5 points apart | Rust 0 vs pglite 1: counts differ | Rust NaN vs pglite 4: counts differ | Rust 4 vs pglite 0: counts differ | Rust 0 vs postgres 52.67597369506041: more than 0.5 points apart | Rust 0 vs postgres 1: counts differ | Rust NaN vs postgres 4: counts differ | Rust 4 vs postgres 0: counts differ | The Rust run refused 4 engine calls at: core/persistence/maintenance.ts:59 (readManagedModeRows, persistence_journal, from core/import-file.ts:347) x3; core/persistence/managed-mode.ts:74 (readManagedModeRows, persistence_journal, from core/persistence/ownership.ts:72) x1",
+  "rows": [
+    {
+      "id": "cat27",
+      "benchmark": "Cat 27 graph signals on",
+      "verdict": "FAIL",
+      "measured": {
+        "pglite": {
+          "ndcg10_points": 52.67597369506041,
+          "top1_hits": 1,
+          "probes_scored": 4,
+          "errors": 0
+        },
+        "postgres": {
+          "ndcg10_points": 52.67597369506041,
+          "top1_hits": 1,
+          "probes_scored": 4,
+          "errors": 0
+        },
+        "rust": {
+          "ndcg10_points": 0,
+          "top1_hits": 0,
+          "probes_scored": null,
+          "errors": 4
+        }
+      },
+      "reason": "the Rust receipt has no probes_scored (verdict fail) | Rust 0 vs pglite 52.67597369506041: more than 0.5 points apart | Rust 0 vs pglite 1: counts differ | Rust NaN vs pglite 4: counts differ | Rust 4 vs pglite 0: counts differ | Rust 0 vs postgres 52.67597369506041: more than 0.5 points apart | Rust 0 vs postgres 1: counts differ | Rust NaN vs postgres 4: counts differ | Rust 4 vs postgres 0: counts differ | The Rust run refused 4 engine calls at: core/persistence/maintenance.ts:59 (readManagedModeRows, persistence_journal, from core/import-file.ts:347) x3; core/persistence/managed-mode.ts:74 (readManagedModeRows, persistence_journal, from core/persistence/ownership.ts:72) x1"
+    }
+  ],
+  "losses": [
+    {
+      "id": "cat27:probes_scored",
+      "reason": "the Rust receipt has no probes_scored (verdict fail)"
+    },
+    {
+      "id": "cat27:ndcg10_points:vs-pglite",
+      "reason": "Rust 0 vs pglite 52.67597369506041: more than 0.5 points apart"
+    },
+    {
+      "id": "cat27:top1_hits:vs-pglite",
+      "reason": "Rust 0 vs pglite 1: counts differ"
+    },
+    {
+      "id": "cat27:probes_scored:vs-pglite",
+      "reason": "Rust NaN vs pglite 4: counts differ"
+    },
+    {
+      "id": "cat27:errors:vs-pglite",
+      "reason": "Rust 4 vs pglite 0: counts differ"
+    },
+    {
+      "id": "cat27:ndcg10_points:vs-postgres",
+      "reason": "Rust 0 vs postgres 52.67597369506041: more than 0.5 points apart"
+    },
+    {
+      "id": "cat27:top1_hits:vs-postgres",
+      "reason": "Rust 0 vs postgres 1: counts differ"
+    },
+    {
+      "id": "cat27:probes_scored:vs-postgres",
+      "reason": "Rust NaN vs postgres 4: counts differ"
+    },
+    {
+      "id": "cat27:errors:vs-postgres",
+      "reason": "Rust 4 vs postgres 0: counts differ"
+    },
+    {
+      "id": "cat27:refusal-sites",
+      "reason": "The Rust run refused 4 engine calls at: core/persistence/maintenance.ts:59 (readManagedModeRows, persistence_journal, from core/import-file.ts:347) x3; core/persistence/managed-mode.ts:74 (readManagedModeRows, persistence_journal, from core/persistence/ownership.ts:72) x1"
+    }
+  ]
+}

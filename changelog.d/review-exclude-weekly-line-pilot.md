@@ -1,1 +1,0 @@
-Reviews leave out the weekly held-out line's per-question answers, judgments and rows records under `docs/benchmarks/2026-11-23-weekly-outcome-line/pilot/`, so the results pull request that adds them fits the review's size limit; its receipts, run configs, lease files, results page, plan, registry entry and recount stay in review.

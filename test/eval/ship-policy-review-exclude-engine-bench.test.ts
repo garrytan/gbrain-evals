@@ -5,7 +5,10 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 
 const policy = JSON.parse(readFileSync(new URL('../../.gstack/ship-policy.json', import.meta.url), 'utf8')) as { review_exclude_paths: string[] };
-const GLOBS = ['docs/benchmarks/*-engine-bench/correctness/work/*/receipt.json', 'docs/benchmarks/*-engine-bench/speed/*speed-*-10000.json'];
+const GLOBS = [
+  'docs/benchmarks/*-engine-bench/correctness/work/*/receipt.json', 'docs/benchmarks/*-engine-bench/speed/*speed-*-10000.json',
+  'docs/benchmarks/*-engine-bench/lme-recall/lme-w*', 'docs/benchmarks/*-engine-bench/lme-recall/aggregate.json',
+];
 const RUN = 'docs/benchmarks/2026-11-17-engine-bench';
 
 const excluded = [
@@ -14,6 +17,8 @@ const excluded = [
   `${RUN}/speed/dev-speed-2026-11-17T09-39-20-10000.json`,
   'docs/benchmarks/2026-12-01-engine-bench/correctness/work/n1-rust/receipt.json',
   'docs/benchmarks/2026-12-01-engine-bench/speed/speed-2026-12-01T10-00-00-10000.json',
+  ...['json', 'ndjson', 'log'].map(ext => `docs/benchmarks/2026-12-01-engine-bench/lme-recall/lme-w0.${ext}`),
+  'docs/benchmarks/2026-12-01-engine-bench/lme-recall/aggregate.json',
 ];
 const kept = [
   `${RUN}.md`,
@@ -26,6 +31,9 @@ const kept = [
   `${RUN}/lme-recall/dry100.json`,
   `${RUN}/lme-recall/dry100.ndjson`,
   `${RUN}/lme-recall/count.json`,
+  `${RUN}/lme-recall/cache.sha256`,
+  'docs/benchmarks/2026-12-01-engine-bench/gate-suites/cat10.json',
+  'docs/benchmarks/x/y-engine-bench/lme-recall/aggregate.json',
   `${RUN}/surface-parity/surface-parity-2026-11-17T09-11-34-800Z.json`,
   'docs/benchmarks/2026-11-17-engine-bench-preregistration.md',
   'docs/benchmarks/x/y-engine-bench/correctness/work/n1-pglite/receipt.json',
@@ -33,7 +41,7 @@ const kept = [
 ];
 
 describe('ship policy: reviewers leave out the bulky engine-bench receipts', () => {
-  test('lists the two engine-bench globs', () => {
+  test('lists the engine-bench globs', () => {
     for (const glob of GLOBS) expect(policy.review_exclude_paths).toContain(glob);
   });
 

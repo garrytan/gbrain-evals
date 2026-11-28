@@ -63,13 +63,16 @@ export type Embedder = (texts: string[], options?: EmbedOptions) => Promise<numb
  *
  * `baseUrl` defaults to OPENAI_BASE_URL (a shootout cell's metering proxy) or the official endpoint; requests are
  * priced as official OpenAI requests either way.
+ *
+ * A null `cachePath` turns the cache off: nothing is read from or written to disk, and every call sends each of its
+ * distinct texts (a cost-and-speed cell, where a cached vector would be an unmetered call with no real latency).
  */
-export function cachedOpenAIEmbedder(cachePath: string, fetchImpl: typeof fetch = fetch, baseUrl = process.env.OPENAI_BASE_URL ?? 'https://api.openai.com/v1'): Embedder {
+export function cachedOpenAIEmbedder(cachePath: string | null, fetchImpl: typeof fetch = fetch, baseUrl = process.env.OPENAI_BASE_URL ?? 'https://api.openai.com/v1'): Embedder {
   // Legacy cache: one JSON object. New entries are appended to a JSONL file beside it (base64 float32), so a
   // 50,000-document corpus neither rewrites a gigabyte of JSON per query nor exceeds the maximum string length.
-  const linesPath = cachePath.replace(/\.json$/, '') + '.jsonl';
-  const cache: Record<string, number[]> = existsSync(cachePath) ? JSON.parse(readFileSync(cachePath, 'utf8')) : {};
-  if (existsSync(linesPath)) {
+  const linesPath = cachePath === null ? null : cachePath.replace(/\.json$/, '') + '.jsonl';
+  const cache: Record<string, number[]> = cachePath !== null && existsSync(cachePath) ? JSON.parse(readFileSync(cachePath, 'utf8')) : {};
+  if (linesPath && existsSync(linesPath)) {
     for (const line of readFileSync(linesPath, 'utf8').split('\n')) {
       if (!line) continue;
       const { k, v } = JSON.parse(line) as { k: string; v: string };
@@ -79,7 +82,7 @@ export function cachedOpenAIEmbedder(cachePath: string, fetchImpl: typeof fetch 
   }
   const key = (t: string, ns?: string) => createHash('sha256').update(ns ? `${PG_EMBED_MODEL}:${PG_EMBED_DIMS}:${ns}:${t}` : `${PG_EMBED_MODEL}:${PG_EMBED_DIMS}:${t}`).digest('hex');
   const url = `${baseUrl.replace(/\/$/, '')}/embeddings`;
-  const fetchBatch = async (batch: string[], ns: string | undefined, usage: EmbedUsage | undefined) => {
+  const fetchBatch = async (batch: string[], ns: string | undefined, usage: EmbedUsage | undefined, into: Record<string, number[]>) => {
     const payload = { model: PG_EMBED_MODEL, input: batch.map(t => t.slice(0, PG_EMBED_INPUT_CHARS)), dimensions: PG_EMBED_DIMS };
     const price = priceRequest('https://api.openai.com/v1/embeddings', payload);
     let res: Response, text: string;
@@ -112,20 +115,22 @@ export function cachedOpenAIEmbedder(cachePath: string, fetchImpl: typeof fetch 
     const lines: string[] = [];
     for (const d of body.data) {
       const k = key(batch[d.index], ns);
-      cache[k] = d.embedding;
+      into[k] = d.embedding;
       lines.push(JSON.stringify({ k, v: Buffer.from(new Float32Array(d.embedding).buffer).toString('base64') }));
     }
+    if (!linesPath) return;
     mkdirSync(dirname(linesPath), { recursive: true });
     appendFileSync(linesPath, lines.join('\n') + '\n');
   };
   return async (texts: string[], options: EmbedOptions = {}) => {
     const ns = options.namespace;
-    const missing = [...new Set(texts.filter(t => !cache[key(t, ns)]))];
+    const into = linesPath ? cache : {};
+    const missing = [...new Set(texts.filter(t => !into[key(t, ns)]))];
     const batches: string[][] = [];
     for (let i = 0; i < missing.length; i += 96) batches.push(missing.slice(i, i + 96));
     let next = 0;
-    await Promise.all(Array.from({ length: Math.min(4, batches.length) }, async () => { while (next < batches.length) await fetchBatch(batches[next++], ns, options.usage); }));
-    return texts.map(t => cache[key(t, ns)]);
+    await Promise.all(Array.from({ length: Math.min(4, batches.length) }, async () => { while (next < batches.length) await fetchBatch(batches[next++], ns, options.usage, into); }));
+    return texts.map(t => into[key(t, ns)]);
   };
 }
 

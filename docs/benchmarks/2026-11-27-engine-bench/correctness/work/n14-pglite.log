@@ -1,0 +1,42 @@
+# BrainBench N14: large-page fidelity (gbrain 0.60.777.0, overlay d8eb357; pglite; tiers 2mb; arms single-page, managed-parts, native)
+native capability: present (get_page declares body {"type":"string","enum":["auto","full","none","outline","window"],"description":"auto: whole up to 256 KB, else outline + window; a window's edit_target is edit_page `within`. none: revision + size + tail_sha256 (append_page expected_tail_sha256).","fullSurfaceOnly":true}; append_page exists; upload sessions exist)
+[2mb] generated conversation: 2.0 MB, 20258 lines, 365 sections
+[2mb] generated project-log: 2.0 MB, 23888 lines, 365 sections
+[2mb] generated book: 1.5 MB, 4321 lines, 41 sections
+[2mb] conversation / single-page: start
+[2mb] conversation / managed-parts: start
+[2mb] conversation / single-page: done in 16.8 s, peak RSS 1781 MB
+[2mb] conversation / native: start
+[2mb] conversation / managed-parts: done in 27.9 s, peak RSS 2210 MB
+[2mb] project-log / single-page: start
+[2mb] conversation / native: done in 16.3 s, peak RSS 1962 MB
+[2mb] project-log / managed-parts: start
+[2mb] project-log / single-page: done in 15.2 s, peak RSS 1212 MB
+[2mb] project-log / native: start
+[2mb] project-log / native: done in 14.7 s, peak RSS 1442 MB
+[2mb] book / single-page: start
+[2mb] project-log / managed-parts: done in 29.1 s, peak RSS 2170 MB
+[2mb] book / managed-parts: start
+[2mb] book / single-page: done in 12.6 s, peak RSS 1165 MB
+[2mb] book / native: start
+[2mb] book / managed-parts: done in 14.6 s, peak RSS 1652 MB
+[2mb] book / native: done in 12.0 s, peak RSS 1429 MB
+
+verdict: pass
+safety: crashes 0, responses over 1048576 B 0, round-trip byte loss 0, presence failures 0
+quality: native append embed ratio max 2.76 (<= 3), native recall gap vs parts 0 points (<= 2), native keyword recall at 2 MB 1 (>= 0.9); native capability present
+
+| tier | doc | arm | ingest | chunks | keyword recall@10 | min decile | delivered | reads ok | max frame B | append embed ratio | rewritten | round trip | ingest s | RSS over base MB |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 2mb | conversation | single-page | stored | 873 | 40/40 | 1.00 | 40/40 | 0/40 | 13721 | 1.36 | 67 | match | 2.4 | 5 |
+| 2mb | conversation | managed-parts | stored | 754 | 40/40 | 1.00 | 40/40 | 40/40 | 68975 | 2.138 | 2 | match | 11.8 | 14 |
+| 2mb | conversation | native | stored | 873 | 40/40 | 1.00 | 40/40 | 40/40 | 13721 | 1.36 | 67 | match | 2.3 | 27 |
+| 2mb | project-log | single-page | stored | 796 | 40/40 | 1.00 | 40/40 | 0/40 | 10188 | 2.76 | 63 | match | 2.2 | 6 |
+| 2mb | project-log | managed-parts | stored | 824 | 40/40 | 1.00 | 40/40 | 40/40 | 38576 | 5.56 | 4 | match | 13.6 | 5 |
+| 2mb | project-log | native | stored | 796 | 40/40 | 1.00 | 40/40 | 40/40 | 10188 | 2.76 | 63 | match | 2.2 | 22 |
+| 2mb | book | single-page | stored | 637 | 40/40 | 1.00 | 40/40 | 0/40 | 7190 | 1.869 | 16 | match | 1.8 | 5 |
+| 2mb | book | managed-parts | stored | 667 | 40/40 | 1.00 | 40/40 | 40/40 | 39726 | 2.776 | 2 | match | 2.8 | 7 |
+| 2mb | book | native | stored | 637 | 40/40 | 1.00 | 40/40 | 40/40 | 21100 | 1.869 | 16 | match | 1.7 | 21 |
+
+gbrain findings: none
+receipt: ./out/correctness-work/n14-pglite/receipt.json (hermetic arm 83.4 s)

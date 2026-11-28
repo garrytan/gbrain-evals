@@ -1,0 +1,9 @@
+surface parity: gbrain 0.60.777.0, verdict differs, input 8c21c80ceaba
+  pglite: ran
+  postgres: ran
+  rust: errored (import-a failed (exit 1):   "class": "caller", |   "retryable": false, |   "contract_version": 1 | })
+  cli: 55 identical, 1 differ, 0 errored, 0 refused, 0 not applicable (content 1)
+    differs cli:search --json [content]
+  mcp: 47 identical, 0 differ, 0 errored, 0 refused, 7 not applicable
+  markdown: 199 identical, 0 differ, 0 errored, 0 refused, 0 not applicable
+receipt: out/surface-parity/surface-parity-2026-11-27T03-43-47-126Z.json

@@ -2,7 +2,7 @@
 
 - **We learned that gbrain returns the same results on PGLite and on Postgres, with two small exceptions.** At gbrain v0.60.734.0 to v0.60.737.0, both engines passed the five keyless correctness checks they can both run with identical counts (zero stale values, leaks, lost writes or bytes lost) and Postgres also passed the sixth, which runs only on Postgres; 301 of 302 CLI, MCP and markdown outputs were byte-identical, and LongMemEval-S retrieval returned the same top 5, never empty, on 102 of 102 questions in each of the keyword, vector and hybrid arms. On these fixtures and builds the two engines returned the same outputs, except for the `stale` flag in `gbrain search --json`, which only PGLite computes, and a few vector and hybrid rankings in the 10,000-page speed run (identical top 10 on 70 and 69 of 71 quality queries).
 - **We learned that Postgres is the engine for concurrent clients and large brains.** With 16 concurrent clients PGLite served 0.05x Postgres's read rate (17.6 against 347.9 reads per second), and PGLite's import slows as the brain grows: 27.7 pages per second for the first 5,000 pages, 1.5 by 45,000. Postgres slowed only from 28.4 to 23.0 pages per second over all 100,000 pages (22.7 at its lowest). You should use Postgres for a brain that several agents read at once or that will grow past roughly 10,000 pages; for one client, PGLite's mixed-read throughput was 6% lower than Postgres's and it wrote faster.
-- These are development runs made before the [preregistration](2026-11-17-engine-bench-preregistration.md) froze. They describe the two TypeScript engines and decide nothing. The Rust engine is not measured here: no gbrain release carries it yet, and the counted wave runs when gbrain's maintainers name a build.
+- These are development runs made before the [preregistration](2026-11-17-engine-bench-preregistration.md) froze. They describe the two TypeScript engines and decide nothing. The Rust engine is not measured here. Its counted wave runs on gbrain v0.60.777.0, the build gbrain's maintainers named, under the [preregistration's 2026-11-27 amendment](2026-11-17-engine-bench-preregistration.md#2026-11-27-the-named-build-is-gbrain-v0607770-counted-at-the-maintainers-request-although-it-does-not-meet-the-build-trigger).
 
 ## What engine-bench is
 
@@ -111,7 +111,7 @@ Postgres wrote 100,000 pages in 4,124 s (4,162 s including links, timeline entri
 
 ## Reproduce
 
-From the repository root, with Bun and Docker, and a gbrain checkout at the named tag (`--gbrain <checkout>@<ref>` loads a verified copy):
+The counted wave's commands, including the gate suites and `eval-gates.ts --suite`, are in the [counted wave's Reproduce section](2026-11-27-engine-bench.md#reproduce). From the repository root, with Bun and Docker, and a gbrain checkout at the named tag (`--gbrain <checkout>@<ref>` loads a verified copy):
 
 ```sh
 bun eval/runner/engine-bench/correctness.ts --dev --engines pglite,postgres --gbrain '<gbrain checkout>@v0.60.735.0'

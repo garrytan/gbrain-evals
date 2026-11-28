@@ -1,0 +1,227 @@
+/**
+ * Keyless tests for the cost-and-speed experiment's probe rules (amendment of 2026-11-24): a search that overlaps a
+ * write is labelled probe by its own text and every charge lands exactly once; errored polls are not misses; a void
+ * window counts nothing; the idle check is bounded and never treats an undrained /finish as idle.
+ */
+import { afterAll, beforeEach, describe, expect, test } from 'bun:test';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { BudgetRun, closeLedgers } from '../../eval/runner/budget-ledger.ts';
+import { MeteringProxy, ProxyControl, searchTexts, type UsageLine } from '../../eval/runner/metering-proxy.ts';
+import { costSpeed, usagePhase } from '../../eval/runner/cost-speed.ts';
+import { awaitIdle, finishDrained, probePassage, probeRecord, probeSummary, unlabelledMeterRoutes, unlabelledSearchRoutes, windowVoid, type ProbeRecord } from '../../eval/runner/memory-qa/cost-speed-probes.ts';
+
+const tmp = mkdtempSync(join(tmpdir(), 'cost-speed-probes-'));
+afterAll(() => { closeLedgers(); rmSync(tmp, { recursive: true, force: true }); });
+const FAKE_ENV = { OPENAI_API_KEY: 'placeholder-openai', VOYAGE_API_KEY: 'placeholder-voyage' };
+const PASSAGE = 'I finally moved the standing desk to the window, and the afternoon light makes the long calls bearable.';
+
+describe('probe attribution in the lease proxy', () => {
+  beforeEach(() => closeLedgers());
+  test('a probe search that overlaps a write is labelled probe by its text; the write keeps its phase; each request is charged once', async () => {
+    let release!: () => void;
+    const gate = new Promise<void>(r => { release = r; });
+    const fetchImpl = (async (_url: RequestInfo | URL, init?: RequestInit) => {
+      const body = JSON.parse(String(init?.body));
+      if (Array.isArray(body.input) && body.input[0] !== PASSAGE) await gate;
+      const tokens = Array.isArray(body.input) ? 2_000_000 : 100_000;
+      return Response.json({ data: [{ embedding: [0.1] }], usage: { prompt_tokens: tokens, total_tokens: tokens } });
+    }) as unknown as typeof fetch;
+    const lease = BudgetRun.openLease({ runId: 'probe-overlap', leaseUsd: 1, ledgerPath: join(tmp, 'ledger.sqlite') });
+    const usageLog = join(tmp, 'usage.ndjson');
+    const proxy = new MeteringProxy({ fetchImpl, policy: { lease, env: FAKE_ENV, usageLog }, controlToken: 'ctl' });
+    const lineSum = (ls: UsageLine[]) => ls.reduce((n, l) => n + (l.actual_usd ?? 0), 0);
+    proxy.start();
+    const base = `http://127.0.0.1:${proxy.port}`;
+    const post = (body: unknown) => fetch(`${base}/ext-extract-first/openai/v1/embeddings`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+    try {
+      const ctl = new ProxyControl(base, 'ctl');
+      await ctl.bind('ext-extract-first', 'ingest:ns-a', { brain: 'ns-a', phase: 'background' });
+      await ctl.probeQueries('ext-extract-first', [PASSAGE]);
+      const write = post({ model: 'text-embedding-3-small', input: [`user: ${PASSAGE} And then the rest of the session went on for a while.`] });
+      await Bun.sleep(50);
+      expect((await post({ model: 'text-embedding-3-small', input: PASSAGE })).status).toBe(200);
+      release();
+      expect((await write).status).toBe(200);
+      expect((await post({ model: 'text-embedding-3-small', input: [PASSAGE, 'user: another turn of the same session'] })).status).toBe(200);
+      await ctl.probeQueries('ext-extract-first', null);
+      expect((await post({ model: 'text-embedding-3-small', input: PASSAGE })).status).toBe(200);
+      const lines = readFileSync(usageLog, 'utf8').trim().split('\n').map(l => JSON.parse(l) as UsageLine).filter(l => l.outcome !== 'refused');
+      expect(lines.map(l => [l.phase, usagePhase(l)])).toEqual([['probe', 'probe'], ['background', 'ingest'], ['background', 'ingest'], ['background', 'ingest']]);
+      expect(new Set(lines.map(l => l.request_id)).size).toBe(4);
+      const billed = lineSum(lines);
+      expect(billed).toBeCloseTo(Number(proxy.status().billed_usd), 10);
+      const probeUsd = lineSum(lines.filter(l => l.phase === 'probe'));
+      expect(probeUsd).toBeGreaterThan(0.001);
+      const cs = costSpeed({ usage: lines, rows: [] } as never);
+      const p = cs.spend.campaign.by_phase;
+      expect(p.ingest).toBeCloseTo(lineSum(lines.filter(l => l.phase === 'background')), 4);
+      expect(p.other).toBeCloseTo(probeUsd, 4);
+      expect(p.ingest + p.retrieval + p.answer + p.judge + p.other).toBeCloseTo(billed, 4);
+    } finally { proxy.stop(); }
+  });
+
+  test("a slot's read route is the slot itself, labelled probe while a probe is registered, and its writes never are", async () => {
+    const fetchImpl = (async () => Response.json({ data: [{ embedding: [0.1] }], usage: { prompt_tokens: 1000, total_tokens: 1000 } })) as unknown as typeof fetch;
+    const lease = BudgetRun.openLease({ runId: 'probe-read-route', leaseUsd: 1, ledgerPath: join(tmp, 'ledger-read-route.sqlite') });
+    const usageLog = join(tmp, 'usage-read-route.ndjson');
+    const proxy = new MeteringProxy({ fetchImpl, policy: { lease, env: FAKE_ENV, usageLog }, controlToken: 'ctl' });
+    proxy.start();
+    const base = `http://127.0.0.1:${proxy.port}`;
+    const post = (slot: string, input: unknown) => fetch(`${base}/${slot}/openai/v1/embeddings`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ model: 'text-embedding-3-small', input }) });
+    try {
+      const ctl = new ProxyControl(base, 'ctl');
+      await ctl.bind('ext-extract-first', 'ingest:ns-a#held-back', { brain: 'ns-a', phase: 'background' });
+      await ctl.probeQueries('ext-extract-first', [PASSAGE]);
+      expect((await post('ext-extract-first~read', PASSAGE)).status).toBe(200);
+      expect((await post('ext-extract-first~read', ['standing desk', 'window'])).status).toBe(200);
+      expect((await post('ext-extract-first', ['standing desk'])).status).toBe(200);
+      await ctl.probeQueries('ext-extract-first', null);
+      expect((await post('ext-extract-first~read', ['standing desk'])).status).toBe(200);
+      expect((await post('~read', 'x')).status).toBe(200);
+      const lines = readFileSync(usageLog, 'utf8').trim().split('\n').map(l => JSON.parse(l) as UsageLine & { read?: true });
+      expect(lines.map(l => [l.key, l.slot, l.phase, l.read ?? null])).toEqual([
+        ['ingest:ns-a#held-back', 'ext-extract-first', 'probe', true], ['ingest:ns-a#held-back', 'ext-extract-first', 'probe', true],
+        ['ingest:ns-a#held-back', 'ext-extract-first', 'background', null], ['ingest:ns-a#held-back', 'ext-extract-first', 'background', true],
+        ['slot:~read', '~read', null, null],
+      ]);
+      expect(new Set(lines.map(l => l.request_id)).size).toBe(5);
+      expect(lines.reduce((n, l) => n + (l.actual_usd ?? 0), 0)).toBeCloseTo(Number(proxy.status().billed_usd), 10);
+      expect(proxy.status().slots['ext-extract-first~read']).toBeUndefined();
+      expect(proxy.status().slots['ext-extract-first'].inflight).toBe(0);
+    } finally { proxy.stop(); }
+  });
+
+  test("a calibration window's meter splits requests by label, and the slot's activity feeds the idle check", async () => {
+    const fetchImpl = (async (url: RequestInfo | URL) => String(url).endsWith('/rerank')
+      ? Response.json({ data: [], usage: { total_tokens: 1000 } })
+      : Response.json({ data: [{ embedding: [0.1] }], usage: { prompt_tokens: 1000, total_tokens: 1000 } })) as unknown as typeof fetch;
+    const lease = BudgetRun.openLease({ runId: 'probe-calibration', leaseUsd: 1, ledgerPath: join(tmp, 'ledger-calibration.sqlite') });
+    const proxy = new MeteringProxy({ fetchImpl, policy: { lease, env: FAKE_ENV }, controlToken: 'ctl' });
+    proxy.start();
+    const base = `http://127.0.0.1:${proxy.port}`;
+    const post = (path: string, body: unknown) => fetch(`${base}/sys/${path}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+    try {
+      const ctl = new ProxyControl(base, 'ctl');
+      expect(await ctl.slotActivity('sys')).toBeNull();
+      const t0 = Date.now();
+      await ctl.bind('sys', 'calib:w1');
+      await ctl.probeQueries('sys', [PASSAGE]);
+      expect((await post('openai/v1/embeddings', { model: 'text-embedding-3-small', input: PASSAGE })).status).toBe(200);
+      expect((await post('voyage/v1/rerank', { model: 'rerank-2.5', query: PASSAGE, documents: ['a', 'b'] })).status).toBe(200);
+      expect((await post('openai/v1/embeddings', { model: 'text-embedding-3-small', input: 'an expanded rewrite of the passage' })).status).toBe(200);
+      const a = await ctl.slotActivity('sys');
+      expect(a!.inflight).toBe(0);
+      expect(a!.last_ms).toBeGreaterThanOrEqual(t0 - 5);
+      expect(proxy.status().slots.sys.inflight).toBe(0);
+      await ctl.unbind('sys');
+      const m = await ctl.finalize('calib:w1');
+      expect(m.requests).toBe(3);
+      expect(m.byPhase!.probe).toMatchObject({ requests: 2, routes: { 'openai/v1/embeddings': 1, 'voyage/v1/rerank': 1 } });
+      expect(m.byPhase!.none).toMatchObject({ requests: 1, routes: { 'openai/v1/embeddings': 1 } });
+      expect(m.byPhase!.probe.usd + m.byPhase!.none.usd).toBeCloseTo(m.usd, 10);
+      expect(unlabelledMeterRoutes(m.byPhase)).toEqual(['openai/v1/embeddings']);
+      expect(unlabelledMeterRoutes({ probe: m.byPhase!.probe })).toEqual([]);
+    } finally { proxy.stop(); }
+  });
+
+  test('the pilot label check names every search route the probe label misses, such as a query-expansion call', () => {
+    const lines = [
+      { phase: 'probe', provider: 'voyage', route: '/v1/embeddings' }, { phase: 'probe', provider: 'voyage', route: '/v1/rerank' },
+      { phase: null, provider: 'anthropic', route: '/v1/messages' }, { phase: 'query', provider: 'anthropic', route: '/v1/messages', outcome: 'refused' },
+    ];
+    expect(unlabelledSearchRoutes(lines)).toEqual(['anthropic/v1/messages']);
+    expect(unlabelledSearchRoutes(lines.slice(0, 2))).toEqual([]);
+  });
+
+  test('a probe passage is never a whole turn', () => {
+    const long = 'word '.repeat(100);
+    expect(probePassage([{ content: 'hi' }, { content: long }])).toBe(long.slice(0, 300));
+    expect(probePassage([{ content: 'the desk is by the window now' }, { content: 'ok' }])).toBe('the desk is by the window');
+    expect(probePassage([{ content: 'ok' }])).toBeNull();
+    for (const turns of [[{ content: 'the desk is by the window now' }], [{ content: long }]]) expect(turns.map(t => t.content)).not.toContain(probePassage(turns));
+  });
+
+  test('search texts come from embedding inputs and rerank queries only', () => {
+    expect(searchTexts('openai', '/v1/embeddings', { input: 'a' })).toEqual(['a']);
+    expect(searchTexts('voyage', '/v1/embeddings', { input: ['a', 'b'] })).toEqual(['a', 'b']);
+    expect(searchTexts('voyage', '/v1/rerank', { query: 'q', documents: ['a'] })).toEqual(['q']);
+    expect(searchTexts('openai', '/v1/chat/completions', { messages: [{ role: 'user', content: 'a' }] })).toEqual([]);
+  });
+});
+
+describe('probe records and summary', () => {
+  const rec = (status: 'found' | 'missed' | 'errored', ms: number | null = null, idle = true): ProbeRecord =>
+    ({ source_id: 's', status, write_to_queryable_ms: ms, polls: 1, errored_polls: status === 'errored' ? 1 : 0, unattributed_returns: 0, started_idle: idle });
+
+  test('a probe whose polls errored and never found the session is errored, not missed', () => {
+    const H = 2000;
+    expect(probeRecord('s1', [{ at_ms: 1000, error: 'HTTP 503' }, { at_ms: 2000, error: 'HTTP 503' }], true, H).status).toBe('errored');
+    expect(probeRecord('s1', [{ at_ms: 1000, found: false, unattributed: 2 }, { at_ms: 2000, found: false }], true, H)).toMatchObject({ status: 'missed', unattributed_returns: 2 });
+    expect(probeRecord('s1', [{ at_ms: 1000, error: 'HTTP 503' }, { at_ms: 2000, found: true }], true, H)).toMatchObject({ status: 'found', write_to_queryable_ms: 2000, errored_polls: 1 });
+  });
+
+  test('polling that stops before the horizon is errored, and a find after the horizon is a miss', () => {
+    expect(probeRecord('s1', [], true, 2000).status).toBe('errored');
+    expect(probeRecord('s1', [{ at_ms: 1000, found: false }], true, 2000).status).toBe('errored');
+    expect(probeRecord('s1', [{ at_ms: 2000, found: false }, { at_ms: 3000, found: true }], true, 2000)).toMatchObject({ status: 'missed', write_to_queryable_ms: null });
+  });
+
+  test('errored probes stay out of the percentiles and the miss share, and a window with more than a tenth errored is void', () => {
+    const outage = Array.from({ length: 21 }, () => rec('errored'));
+    expect(windowVoid(outage)).toBe(true);
+    const healthy = [...Array.from({ length: 20 }, (_, i) => rec('found', 1000 + i)), rec('errored')];
+    expect(windowVoid(healthy)).toBe(false);
+    const s = probeSummary([outage, healthy], 600_000);
+    expect(s).toMatchObject({ counted: 20, found: 20, missed: 0, miss_share: 0, errored: 22, void_windows: 1 });
+    expect(s.p50_ms).toBe(1009);
+  });
+
+  test('a percentile that lands on a miss reports no time, and probes that started without the system idle do not count', () => {
+    const w = [...Array.from({ length: 5 }, () => rec('found', 500)), ...Array.from({ length: 6 }, () => rec('missed')), rec('found', 900, false)];
+    expect(probeSummary([w], 600_000)).toMatchObject({ counted: 11, found: 5, missed: 6, p50_ms: null, not_idle: 1, void_windows: 0 });
+    expect(probeSummary([[rec('found', 500), rec('found', 900, false)]], 600_000)).toMatchObject({ counted: 0, void_windows: 1 });
+    const ok = [...Array.from({ length: 10 }, () => rec('found', 500)), rec('missed')];
+    expect(probeSummary([ok], 600_000)).toMatchObject({ counted: 11, p50_ms: 500, p95_ms: null });
+  });
+});
+
+describe('idle check', () => {
+  const clock = () => { let t = 0; return { now: () => t, sleep: async (ms: number) => { t += ms; } }; };
+
+  test('a system with pending work is given up on at the bound, without draining it', async () => {
+    const c = clock();
+    let calls = 0;
+    const r = await awaitIdle({ pending: async () => { calls++; return 3; }, lastRequestAt: () => null, maxMs: 600_000, intervalMs: 1_000, ...c });
+    expect(r).toEqual({ idle: false, waited_ms: 600_000 });
+    expect(calls).toBe(601);
+  });
+
+  test('a pending-work check that throws is not idle', async () => {
+    const c = clock();
+    const r = await awaitIdle({ pending: async () => { throw new Error('shim down'); }, lastRequestAt: () => null, maxMs: 5_000, intervalMs: 1_000, ...c });
+    expect(r).toEqual({ idle: false, waited_ms: 5_000 });
+  });
+
+  test('idle once nothing is pending and the slot has been quiet for the quiet window', async () => {
+    const c = clock();
+    const r = await awaitIdle({ pending: async () => 0, lastRequestAt: () => 0, quietMs: 60_000, intervalMs: 1_000, ...c });
+    expect(r).toEqual({ idle: true, waited_ms: 60_000 });
+  });
+
+  test('a slot-activity read that fails counts as a request now, so the system is not idle', async () => {
+    const c = clock();
+    const r = await awaitIdle({ pending: async () => null, lastRequestAt: async () => { throw new Error('proxy down'); }, quietMs: 60_000, maxMs: 10_000, intervalMs: 1_000, ...c });
+    expect(r).toEqual({ idle: false, waited_ms: 10_000 });
+    const ok = await awaitIdle({ pending: async () => null, lastRequestAt: async () => 0, quietMs: 60_000, intervalMs: 1_000, ...c });
+    expect(ok.idle).toBe(true);
+  });
+
+  test('a /finish that says ready with undrained background liabilities is not drained', () => {
+    expect(finishDrained({ ready: true, raw: { background_liabilities: { drained: false } } })).toBe(false);
+    expect(finishDrained({ ready: true, raw: { background_liabilities: { drained: true } } })).toBe(true);
+    expect(finishDrained({ ready: true })).toBe(true);
+    expect(finishDrained({ ready: false })).toBe(false);
+  });
+});
