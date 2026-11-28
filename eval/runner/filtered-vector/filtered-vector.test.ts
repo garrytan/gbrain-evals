@@ -5,7 +5,8 @@ import { join, resolve } from 'node:path';
 import { afterDateFor, attributeRanks, dateFor, filters, pageAttributes, SHARES } from './attributes.ts';
 import { attemptKind, boostedSlug, firstSentence, queryPlan } from './harness.ts';
 import { ARM_PATCHES, applyPatch } from './patch-arm.ts';
-import { applyReruns, decide, recountDir, truthCheck, type CellResult } from './recount.ts';
+import { MACHINE_LOCAL_PATH } from '../receipt.ts';
+import { applyReruns, decide, publishedManifest, recountDir, truthCheck, type CellResult } from './recount.ts';
 import { latencyState, outcome, recallAt, recallState, type CellVerdict } from './stats.ts';
 import { flipsUnderRule } from './tables.ts';
 
@@ -197,5 +198,14 @@ describe('the stage 1b rule', () => {
     expect(flipsUnderRule(cell('type', 375_000))).toBe(false);
     expect(flipsUnderRule(cell('where', 375_000))).toBe(false);
     expect(flipsUnderRule(cell('scope', 375_000))).toBe(false);
+  });
+});
+
+describe('published manifests', () => {
+  test('the run VM home in a PGLite data directory is written as ~/', () => {
+    const manifest = publishedManifest({ label: 'pglite', db: '/home/ubi/pgl/data-15000', chunks: 15000 });
+    expect(manifest).toEqual({ label: 'pglite', db: '~/pgl/data-15000', chunks: 15000 });
+    expect(MACHINE_LOCAL_PATH.test(JSON.stringify(manifest))).toBe(false);
+    expect(MACHINE_LOCAL_PATH.test(JSON.stringify({ db: '/home/ubi/pgl/data-15000' }))).toBe(true);
   });
 });

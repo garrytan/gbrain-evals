@@ -3188,7 +3188,7 @@
    "started": "2026-11-26T20:06:27.810Z"
   },
   {
-   "db": "/home/ubi/pgl/data-15000",
+   "db": "~/pgl/data-15000",
    "label": "pglite",
    "engine": "pglite",
    "image": "",
@@ -3289,7 +3289,7 @@
    "started": "2026-11-26T20:05:47.220Z"
   },
   {
-   "db": "/home/ubi/pgl/data-75000",
+   "db": "~/pgl/data-75000",
    "label": "pglite",
    "engine": "pglite",
    "image": "",
@@ -3390,7 +3390,7 @@
    "started": "2026-11-27T01:17:56.595Z"
   },
   {
-   "db": "/home/ubi/pgl/data-75000",
+   "db": "~/pgl/data-75000",
    "label": "pglite",
    "engine": "pglite",
    "image": "",

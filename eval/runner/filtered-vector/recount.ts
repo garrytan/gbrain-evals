@@ -18,6 +18,7 @@
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import { scrubMachinePaths } from '../receipt.ts';
 import { hash32 } from './attributes.ts';
 import {
   BOOTSTRAP_RESAMPLES, cellStats, latencyState, outcome, percentile, pooledRatio, recallAt, recallState,
@@ -240,6 +241,12 @@ export function pilotChecks(dirs: string[], cells: CellResult[]) {
 const f = (x: number, d = 2) => (Number.isFinite(x) ? x.toFixed(d) : 'n/a');
 const iv = (i: Interval) => f(i.est) + ' [' + f(i.lo) + ', ' + f(i.hi) + ']';
 
+export const RUN_VM_HOME = '/home/ubi/';
+
+export function publishedManifest<T>(manifest: T): T {
+  return scrubMachinePaths(manifest, undefined, undefined, undefined, [[RUN_VM_HOME, '~/']]);
+}
+
 export function markdownTable(cells: CellResult[]): string {
   const head = '| cell | reached | p50 C | p50 T | p50 T/C | p95 T/C | p99 C | p99 T | recall C | recall T | T − C | recall | latency | Materialize C/T |\n|---|---|---|---|---|---|---|---|---|---|---|---|---|---|';
   const lines = cells.map(c => '| ' + [c.cell.split('|').slice(0, 8).join(' '), f(c.reached), f(c.stats.p50.c, 1), f(c.stats.p50.t, 1), iv(c.stats.p50.ratio), iv(c.stats.p95.ratio), f(c.stats.p99.c, 1), f(c.stats.p99.t, 1),
@@ -260,7 +267,7 @@ if (import.meta.main) {
   if (!dirs.length) throw new Error('usage: recount.ts --out <dir> <run dir>... [--rerun <run dir>]... [--pilot]');
   const cells = dirs.flatMap(d => recountDir(d, resamples));
   applyReruns(cells, reruns.flatMap(d => recountDir(d, resamples)));
-  const result = { cells: cells.length, decision: decide(dirs, cells, resamples), truth_check: truthCheck(dirs, cells), sanity: sanity(dirs, cells, resamples), ...(pilot ? { pilot: pilotChecks(dirs, cells) } : {}), manifests: dirs.map(d => JSON.parse(readFileSync(join(d, 'manifest.json'), 'utf8'))) };
+  const result = { cells: cells.length, decision: decide(dirs, cells, resamples), truth_check: truthCheck(dirs, cells), sanity: sanity(dirs, cells, resamples), ...(pilot ? { pilot: pilotChecks(dirs, cells) } : {}), manifests: dirs.map(d => publishedManifest(JSON.parse(readFileSync(join(d, 'manifest.json'), 'utf8')))) };
   mkdirSync(outDir, { recursive: true });
   writeFileSync(join(outDir, 'cells.json'), JSON.stringify(cells, null, 1));
   writeFileSync(join(outDir, 'summary.json'), JSON.stringify(result, null, 1));
