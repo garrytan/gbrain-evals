@@ -313,13 +313,12 @@ measures.
 
 ## Changelog
 
-<<<<<<< HEAD
 ### 2026-11-28: Filtered vector search results
 
 The filtered vector search row moves from the protocols table to the retrieval experiments with its
 [results](benchmarks/2026-11-26-filtered-vector-material.md): a limited flip that turns materialization off only for
 date-filtered searches on brains of at least 375,000 chunks, confirmed on a fresh corpus.
-=======
+
 ### 2026-11-27: Cost and write-to-queryable results
 
 The cost and write-to-queryable row moves from the protocols table to "Saving, using, and improving memory" with its
@@ -340,7 +339,6 @@ maintainers' request although it misses the build trigger, and says a second wav
 
 The results table adds the [section delivery confirmation](benchmarks/2026-11-24-cat40-h4-fix-confirmation.md) on
 questions where sources disagree.
->>>>>>> origin/main
 
 ### 2026-11-26: Filtered vector search preregistration row
 
