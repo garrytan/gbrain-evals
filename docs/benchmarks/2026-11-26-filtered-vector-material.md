@@ -3,12 +3,14 @@
 - **We learned that turning off Postgres materialization (`enable_material = off`) makes gbrain's date-filtered vector
   searches several times faster on brains of 375,000 chunks (about 50,000 pages), with no measurable loss of
   nearest-neighbour recall.** Across PostgreSQL 15 to 18, pgvector 0.7.4 and 0.8.7, and generated and Wikipedia
-  corpora, the rule below flips 180 realistic cells. None loses recall beyond a one-point margin, and none slows down. On 1% date filters it also fixes recall for untrusted
-  callers: with limit 20, the shipped plan walks the approximate vector index and returns 60% to 72% of the true top 20
+  corpora, the rule below flips 180 realistic cells. None loses recall beyond a one-point margin, and none has a confirmed slowdown: 12 have p50 intervals slightly above 1 but
+  under the plan's 1.1 threshold, and the one that crossed it (Wikipedia, 0.1% date, untrusted, 1.14 to 1.17) came out
+  neutral on its re-run. On 1% date filters it also fixes recall for untrusted
+  callers: with limit 20 on pgvector 0.8.7, the shipped plan walks the approximate vector index and returns 60% to 72% of the true top 20
   pages on generated data (85% to 87% on Wikipedia), while with materialization off the planner scores the filtered
   chunks exactly and returns all of them. Trusted callers already get all of them.
   The 69 that speed up have a median p50 of 0.11 times the shipped plan's. All of the gain goes to callers gbrain treats
-  as untrusted, whose searches carry the private-page rule. A fresh corpus confirmed the rule: its 38 cells there are all safe, none slows down, and the 17 that speed up have a median p50 of 0.12 times the shipped plan's. You should get it when gbrain ships the
+  as untrusted, whose searches carry the private-page rule. A fresh corpus confirmed the rule: its 38 cells there are all safe, none regresses (5 have p50 intervals just above 1, at most 1.06), and the 17 that speed up have a median p50 of 0.12 times the shipped plan's. You should get it when gbrain ships the
   rule: date filters, alone or with a type filter, on brains of at least 375,000 chunks.
 - **We learned that turning it off everywhere is the wrong call.** On brains of 75,000 chunks (about 10,000 pages),
   filters that select 20% or 50% of pages get slower, mostly `type` and frontmatter filters, and after a restart some
@@ -104,7 +106,7 @@ Three things stand out.
 
 - **Trusted callers see no change.** All 576 realistic affected trusted cells are neutral, at every size. Without the
   private-page rule the planner doesn't build the costly materialized plan, so there is nothing to turn off.
-- **The gain grows with brain size.** Take the untrusted caller's limit-20 filtered cells and compare median p50s.
+- **The gain grows with brain size.** Take the untrusted caller's warm limit-20 filtered cells and compare median p50s.
   - At 375,000 chunks on PostgreSQL 15 to 18 with pgvector 0.8.7, C takes 304 to 359 ms and T takes 35 to 46 ms.
   - At 1,500,000 chunks, C takes 154 ms and T takes 56 ms.
   - On the Wikipedia corpus at 375,000 chunks, C takes 79 ms and T takes 46 ms.
@@ -123,6 +125,10 @@ from stage 1 alone and committed before any stage 1b result was read:
 > Turn materialization off for a filtered joined attempt when the search has a date bound (`afterDate` or
 > `beforeDate`), alone or with a `type` filter, and the brain holds at least 375,000 chunks. Every other search keeps
 > today's plan.
+
+The grid measured `afterDate` alone and one combination, a 20% `type` filter with a 50% `afterDate` bound. The
+rule's `beforeDate`, two-sided date windows and other `type` shares with a date are extrapolated from those cells, not
+measured.
 
 The rule's flip side in stage 1:
 
@@ -270,7 +276,7 @@ The table shows four cases.
   `where` 20% cell reopens stage 2.
 - **pgvector 0.7.4, 375,000 chunks, cold.** Every search in the cold 20% cells ran out the budget in both arms. They
   returned a median of 5 pages, for recall of about 0.23 in both arms. In the cold 1% date cell, all 30 of C's searches ran
-  out the budget with no pages (recall 0.008). Only 3 of T's did, returning a median of 11 pages, and T's recall was
+  out the budget: 25 returned no pages and 5 returned one (recall 0.008). Only 3 of T's did, returning a median of 11 pages, and T's recall was
   0.957.
 - **Cold 1% date filter, PostgreSQL 15, 375,000 chunks.** 5 of C's 30 searches ran out the budget and returned a
   median of 12 pages, so C's recall was 0.60. T finished every search, with recall 1.00. This cell is on the rule's
@@ -385,7 +391,10 @@ The stage 1 recount takes about 90 minutes on one core at 10,000 resamples. Its 
 
 - `summary.json` holds the decision, truth check and sanity checks.
 - `cells.json.gz` (the recount's `cells.json`, gzipped) and `cells.md` hold every cell.
-- [`tables.md`](2026-11-26-filtered-vector-material/tables.md) holds every table on this page.
+- [`tables.md`](2026-11-26-filtered-vector-material/tables.md) holds the tables that `tables.ts` prints: states by engine, the rule's flip side, the losing
+  and regressing cells, the re-runs, the incomplete searches and stage 1b. The per-engine count of losing and
+  regressing cells, the pgvector 0.7.4 and 0.8.7 latency table and the warm medians in the prose come from
+  `cells.json.gz` but aren't printed by it.
 
 To run a cell yourself, use `eval/runner/filtered-vector/run.ts`, and set up the machine with
 `scripts/ubicloud/filtered-vector-setup.sh`. Each run's `manifest.json` records its image digest, commits and
